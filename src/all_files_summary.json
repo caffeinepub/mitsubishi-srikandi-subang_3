@@ -1,0 +1,16 @@
+{
+  "backend/main.mo": "Main backend actor implementing user profiles, website settings, vehicles, visitor stats, credit simulations, product likes, article comments, and contact submissions with role-based access control and blob storage integration.",
+  "feature_evidence.json": "Empty feature evidence report JSON file with no features documented.",
+  "frontend-file-summaries.txt": "JSON-formatted summaries of three frontend files describing Phase 1 foundation components including placeholder UI, basic React Query hooks, and Tailwind CSS configuration.",
+  "frontend/index.css": "Empty CSS file (content appears to be missing or blank).",
+  "frontend/index.html": "Basic HTML entry point for the Mitsubishi Srikandi Subang application with root div and module script reference.",
+  "frontend/src/App.tsx": "Phase 1 placeholder UI component displaying system build status, authentication state, and infrastructure checklist for the Mitsubishi Srikandi Subang application.",
+  "frontend/src/hooks/useActor.ts": "React hook that creates and manages the backend actor instance with authentication support, handling both anonymous and authenticated identities with automatic query invalidation on identity changes.",
+  "frontend/src/hooks/useInternetIdentity.ts": "React context provider and hook for Internet Identity authentication, managing login state, identity persistence, and delegation validation with configurable AuthClient options.",
+  "frontend/src/hooks/useQueries.ts": "React Query hooks for Phase 1 backend connectivity testing, providing queries for visitor stats and website settings plus a mutation for incrementing page views.",
+  "frontend/src/index.css": "Tailwind CSS configuration with OKLCH color system defining comprehensive design tokens for light and dark modes including background, foreground, card, primary, secondary, muted, accent, destructive, border, and chart colors.",
+  "frontend/src/main.tsx": "Application entry point that sets up React root with QueryClient and InternetIdentityProvider wrappers around the main App component.",
+  "frontend/src/utils/urlParams.ts": "Utility functions for extracting, storing, and managing URL parameters and sessionStorage values, supporting both regular query strings and hash-based routing with parameter persistence.",
+  "frontend/tailwind.config.js": "Tailwind CSS configuration with custom color scheme using OKLCH color space, extended theme with sidebar/chart/card colors, custom animations for accordions, and plugins for typography, container queries, and animations.",
+  "project_state.json": "Project state file defining Phase 1 architecture for Mitsubishi Srikandi Subang automotive website with IC Canister backend, stable storage, relational vehicle database (passenger/commercial), blob media storage, admin authentication, and lifecycle hooks; includes 11+ feature requests tracking implementation status."
+}

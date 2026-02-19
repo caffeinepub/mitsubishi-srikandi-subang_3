@@ -1,0 +1,5 @@
+{
+  "frontend/src/App.tsx": "Phase 1 foundation placeholder showing system status and authentication state without any functional UI components.",
+  "frontend/src/hooks/useQueries.ts": "Basic React Query hooks for visitor stats and website settings to test backend connectivity during Phase 1.",
+  "frontend/src/index.css": "Global CSS file with Tailwind directives and OKLCH color system variables for light and dark modes."
+}
