@@ -1,66 +1,55 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-20T21:25:37.651Z",
+  "generatedAt": "2026-02-20T21:34:36.352Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
     "total": 4,
-    "implemented": 1,
+    "implemented": 0,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Modify getMediaAssets backend function to allow access for any authenticated user, removing strict principal validation that blocks media listing",
+        "summary": "Implement persistent storage for admin users in the backend main actor, ensuring admin user data including principal and role are saved in stable variables that survive canister upgrades",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "Ensure deleteMediaAsset retains role-based authorization checking for 'admin' role only, keeping existing admin validation logic",
+        "summary": "Modify deleteMediaAsset function to check admin role from stored user data instead of using hardcoded principal comparison",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-3",
-        "summary": "Verify media upload logic remains unmodified and continues to function correctly",
+        "summary": "Ensure the currently logged-in admin user has role 'admin' assigned in persistent storage and this role is verified before allowing delete operations",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-4",
-        "summary": "Test and verify that media list loads correctly on the admin media manager page after user authentication and login",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useMediaAssets.ts",
-          "frontend/src/components/admin/MediaAssetGrid.tsx",
-          "frontend/src/pages/admin/MediaManagerPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useMediaAssets.ts",
-          "frontend/src/components/admin/MediaAssetGrid.tsx",
-          "frontend/src/pages/admin/MediaManagerPage.tsx"
-        ]
+        "summary": "Preserve existing functionality for media listing and upload operations, ensuring they remain unaffected by authorization system changes",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
-    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
-    "frontend/src/components/admin/MediaAssetGrid.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useMediaAssets.ts",
-    "frontend/src/pages/admin/MediaManagerPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

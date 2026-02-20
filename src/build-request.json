@@ -1,92 +1,99 @@
 {
   "kind": "build_request",
-  "title": "Fix media loading for authenticated admin users",
+  "title": "Rebuild admin authorization system with persistent role storage",
+  "projectName": "Media Manager",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Modify getMediaAssets backend function to allow access for any authenticated user, removing strict principal validation that blocks media listing",
+      "text": "Implement persistent storage for admin users in the backend main actor, ensuring admin user data including principal and role are saved in stable variables that survive canister upgrades",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-latest"
+          "msg-4"
         ],
         "quotes": [
-          "Ensure getMediaAssets is accessible for authenticated admin users",
-          "Do not block media listing with strict principal validation"
+          "Ensure admin user is stored in persistent storage",
+          "Ensure admin role is saved and retrievable after deploy"
         ]
       },
       "acceptanceCriteria": [
-        "getMediaAssets returns media assets for authenticated users without principal validation",
-        "Admin users can view media list immediately after login",
-        "Function does not throw authorization errors for valid authenticated sessions"
+        "Admin user data is stored in stable variables",
+        "Admin role persists across canister deployments and upgrades",
+        "Admin principal and role mapping is retrievable after deploy"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Ensure deleteMediaAsset retains role-based authorization checking for 'admin' role only, keeping existing admin validation logic",
+      "text": "Modify deleteMediaAsset function to check admin role from stored user data instead of using hardcoded principal comparison",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-latest"
+          "msg-4"
         ],
         "quotes": [
-          "Keep admin validation only for deleteMediaAsset"
+          "Ensure deleteMediaAsset checks role from stored user data",
+          "Do NOT use hardcoded principal comparison",
+          "Verify admin role before allowing delete"
         ]
       },
       "acceptanceCriteria": [
-        "deleteMediaAsset continues to validate admin role before allowing deletion",
-        "Non-admin users cannot delete media assets",
-        "Authorization logic remains unchanged for delete operations"
+        "deleteMediaAsset queries stored admin user data to verify role",
+        "No hardcoded principal comparisons exist in deleteMediaAsset",
+        "Authorization check validates that caller's principal has admin role in storage",
+        "Returns appropriate error if caller is not found in admin users or lacks admin role"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Verify media upload logic remains unmodified and continues to function correctly",
+      "text": "Ensure the currently logged-in admin user has role 'admin' assigned in persistent storage and this role is verified before allowing delete operations",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-latest"
+          "msg-4"
         ],
         "quotes": [
-          "Do not modify upload logic"
+          "Ensure current logged-in admin user has role: 'admin'",
+          "Verify admin role before allowing delete"
         ]
       },
       "acceptanceCriteria": [
-        "Media upload functionality remains unchanged",
-        "Upload authorization and validation logic is preserved",
-        "No modifications to uploadMediaAsset function"
+        "Admin user record includes role field set to 'admin'",
+        "deleteMediaAsset verifies caller's role equals 'admin' before proceeding",
+        "Role check happens at runtime using stored data, not compile-time constants"
       ]
     },
     {
       "id": "REQ-4",
-      "text": "Test and verify that media list loads correctly on the admin media manager page after user authentication and login",
-      "target": "both",
+      "text": "Preserve existing functionality for media listing and upload operations, ensuring they remain unaffected by authorization system changes",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-latest"
+          "msg-4"
         ],
         "quotes": [
-          "Ensure media list loads correctly after login"
+          "Do not affect media listing or upload"
         ]
       },
       "acceptanceCriteria": [
-        "Media assets display in the admin media manager immediately after login",
-        "No authentication errors appear when loading media list",
-        "MediaAssetGrid component successfully renders uploaded assets"
+        "getMediaAssets function continues to work with authenticated users",
+        "createMediaAsset function continues to work with authenticated users",
+        "Only deleteMediaAsset authorization logic is modified",
+        "Media listing and upload flows remain unchanged"
       ]
     }
   ],
   "constraints": [
-    "Do not modify the upload logic or uploadMediaAsset function",
-    "Maintain role-based authorization for deleteMediaAsset using admin role validation",
-    "Remove principal validation only from getMediaAssets, not from delete operations"
+    "Do not use hardcoded principal comparison for authorization",
+    "Do not modify media listing or upload functionality",
+    "Admin role must be stored in persistent backend storage",
+    "Authorization must check stored user data, not hardcoded values"
   ],
   "nonGoals": [
-    "Changing the media upload functionality",
-    "Modifying authorization logic for other admin operations",
-    "Altering the frontend media display components",
-    "Adding new media management features"
+    "Changing the frontend authorization UI",
+    "Modifying media asset data structure",
+    "Adding new admin user management features",
+    "Surface-level validation changes"
   ],
   "imageRequirements": {
     "required": [],

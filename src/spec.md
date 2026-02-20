@@ -1,12 +1,14 @@
 # Specification
 
 ## Summary
-**Goal:** Fix media loading for authenticated admin users by adjusting backend authorization logic.
+**Goal:** Rebuild the admin authorization system to use persistent role storage instead of hardcoded principal comparisons.
 
 **Planned changes:**
-- Modify getMediaAssets to allow access for any authenticated user without strict principal validation
-- Keep admin role validation for deleteMediaAsset unchanged
-- Verify media list loads correctly in admin media manager after login
-- Leave upload logic unmodified
+- Implement persistent storage for admin users in the backend using stable variables that survive canister upgrades
+- Store admin principal and role mapping in backend stable storage
+- Modify deleteMediaAsset function to verify admin role from stored user data instead of hardcoded principal comparison
+- Ensure currently logged-in admin user has role 'admin' assigned in persistent storage
+- Verify admin role at runtime before allowing delete operations
+- Preserve existing media listing and upload functionality unchanged
 
-**User-visible outcome:** Admin users can immediately view the media list after logging in without authorization errors.
+**User-visible outcome:** Admin users can delete media assets with proper role-based authorization that persists across deployments, while media listing and upload operations continue to work as before.

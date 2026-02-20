@@ -10,9 +10,11 @@ import Runtime "mo:core/Runtime";
 import Blob "mo:core/Blob";
 
 import MixinStorage "blob-storage/Mixin";
+import Migration "migration";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
+(with migration = Migration.run)
 actor {
   include MixinStorage();
   let accessControlState = AccessControl.initState();
@@ -598,25 +600,19 @@ actor {
     mediaAssetIdCounter += 1;
   };
 
-  public query ({ caller }) func getAllMediaAssets() : async [MediaAsset] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can view media assets");
-    };
+  public query func getAllMediaAssets() : async [MediaAsset] {
+    // No authorization check - media listing is public
     mediaAssets.values().toArray();
   };
 
-  public query ({ caller }) func getMediaAssetById(id : Nat) : async ?MediaAsset {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can view media assets");
-    };
+  public query func getMediaAssetById(id : Nat) : async ?MediaAsset {
+    // No authorization check - media viewing is public
     mediaAssets.get(id);
   };
 
   // Keeping this method for compatibility (filtering by id)
-  public query ({ caller }) func getMediaAssetByBlobId(blobId : Text) : async ?MediaAsset {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can view media assets");
-    };
+  public query func getMediaAssetByBlobId(blobId : Text) : async ?MediaAsset {
+    // No authorization check - media viewing is public
     let assets = mediaAssets.values().toArray();
     switch (assets.find(func(asset) { asset.id.toText() == blobId })) {
       case (?asset) { ?asset };
@@ -684,10 +680,8 @@ actor {
     );
   };
 
-  public query ({ caller }) func getMediaAssets() : async [MediaAsset] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can access media assets");
-    };
+  public query func getMediaAssets() : async [MediaAsset] {
+    // No authorization check - media listing is public
     mediaAssets.values().toArray();
   };
 };

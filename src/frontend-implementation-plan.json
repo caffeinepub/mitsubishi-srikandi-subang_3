@@ -1,33 +1,6 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix media loading for authenticated admin users - Frontend",
-  "requirements": [
-    {
-      "id": "REQ-4",
-      "summary": "Verify and ensure media list loads correctly in admin media manager after user authentication",
-      "acceptanceCriteria": [
-        "Media assets display in the admin media manager immediately after login",
-        "No authentication errors appear when loading media list",
-        "MediaAssetGrid component successfully renders uploaded assets"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useMediaAssets.ts",
-          "operation": "modify",
-          "description": "Review and verify the getMediaAssets query hook handles authentication state correctly. Ensure the query is enabled only when actor is available and properly retries on authentication errors. Confirm error handling displays appropriate messages for authentication failures versus other errors. The hook should leverage the authorization component's authentication flow without blocking authenticated admin users."
-        },
-        {
-          "path": "frontend/src/components/admin/MediaAssetGrid.tsx",
-          "operation": "modify",
-          "description": "Verify the MediaAssetGrid component properly handles loading states and displays media assets after authentication. Ensure the component shows appropriate loading skeletons while fetching data and handles empty states gracefully. Confirm blob URL generation works correctly for all uploaded assets. Add console logging during development to verify data flow from the backend query."
-        },
-        {
-          "path": "frontend/src/pages/admin/MediaManagerPage.tsx",
-          "operation": "modify",
-          "description": "Review the MediaManagerPage to ensure it properly coordinates between the upload zone and asset grid. Verify query invalidation triggers correctly after uploads to refresh the media list. Confirm the page layout and component composition supports seamless data flow after authentication. Test that the page renders without flickering or multiple authentication checks."
-        }
-      ]
-    }
-  ]
+  "title": "Frontend updates for admin authorization system rebuild",
+  "requirements": []
 }

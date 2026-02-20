@@ -1,28 +1,4 @@
 {
   "kind": "feature_evidence_report",
-  "features": [
-    {
-      "featureId": "feature-test-and-verify-that-media-list-loads-correctly-on-the-admin-media-manager-page-after-user-authentication-and-login",
-      "featureTitle": "Test and verify that media list loads correctly on the admin media manager page after user authentication and login",
-      "files": [
-        "frontend/src/components/admin/MediaAssetGrid.tsx",
-        "frontend/src/hooks/useMediaAssets.ts",
-        "frontend/src/pages/admin/MediaManagerPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "http-outcalls@3.0.0"
-      ],
-      "testIds": [
-        "REQ-4"
-      ],
-      "confidence": "high"
-    }
-  ]
+  "features": []
 }
