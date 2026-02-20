@@ -5,10 +5,16 @@ import { Phone, MessageCircle, Calculator, Menu } from 'lucide-react';
 export default function BottomCTABar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      if (
+        menuRef.current && 
+        !menuRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
         setMenuOpen(false);
       }
     };
@@ -34,23 +40,27 @@ export default function BottomCTABar() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
-      {/* Dropdown Menu */}
+      {/* Dropdown Menu - positioned above the blue button */}
       {menuOpen && (
-        <div
-          ref={menuRef}
-          className="bg-white border-t shadow-lg animate-in slide-in-from-bottom"
-        >
-          <div className="max-h-[300px] overflow-y-auto">
-            {menuItems.map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                className="block px-4 py-3 text-gray-700 hover:bg-gray-100 border-b"
-                onClick={() => setMenuOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
+        <div className="absolute bottom-[50px] right-0 w-64 mb-1">
+          <div
+            ref={menuRef}
+            className="bg-white border shadow-lg rounded-t-lg animate-in slide-in-from-bottom"
+          >
+            <div className="max-h-[300px] overflow-y-auto">
+              {menuItems.map((item, index) => (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className={`block px-4 py-3 text-gray-700 hover:bg-gray-100 ${
+                    index < menuItems.length - 1 ? 'border-b' : ''
+                  }`}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -79,6 +89,7 @@ export default function BottomCTABar() {
           <span className="text-xs mt-1">Simulasi</span>
         </Link>
         <button
+          ref={buttonRef}
           onClick={() => setMenuOpen(!menuOpen)}
           className="flex-1 h-full flex flex-col items-center justify-center bg-[#0166C0] text-white hover:bg-[#0154a3] transition-colors"
         >

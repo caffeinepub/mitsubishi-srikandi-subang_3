@@ -148,9 +148,12 @@ export interface CreditSimulation {
 
 export interface VisitorStats {
   totalVisitors: bigint;
-  dailyVisitors: bigint;
+  todayVisitors: bigint;
+  yesterdayVisitors: bigint;
   weeklyVisitors: bigint;
   monthlyVisitors: bigint;
+  yearlyVisitors: bigint;
+  onlineUsers: bigint;
   pageViews: bigint;
 }
 

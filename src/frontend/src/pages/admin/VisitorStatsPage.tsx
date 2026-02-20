@@ -1,20 +1,70 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, Eye, Calendar, TrendingUp } from 'lucide-react';
-import { useGetVisitorStats } from '../../hooks/useVisitorStats';
+import { Users, Eye, Calendar, TrendingUp, Activity } from 'lucide-react';
+import { useGetVisitorStats, useGetVisitorTrend, useGetPageViews } from '../../hooks/useVisitorStats';
+import VisitorTrendChart from '../../components/admin/VisitorTrendChart';
+import TopPagesChart from '../../components/admin/TopPagesChart';
 
 export default function VisitorStatsPage() {
-  const { data: visitorStats, isLoading } = useGetVisitorStats();
+  // Auto-refresh every 15 seconds
+  const { data: visitorStats, isLoading } = useGetVisitorStats({ refetchInterval: 15000 });
+  const { data: trendData, isLoading: trendLoading } = useGetVisitorTrend();
+  const { data: pageViewsData, isLoading: pageViewsLoading } = useGetPageViews();
+
+  const formatNumber = (num: bigint | undefined): string => {
+    if (num === undefined) return '0';
+    return Number(num).toLocaleString('id-ID');
+  };
 
   const stats = [
-    { title: 'Total', value: visitorStats?.totalVisitors || BigInt(0), icon: Users },
-    { title: 'Hari ini', value: visitorStats?.dailyVisitors || BigInt(0), icon: Calendar },
-    { title: 'Kemarin', value: BigInt(0), icon: Calendar },
-    { title: 'Mingguan', value: visitorStats?.weeklyVisitors || BigInt(0), icon: TrendingUp },
-    { title: 'Bulanan', value: visitorStats?.monthlyVisitors || BigInt(0), icon: TrendingUp },
-    { title: 'Tahunan', value: BigInt(0), icon: TrendingUp },
-    { title: 'Online', value: BigInt(0), icon: Users },
-    { title: 'Page Views', value: visitorStats?.pageViews || BigInt(0), icon: Eye },
+    { 
+      title: 'Total', 
+      value: visitorStats?.totalVisitors || BigInt(0), 
+      icon: Users,
+      color: 'text-blue-600'
+    },
+    { 
+      title: 'Hari Ini', 
+      value: visitorStats?.todayVisitors || BigInt(0), 
+      icon: Calendar,
+      color: 'text-green-600'
+    },
+    { 
+      title: 'Kemarin', 
+      value: visitorStats?.yesterdayVisitors || BigInt(0), 
+      icon: Calendar,
+      color: 'text-orange-600'
+    },
+    { 
+      title: 'Mingguan', 
+      value: visitorStats?.weeklyVisitors || BigInt(0), 
+      icon: TrendingUp,
+      color: 'text-purple-600'
+    },
+    { 
+      title: 'Bulanan', 
+      value: visitorStats?.monthlyVisitors || BigInt(0), 
+      icon: TrendingUp,
+      color: 'text-pink-600'
+    },
+    { 
+      title: 'Tahunan', 
+      value: visitorStats?.yearlyVisitors || BigInt(0), 
+      icon: TrendingUp,
+      color: 'text-indigo-600'
+    },
+    { 
+      title: 'Online', 
+      value: visitorStats?.onlineUsers || BigInt(0), 
+      icon: Activity,
+      color: 'text-emerald-600'
+    },
+    { 
+      title: 'Page Views', 
+      value: visitorStats?.pageViews || BigInt(0), 
+      icon: Eye,
+      color: 'text-cyan-600'
+    },
   ];
 
   return (
@@ -22,7 +72,7 @@ export default function VisitorStatsPage() {
       <div>
         <h1 className="text-3xl font-bold text-foreground">Statistik Pengunjung</h1>
         <p className="text-muted-foreground">
-          Pantau aktivitas pengunjung website
+          Pantau aktivitas pengunjung website secara real-time (auto-refresh setiap 15 detik)
         </p>
       </div>
 
@@ -35,18 +85,25 @@ export default function VisitorStatsPage() {
                 <CardTitle className="text-sm font-medium">
                   {stat.title}
                 </CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground" />
+                <Icon className={`h-4 w-4 ${stat.color}`} />
               </CardHeader>
               <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-8 w-20" />
                 ) : (
-                  <div className="text-2xl font-bold">{stat.value.toString()}</div>
+                  <div className="text-2xl font-bold">
+                    {formatNumber(stat.value)}
+                  </div>
                 )}
               </CardContent>
             </Card>
           );
         })}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <VisitorTrendChart data={trendData} isLoading={trendLoading} />
+        <TopPagesChart data={pageViewsData} isLoading={pageViewsLoading} />
       </div>
     </div>
   );

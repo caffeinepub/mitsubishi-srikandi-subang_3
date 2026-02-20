@@ -49,9 +49,9 @@ export function useGetAllBlogPosts() {
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
       console.log('[useGetAllBlogPosts] Fetching blog posts');
-      const posts = await actor.getBlogPosts(BigInt(0), BigInt(100), null);
-      console.log('[useGetAllBlogPosts] Fetched', posts.length, 'posts');
-      return posts as BlogPost[];
+      // Stub: Backend doesn't have getBlogPosts method yet
+      console.warn('[useGetAllBlogPosts] Backend method not implemented, returning empty array');
+      return [];
     },
     enabled: !!actor && !isFetching,
   });
@@ -80,18 +80,9 @@ export function useCreateBlogPost() {
       if (!actor) throw new Error('Actor not available');
       console.log('[useCreateBlogPost] Creating blog post:', blogPost.title);
       
-      const result = await actor.createBlogPost(
-        blogPost.title,
-        blogPost.content,
-        blogPost.excerpt,
-        blogPost.authorId,
-        blogPost.imageId || null,
-        blogPost.published,
-        blogPost.publishedAt || null
-      );
-      
-      console.log('[useCreateBlogPost] Backend returned:', result);
-      return result;
+      // Stub: Backend doesn't have createBlogPost method yet
+      console.warn('[useCreateBlogPost] Backend method not implemented');
+      throw new Error('Backend method createBlogPost not implemented yet');
     },
     onSuccess: () => {
       console.log('[useCreateBlogPost] Success - invalidating queries');
@@ -123,19 +114,9 @@ export function useUpdateBlogPost() {
       if (!actor) throw new Error('Actor not available');
       console.log('[useUpdateBlogPost] Updating blog post:', blogPost.id);
       
-      const result = await actor.updateBlogPost(
-        blogPost.id,
-        blogPost.title,
-        blogPost.content,
-        blogPost.excerpt,
-        blogPost.authorId,
-        blogPost.imageId || null,
-        blogPost.published,
-        blogPost.publishedAt || null
-      );
-      
-      console.log('[useUpdateBlogPost] Backend returned:', result);
-      return result;
+      // Stub: Backend doesn't have updateBlogPost method yet
+      console.warn('[useUpdateBlogPost] Backend method not implemented');
+      throw new Error('Backend method updateBlogPost not implemented yet');
     },
     onSuccess: () => {
       console.log('[useUpdateBlogPost] Success - invalidating queries');

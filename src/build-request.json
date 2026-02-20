@@ -1,74 +1,264 @@
 {
   "kind": "build_request",
-  "title": "Update navigation bar and add desktop CTA bar",
-  "priority": "normal",
+  "title": "Implement Fully Functional Realtime Visitor Statistics System",
+  "projectName": "Visitor Statistics Module",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Add white 'Mitsubishi Srikandi Subang' title text to the Navigation Bar component in mobile view with appropriate font sizing",
-      "target": "frontend",
+      "text": "Create backend data structures for visitor tracking: visits table with fields (id, session_id, ip_address, user_agent, page_url, referrer, device_type, browser, visited_at) and visitor_sessions table with fields (session_id, ip_address, first_visit, last_activity, is_online). Ensure all timestamp fields use Int (nanoseconds since epoch) for compatibility with Internet Computer.",
+      "target": "backend",
       "source": {
         "messageIds": [
           "msg-latest"
         ],
         "quotes": [
-          "Tambahkan text judul web pada Navigation Bar dengan nama 'Mitsubishi Srikandi Subang' dengan warna putih di mobile view, ukuran disesuaikan"
+          "CREATE TABLE visits",
+          "CREATE TABLE visitor_sessions"
         ]
       },
       "acceptanceCriteria": [
-        "Title text 'Mitsubishi Srikandi Subang' is visible in the mobile view of the Navigation Bar",
-        "Text color is white",
-        "Font size is appropriately scaled for mobile screens",
-        "Title is positioned correctly within the Navigation Bar layout"
+        "visits and visitor_sessions data structures defined in backend/main.mo",
+        "All timestamp fields use Int type representing nanoseconds",
+        "session_id is indexed/optimized for lookups"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Remove the 'Simulasi Kredit' menu item from the Navigation Bar component",
-      "target": "frontend",
+      "text": "Implement trackVisitor() backend function that accepts session_id, ip_address, user_agent, page_url, referrer, device_type, and browser parameters. Function must insert a new visit record, create or update visitor_sessions entry, set last_activity to current timestamp, and mark is_online as true.",
+      "target": "backend",
       "source": {
         "messageIds": [
           "msg-latest"
         ],
         "quotes": [
-          "Hilangkan menu Simulasi Kredit pada Navigation Bar"
+          "trackVisitor()"
         ]
       },
       "acceptanceCriteria": [
-        "'Simulasi Kredit' menu item is no longer visible in the Navigation Bar",
-        "Other navigation menu items remain functional",
-        "Navigation layout adjusts properly after removal"
+        "trackVisitor() function implemented in backend/main.mo",
+        "Function creates new visit record with all provided parameters",
+        "Function updates or creates visitor_sessions with current timestamp",
+        "is_online flag set to true on activity"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Add Bottom CTA Bar component to desktop view that is currently only visible on mobile",
+      "text": "Implement cleanupExpiredSessions() backend function that identifies visitor_sessions with last_activity older than 5 minutes and sets is_online to false for those sessions.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "cleanupExpiredSessions()",
+          "Set is_online = false if last_activity older than 5 minutes"
+        ]
+      },
+      "acceptanceCriteria": [
+        "cleanupExpiredSessions() function implemented",
+        "Function checks last_activity timestamps against current time minus 5 minutes",
+        "Sessions older than threshold have is_online set to false"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Implement statistics calculation backend functions: getTotalVisitors() counting distinct session_ids from visitor_sessions, getTodayVisitors() filtering by first_visit date equal to current date, getYesterdayVisitors() filtering by first_visit date equal to yesterday, getWeeklyVisitors() filtering by current week, getMonthlyVisitors() filtering by current month and year, getYearlyVisitors() filtering by current year. All functions must return accurate numeric Nat values.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "getTotalVisitors()",
+          "getTodayVisitors()",
+          "getYesterdayVisitors()",
+          "getWeeklyVisitors()",
+          "getMonthlyVisitors()",
+          "getYearlyVisitors()"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All six visitor count functions implemented in backend/main.mo",
+        "Functions use DISTINCT session_id counting logic",
+        "Date filtering correctly identifies today, yesterday, week, month, and year boundaries",
+        "All functions return Nat type"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Implement getOnlineUsers() backend function that counts visitor_sessions with last_activity within the last 5 minutes and is_online set to true, returning the count as Nat.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "getOnlineUsers()",
+          "WHERE last_activity >= NOW() - INTERVAL 5 MINUTE"
+        ]
+      },
+      "acceptanceCriteria": [
+        "getOnlineUsers() function implemented",
+        "Function filters by last_activity within 5 minutes",
+        "Function filters by is_online = true",
+        "Returns Nat count"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Implement page view tracking functions: getTotalPageViews() returning total count of visits, getPageViewsByUrl() returning array of tuples with page_url and visit count sorted by count descending, and getVisitorTrendLast30Days() returning daily visitor counts for the last 30 days as an array of tuples (date, count).",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "getTotalPageViews()",
+          "getPageViewsByUrl()",
+          "getVisitorTrendLast30Days()"
+        ]
+      },
+      "acceptanceCriteria": [
+        "getTotalPageViews() returns total visit count",
+        "getPageViewsByUrl() groups by page_url and returns sorted results",
+        "getVisitorTrendLast30Days() returns daily aggregated data for 30 days",
+        "All functions return appropriate data types"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Update getVisitorStats() backend method to return comprehensive statistics object with fields: totalVisitors, todayVisitors, yesterdayVisitors, weeklyVisitors, monthlyVisitors, yearlyVisitors, onlineUsers, and totalPageViews. Call the respective calculation functions to populate these fields with real data.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "GET /admin/stats/summary",
+          "All statistic cards must display real data"
+        ]
+      },
+      "acceptanceCriteria": [
+        "getVisitorStats() method updated to call all statistics functions",
+        "Method returns object with all required numeric fields",
+        "No hardcoded zero values; all values derived from actual data"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "Implement frontend tracking middleware that automatically executes on every public page load (excluding admin routes). Generate or retrieve session_id from sessionStorage, detect device_type and browser from user agent, capture current page URL and referrer, then call backend trackVisitor() with all collected data. Exclude known bot user agents from tracking.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-latest"
         ],
         "quotes": [
-          "Tambahkan Bottom CTA Bar pada desktop view"
+          "Implement global middleware",
+          "AUTO EXECUTE ON EVERY PAGE LOAD",
+          "Exclude: Admin routes, Known bots"
         ]
       },
       "acceptanceCriteria": [
-        "Bottom CTA Bar is visible in desktop view",
-        "Bottom CTA Bar continues to function in mobile view",
-        "CTA Bar is positioned at the bottom of the viewport in desktop view",
-        "All interactive elements (call, WhatsApp, credit simulation, menu) remain functional"
+        "Tracking logic executes automatically on public page renders",
+        "session_id persisted in sessionStorage and reused across pages",
+        "device_type and browser detected from navigator.userAgent",
+        "Admin routes (/admin/*) excluded from tracking",
+        "Bot user agents filtered out before calling backend"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "text": "Update frontend VisitorStatsPage (frontend/src/pages/admin/VisitorStatsPage.tsx) to fetch and display realtime statistics including Total Visitors, Today, Yesterday, Weekly, Monthly, Yearly, Online Users, and Total Page Views using the updated backend getVisitorStats() method. Implement auto-refresh every 15 seconds using React Query refetchInterval.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "Display: Total Visitors, Today, Yesterday, Weekly, Monthly, Yearly, Online Users, Total Page Views",
+          "Dashboard must auto-refresh every 15 seconds"
+        ]
+      },
+      "acceptanceCriteria": [
+        "VisitorStatsPage displays all 8 statistic values from backend",
+        "Statistics auto-refresh every 15 seconds via React Query",
+        "No hardcoded dummy data displayed",
+        "Loading states shown during fetch"
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "text": "Add line chart to VisitorStatsPage showing visitor trend for last 30 days by calling backend getVisitorTrendLast30Days() method and rendering with a charting library. Add bar chart showing top 10 most visited pages by calling backend getPageViewsByUrl() and displaying the top 10 results.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "Line chart (last 30 days visitors)",
+          "Bar chart (Top 10 pages)"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Line chart renders 30-day visitor trend data",
+        "Bar chart renders top 10 pages by view count",
+        "Charts update on data refresh",
+        "Charts handle empty data gracefully"
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "text": "Update useVisitorStats hook (frontend/src/hooks/useVisitorStats.ts) to remove any stubbed/placeholder logic and ensure it properly calls the backend actor's getVisitorStats method, returning the actual statistics data structure with all numeric fields.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "All endpoints must be protected by admin authentication middleware"
+        ]
+      },
+      "acceptanceCriteria": [
+        "useVisitorStats hook calls backend getVisitorStats method",
+        "Hook returns actual backend data without modification",
+        "Error handling implemented for failed requests"
+      ]
+    },
+    {
+      "id": "REQ-12",
+      "text": "Implement periodic cleanup job that calls cleanupExpiredSessions() every 5 minutes to maintain accurate online user counts by marking inactive sessions as offline.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "Auto-clean expired sessions",
+          "Set is_online = false if last_activity older than 5 minutes"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Cleanup function called automatically every 5 minutes",
+        "Expired sessions marked as offline",
+        "Online user count remains accurate"
       ]
     }
   ],
   "constraints": [
-    "Do not modify the existing BottomCTABar component functionality",
-    "Maintain responsive design principles",
-    "Keep the Navigation Bar component structure intact for desktop view"
+    "Use Internet Computer's Int type (nanoseconds since epoch) for all timestamp fields, not Unix seconds",
+    "Do not use external databases (PostgreSQL, MySQL, etc.); all data must persist in Motoko stable storage",
+    "Do not modify frontend/src/hooks/useInternetIdentity.ts or any files in frontend/src/components/ui",
+    "All admin statistics endpoints must verify admin authentication before returning data",
+    "Tracking must not create performance bottlenecks; optimize for high-frequency page load scenarios"
   ],
   "nonGoals": [
-    "Changing the styling or colors of existing Navigation Bar elements beyond adding the title text",
-    "Modifying the BottomCTABar component's internal functionality or button arrangements",
-    "Adding new menu items to the Navigation Bar"
+    "Real-time WebSocket connections (use polling instead)",
+    "Advanced analytics like user journeys or conversion funnels",
+    "Geolocation or IP-based geographic tracking",
+    "Third-party analytics integrations (Google Analytics, Mixpanel, etc.)",
+    "User-level tracking across devices (session-based only)",
+    "GDPR compliance features like data export or right-to-be-forgotten"
   ],
   "imageRequirements": {
     "required": [],

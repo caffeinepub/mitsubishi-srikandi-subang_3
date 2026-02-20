@@ -2,10 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-white-mitsubishi-srikandi-subang-title-text-to-the-navigation-bar-component-in-mobile-view-with-appropriate-font-sizing",
-      "featureTitle": "Add white 'Mitsubishi Srikandi Subang' title text to the Navigation Bar component in mobile view with appropriate font sizing",
+      "featureId": "feature-implement-frontend-tracking-middleware-that-automatically-executes-on-every-public-page-load-excluding-admin-routes-generate-or-retrieve-session-id-from-sessionstorage-detect-device-type-and-browser-from-user-agent-capture-current-page-url-and-referrer-then-call-backend-trackvisitor-with-all-collected-data-exclude-known-bot-user-agents-from-tracking",
+      "featureTitle": "Implement frontend tracking middleware that automatically executes on every public page load (excluding admin routes). Generate or retrieve session_id from sessionStorage, detect device_type and browser from user agent, capture current page URL and referrer, then call backend trackVisitor() with all collected data. Exclude known bot user agents from tracking.",
       "files": [
-        "frontend/src/components/public/Navbar.tsx"
+        "frontend/src/hooks/useVisitorTracking.ts",
+        "frontend/src/layouts/PublicLayout.tsx",
+        "frontend/src/utils/visitorTracking.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -18,15 +20,15 @@
         "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-1"
+        "REQ-8"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-remove-the-simulasi-kredit-menu-item-from-the-navigation-bar-component",
-      "featureTitle": "Remove the 'Simulasi Kredit' menu item from the Navigation Bar component",
+      "featureId": "feature-update-frontend-visitorstatspage-frontend-src-pages-admin-visitorstatspage-tsx-to-fetch-and-display-realtime-statistics-including-total-visitors-today-yesterday-weekly-monthly-yearly-online-users-and-total-page-views-using-the-updated-backend-getvisitorstats-method-implement-auto-refresh-every-15-seconds-using-react-query-refetchinterval",
+      "featureTitle": "Update frontend VisitorStatsPage (frontend/src/pages/admin/VisitorStatsPage.tsx) to fetch and display realtime statistics including Total Visitors, Today, Yesterday, Weekly, Monthly, Yearly, Online Users, and Total Page Views using the updated backend getVisitorStats() method. Implement auto-refresh every 15 seconds using React Query refetchInterval.",
       "files": [
-        "frontend/src/components/public/Navbar.tsx"
+        "frontend/src/pages/admin/VisitorStatsPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -39,16 +41,17 @@
         "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-2"
+        "REQ-9"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-add-bottom-cta-bar-component-to-desktop-view-that-is-currently-only-visible-on-mobile",
-      "featureTitle": "Add Bottom CTA Bar component to desktop view that is currently only visible on mobile",
+      "featureId": "feature-add-line-chart-to-visitorstatspage-showing-visitor-trend-for-last-30-days-by-calling-backend-getvisitortrendlast30days-method-and-rendering-with-a-charting-library-add-bar-chart-showing-top-10-most-visited-pages-by-calling-backend-getpageviewsbyurl-and-displaying-the-top-10-results",
+      "featureTitle": "Add line chart to VisitorStatsPage showing visitor trend for last 30 days by calling backend getVisitorTrendLast30Days() method and rendering with a charting library. Add bar chart showing top 10 most visited pages by calling backend getPageViewsByUrl() and displaying the top 10 results.",
       "files": [
-        "frontend/src/components/public/BottomCTABar.tsx",
-        "frontend/src/layouts/PublicLayout.tsx"
+        "frontend/src/components/admin/TopPagesChart.tsx",
+        "frontend/src/components/admin/VisitorTrendChart.tsx",
+        "frontend/src/pages/admin/VisitorStatsPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -61,7 +64,28 @@
         "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-3"
+        "REQ-10"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-usevisitorstats-hook-frontend-src-hooks-usevisitorstats-ts-to-remove-any-stubbed-placeholder-logic-and-ensure-it-properly-calls-the-backend-actor-s-getvisitorstats-method-returning-the-actual-statistics-data-structure-with-all-numeric-fields",
+      "featureTitle": "Update useVisitorStats hook (frontend/src/hooks/useVisitorStats.ts) to remove any stubbed/placeholder logic and ensure it properly calls the backend actor's getVisitorStats method, returning the actual statistics data structure with all numeric fields.",
+      "files": [
+        "frontend/src/hooks/useVisitorStats.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-11"
       ],
       "confidence": "high"
     }

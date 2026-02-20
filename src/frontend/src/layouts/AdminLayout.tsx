@@ -1,7 +1,6 @@
 import { ReactNode, useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { DelegationIdentity, isDelegationValid } from '@icp-sdk/core/identity';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -46,7 +45,7 @@ const menuItems = [
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { clear, identity } = useInternetIdentity();
+  const { clear } = useInternetIdentity();
   const queryClient = useQueryClient();
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -87,52 +86,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isMobile, isCollapsed]);
 
-  // Enhanced session state logging for debugging
-  useEffect(() => {
-    console.log('[AdminLayout] === Session State on Navigation ===');
-    console.log('[AdminLayout] Current path:', location.pathname);
-    
-    if (identity) {
-      const principal = identity.getPrincipal();
-      console.log('[AdminLayout] Session active');
-      console.log('[AdminLayout] Principal:', principal.toString());
-      console.log('[AdminLayout] Is Anonymous:', principal.isAnonymous());
-      
-      if (identity instanceof DelegationIdentity) {
-        const delegation = identity.getDelegation();
-        const isValid = isDelegationValid(delegation);
-        console.log('[AdminLayout] Delegation valid:', isValid);
-        
-        if (delegation.delegations.length > 0) {
-          const firstDelegation = delegation.delegations[0];
-          const expirationNs = firstDelegation.delegation.expiration;
-          const expirationMs = Number(expirationNs) / 1_000_000;
-          const expirationDate = new Date(expirationMs);
-          const now = new Date();
-          const timeUntilExpiry = expirationMs - now.getTime();
-          
-          console.log('[AdminLayout] Delegation expiration:', expirationDate.toISOString());
-          console.log('[AdminLayout] Time until expiry (hours):', (timeUntilExpiry / (1000 * 60 * 60)).toFixed(2));
-          
-          if (timeUntilExpiry < 0) {
-            console.error('[AdminLayout] ⚠️ Delegation has EXPIRED!');
-          } else if (timeUntilExpiry < 3600000) {
-            console.warn('[AdminLayout] ⚠️ Delegation expires in less than 1 hour');
-          }
-        }
-      }
-    } else {
-      console.log('[AdminLayout] No active session');
-    }
-  }, [identity, location.pathname]);
-
   const handleLogout = async () => {
-    console.log('[AdminLayout] Logout initiated by user');
-    console.log('[AdminLayout] Clearing query cache...');
     queryClient.clear();
-    console.log('[AdminLayout] Calling clear() to logout...');
     await clear();
-    console.log('[AdminLayout] Navigating to login page...');
     navigate({ to: '/login' });
   };
 

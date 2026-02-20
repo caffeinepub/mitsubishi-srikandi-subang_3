@@ -24,24 +24,23 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
-export const BlogPost = IDL.Record({
-  'id' : IDL.Nat,
-  'title' : IDL.Text,
-  'content' : IDL.Text,
-  'authorId' : IDL.Principal,
-  'published' : IDL.Bool,
-  'createdAt' : IDL.Int,
-  'publishedAt' : IDL.Opt(IDL.Int),
-  'updatedAt' : IDL.Int,
-  'excerpt' : IDL.Text,
-  'imageId' : IDL.Opt(IDL.Text),
+export const VisitorSession = IDL.Record({
+  'lastActivity' : IDL.Int,
+  'isOnline' : IDL.Bool,
+  'firstVisit' : IDL.Int,
+  'sessionId' : IDL.Text,
+  'ipAddress' : IDL.Text,
 });
-export const Variant = IDL.Record({
-  'id' : IDL.Nat,
-  'displayOrder' : IDL.Nat,
-  'name' : IDL.Text,
-  'overridePrice' : IDL.Opt(IDL.Nat),
-  'vehicleId' : IDL.Nat,
+export const Visit = IDL.Record({
+  'id' : IDL.Text,
+  'referrer' : IDL.Text,
+  'visitedAt' : IDL.Int,
+  'pageUrl' : IDL.Text,
+  'deviceType' : IDL.Text,
+  'browser' : IDL.Text,
+  'sessionId' : IDL.Text,
+  'userAgent' : IDL.Text,
+  'ipAddress' : IDL.Text,
 });
 export const UserProfile = IDL.Record({
   'name' : IDL.Text,
@@ -49,20 +48,14 @@ export const UserProfile = IDL.Record({
   'phone' : IDL.Text,
 });
 export const VisitorStats = IDL.Record({
+  'todayVisitors' : IDL.Nat,
+  'yesterdayVisitors' : IDL.Nat,
   'totalVisitors' : IDL.Nat,
+  'onlineUsers' : IDL.Nat,
   'weeklyVisitors' : IDL.Nat,
+  'yearlyVisitors' : IDL.Nat,
   'monthlyVisitors' : IDL.Nat,
-  'dailyVisitors' : IDL.Nat,
   'pageViews' : IDL.Nat,
-});
-export const MediaAsset = IDL.Record({
-  'id' : IDL.Nat,
-  'assetId' : IDL.Text,
-  'size' : IDL.Nat,
-  'mimeType' : IDL.Text,
-  'filename' : IDL.Text,
-  'uploadedAt' : IDL.Int,
-  'uploadedBy' : IDL.Principal,
 });
 
 export const idlService = IDL.Service({
@@ -94,58 +87,41 @@ export const idlService = IDL.Service({
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-  'createBlogPost' : IDL.Func(
-      [
-        IDL.Text,
-        IDL.Text,
-        IDL.Text,
-        IDL.Principal,
-        IDL.Opt(IDL.Text),
-        IDL.Bool,
-        IDL.Opt(IDL.Int),
-      ],
-      [BlogPost],
-      [],
-    ),
-  'createVariant' : IDL.Func(
-      [IDL.Nat, IDL.Text, IDL.Nat, IDL.Opt(IDL.Nat)],
-      [Variant],
-      [],
-    ),
-  'getBlogPosts' : IDL.Func(
-      [IDL.Nat, IDL.Nat, IDL.Opt(IDL.Bool)],
-      [IDL.Vec(BlogPost)],
-      ['query'],
-    ),
+  'cleanupExpiredSessions' : IDL.Func([], [], []),
+  'getAllVisitorSessions' : IDL.Func([], [IDL.Vec(VisitorSession)], ['query']),
+  'getAllVisits' : IDL.Func([], [IDL.Vec(Visit)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getMonthlyVisitors' : IDL.Func([], [IDL.Nat], ['query']),
+  'getOnlineUsers' : IDL.Func([], [IDL.Nat], ['query']),
+  'getPageViewsByUrl' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))],
+      ['query'],
+    ),
+  'getTodayVisitors' : IDL.Func([], [IDL.Nat], ['query']),
+  'getTotalPageViews' : IDL.Func([], [IDL.Nat], ['query']),
+  'getTotalVisitors' : IDL.Func([], [IDL.Nat], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
   'getVisitorStats' : IDL.Func([], [VisitorStats], ['query']),
-  'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
-  'trackPageView' : IDL.Func([], [], []),
-  'trackVisitor' : IDL.Func([], [], []),
-  'updateBlogPost' : IDL.Func(
-      [
-        IDL.Nat,
-        IDL.Text,
-        IDL.Text,
-        IDL.Text,
-        IDL.Principal,
-        IDL.Opt(IDL.Text),
-        IDL.Bool,
-        IDL.Opt(IDL.Int),
-      ],
-      [IDL.Opt(BlogPost)],
+  'getVisitorTrendLast30Days' : IDL.Func(
       [],
+      [IDL.Vec(IDL.Tuple(IDL.Int, IDL.Nat))],
+      ['query'],
     ),
-  'uploadMediaAsset' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
-      [MediaAsset],
+  'getWeeklyVisitors' : IDL.Func([], [IDL.Nat], ['query']),
+  'getYearlyVisitors' : IDL.Func([], [IDL.Nat], ['query']),
+  'getYesterdayVisitors' : IDL.Func([], [IDL.Nat], ['query']),
+  'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'periodicCleanup' : IDL.Func([], [], []),
+  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'trackVisitor' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [],
       [],
     ),
 });
@@ -169,24 +145,23 @@ export const idlFactory = ({ IDL }) => {
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
-  const BlogPost = IDL.Record({
-    'id' : IDL.Nat,
-    'title' : IDL.Text,
-    'content' : IDL.Text,
-    'authorId' : IDL.Principal,
-    'published' : IDL.Bool,
-    'createdAt' : IDL.Int,
-    'publishedAt' : IDL.Opt(IDL.Int),
-    'updatedAt' : IDL.Int,
-    'excerpt' : IDL.Text,
-    'imageId' : IDL.Opt(IDL.Text),
+  const VisitorSession = IDL.Record({
+    'lastActivity' : IDL.Int,
+    'isOnline' : IDL.Bool,
+    'firstVisit' : IDL.Int,
+    'sessionId' : IDL.Text,
+    'ipAddress' : IDL.Text,
   });
-  const Variant = IDL.Record({
-    'id' : IDL.Nat,
-    'displayOrder' : IDL.Nat,
-    'name' : IDL.Text,
-    'overridePrice' : IDL.Opt(IDL.Nat),
-    'vehicleId' : IDL.Nat,
+  const Visit = IDL.Record({
+    'id' : IDL.Text,
+    'referrer' : IDL.Text,
+    'visitedAt' : IDL.Int,
+    'pageUrl' : IDL.Text,
+    'deviceType' : IDL.Text,
+    'browser' : IDL.Text,
+    'sessionId' : IDL.Text,
+    'userAgent' : IDL.Text,
+    'ipAddress' : IDL.Text,
   });
   const UserProfile = IDL.Record({
     'name' : IDL.Text,
@@ -194,20 +169,14 @@ export const idlFactory = ({ IDL }) => {
     'phone' : IDL.Text,
   });
   const VisitorStats = IDL.Record({
+    'todayVisitors' : IDL.Nat,
+    'yesterdayVisitors' : IDL.Nat,
     'totalVisitors' : IDL.Nat,
+    'onlineUsers' : IDL.Nat,
     'weeklyVisitors' : IDL.Nat,
+    'yearlyVisitors' : IDL.Nat,
     'monthlyVisitors' : IDL.Nat,
-    'dailyVisitors' : IDL.Nat,
     'pageViews' : IDL.Nat,
-  });
-  const MediaAsset = IDL.Record({
-    'id' : IDL.Nat,
-    'assetId' : IDL.Text,
-    'size' : IDL.Nat,
-    'mimeType' : IDL.Text,
-    'filename' : IDL.Text,
-    'uploadedAt' : IDL.Int,
-    'uploadedBy' : IDL.Principal,
   });
   
   return IDL.Service({
@@ -239,58 +208,45 @@ export const idlFactory = ({ IDL }) => {
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-    'createBlogPost' : IDL.Func(
-        [
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Principal,
-          IDL.Opt(IDL.Text),
-          IDL.Bool,
-          IDL.Opt(IDL.Int),
-        ],
-        [BlogPost],
+    'cleanupExpiredSessions' : IDL.Func([], [], []),
+    'getAllVisitorSessions' : IDL.Func(
         [],
-      ),
-    'createVariant' : IDL.Func(
-        [IDL.Nat, IDL.Text, IDL.Nat, IDL.Opt(IDL.Nat)],
-        [Variant],
-        [],
-      ),
-    'getBlogPosts' : IDL.Func(
-        [IDL.Nat, IDL.Nat, IDL.Opt(IDL.Bool)],
-        [IDL.Vec(BlogPost)],
+        [IDL.Vec(VisitorSession)],
         ['query'],
       ),
+    'getAllVisits' : IDL.Func([], [IDL.Vec(Visit)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getMonthlyVisitors' : IDL.Func([], [IDL.Nat], ['query']),
+    'getOnlineUsers' : IDL.Func([], [IDL.Nat], ['query']),
+    'getPageViewsByUrl' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))],
+        ['query'],
+      ),
+    'getTodayVisitors' : IDL.Func([], [IDL.Nat], ['query']),
+    'getTotalPageViews' : IDL.Func([], [IDL.Nat], ['query']),
+    'getTotalVisitors' : IDL.Func([], [IDL.Nat], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
     'getVisitorStats' : IDL.Func([], [VisitorStats], ['query']),
-    'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
-    'trackPageView' : IDL.Func([], [], []),
-    'trackVisitor' : IDL.Func([], [], []),
-    'updateBlogPost' : IDL.Func(
-        [
-          IDL.Nat,
-          IDL.Text,
-          IDL.Text,
-          IDL.Text,
-          IDL.Principal,
-          IDL.Opt(IDL.Text),
-          IDL.Bool,
-          IDL.Opt(IDL.Int),
-        ],
-        [IDL.Opt(BlogPost)],
+    'getVisitorTrendLast30Days' : IDL.Func(
         [],
+        [IDL.Vec(IDL.Tuple(IDL.Int, IDL.Nat))],
+        ['query'],
       ),
-    'uploadMediaAsset' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
-        [MediaAsset],
+    'getWeeklyVisitors' : IDL.Func([], [IDL.Nat], ['query']),
+    'getYearlyVisitors' : IDL.Func([], [IDL.Nat], ['query']),
+    'getYesterdayVisitors' : IDL.Func([], [IDL.Nat], ['query']),
+    'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'periodicCleanup' : IDL.Func([], [], []),
+    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'trackVisitor' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [],
         [],
       ),
   });

@@ -48,8 +48,8 @@ export function useGetAllMediaAssets() {
     queryKey: ['mediaAssets'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      // TODO: Backend needs to implement getMediaAssets method
-      // For now, return empty array
+      // Stub: Backend doesn't have getMediaAssets method yet
+      console.warn('[useGetAllMediaAssets] Backend method not implemented, returning empty array');
       return [];
     },
     enabled: !!actor && !isFetching,
@@ -64,7 +64,7 @@ export function useGetMediaAsset(assetId: bigint | null) {
     queryKey: ['mediaAsset', assetId?.toString()],
     queryFn: async () => {
       if (!actor || !assetId) return null;
-      // TODO: Backend needs to implement getMediaAsset method
+      // Stub: Backend doesn't have getMediaAsset method yet
       return null;
     },
     enabled: !!actor && !isFetching && assetId !== null,
@@ -80,15 +80,9 @@ export function useUploadMediaAsset() {
       if (!actor) throw new Error('Actor not available');
       console.log('[useUploadMediaAsset] Uploading file:', asset.filename);
       
-      const result = await actor.uploadMediaAsset(
-        asset.filename,
-        asset.assetId,
-        asset.mimeType,
-        asset.size
-      );
-      
-      console.log('[useUploadMediaAsset] Backend returned:', result);
-      return result;
+      // Stub: Backend doesn't have uploadMediaAsset method yet
+      console.warn('[useUploadMediaAsset] Backend method not implemented');
+      throw new Error('Backend method uploadMediaAsset not implemented yet');
     },
     onSuccess: () => {
       console.log('[useUploadMediaAsset] Success - invalidating queries');
@@ -123,7 +117,7 @@ export function useDeleteMediaAsset() {
     mutationFn: async (assetId: bigint) => {
       if (!actor) throw new Error('Actor not available');
       console.log('[useDeleteMediaAsset] Deleting media asset:', assetId);
-      // TODO: Backend needs to implement deleteMediaAsset method
+      // Stub: Backend doesn't have deleteMediaAsset method yet
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['mediaAssets'] });

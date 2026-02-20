@@ -1,32 +1,50 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Mitsubishi Srikandi Subang - automotive dealership website",
-  "architectural_notes": [],
-  "known_issues": [],
-  "isFixRequest": false,
+  "summary": "Web application with realtime visitor statistics tracking system for admin panel",
+  "architectural_notes": [
+    "Database: visits and visitor_sessions tables with proper indexing on session_id, visited_at, page_url, last_activity",
+    "Global middleware tracks visitors on every page load (excludes admin routes and bots)",
+    "Session management: 5-minute online timeout with automatic cleanup",
+    "Statistics calculated using DISTINCT session_id for accurate unique visitor counts",
+    "API endpoints secured with admin authentication middleware",
+    "Dashboard auto-refreshes stats every 15 seconds via AJAX polling",
+    "Performance optimized with indexed queries and 30-second cache layer"
+  ],
+  "known_issues": [
+    "Visitor statistics showing 0 values - tracking system not functional"
+  ],
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-add-white-mitsubishi-srikandi-subang-title-text-to-the-navigation-bar-component-in-mobile-view-with-appropriate-font-sizing",
-      "title": "Add white 'Mitsubishi Srikandi Subang' title text to the Navigation Bar component in mobile view with appropriate font sizing",
+      "id": "feature-implement-frontend-tracking-middleware-that-automatically-executes-on-every-public-page-load-excluding-admin-routes-generate-or-retrieve-session-id-from-sessionstorage-detect-device-type-and-browser-from-user-agent-capture-current-page-url-and-referrer-then-call-backend-trackvisitor-with-all-collected-data-exclude-known-bot-user-agents-from-tracking",
+      "title": "Implement frontend tracking middleware that automatically executes on every public page load (excluding admin routes). Generate or retrieve session_id from sessionStorage, detect device_type and browser from user agent, capture current page URL and referrer, then call backend trackVisitor() with all collected data. Exclude known bot user agents from tracking.",
       "reqIds": [
-        "REQ-1"
+        "REQ-8"
       ],
       "version": 1
     },
     {
-      "id": "feature-remove-the-simulasi-kredit-menu-item-from-the-navigation-bar-component",
-      "title": "Remove the 'Simulasi Kredit' menu item from the Navigation Bar component",
+      "id": "feature-update-frontend-visitorstatspage-frontend-src-pages-admin-visitorstatspage-tsx-to-fetch-and-display-realtime-statistics-including-total-visitors-today-yesterday-weekly-monthly-yearly-online-users-and-total-page-views-using-the-updated-backend-getvisitorstats-method-implement-auto-refresh-every-15-seconds-using-react-query-refetchinterval",
+      "title": "Update frontend VisitorStatsPage (frontend/src/pages/admin/VisitorStatsPage.tsx) to fetch and display realtime statistics including Total Visitors, Today, Yesterday, Weekly, Monthly, Yearly, Online Users, and Total Page Views using the updated backend getVisitorStats() method. Implement auto-refresh every 15 seconds using React Query refetchInterval.",
       "reqIds": [
-        "REQ-2"
+        "REQ-9"
       ],
       "version": 1
     },
     {
-      "id": "feature-add-bottom-cta-bar-component-to-desktop-view-that-is-currently-only-visible-on-mobile",
-      "title": "Add Bottom CTA Bar component to desktop view that is currently only visible on mobile",
+      "id": "feature-add-line-chart-to-visitorstatspage-showing-visitor-trend-for-last-30-days-by-calling-backend-getvisitortrendlast30days-method-and-rendering-with-a-charting-library-add-bar-chart-showing-top-10-most-visited-pages-by-calling-backend-getpageviewsbyurl-and-displaying-the-top-10-results",
+      "title": "Add line chart to VisitorStatsPage showing visitor trend for last 30 days by calling backend getVisitorTrendLast30Days() method and rendering with a charting library. Add bar chart showing top 10 most visited pages by calling backend getPageViewsByUrl() and displaying the top 10 results.",
       "reqIds": [
-        "REQ-3"
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-usevisitorstats-hook-frontend-src-hooks-usevisitorstats-ts-to-remove-any-stubbed-placeholder-logic-and-ensure-it-properly-calls-the-backend-actor-s-getvisitorstats-method-returning-the-actual-statistics-data-structure-with-all-numeric-fields",
+      "title": "Update useVisitorStats hook (frontend/src/hooks/useVisitorStats.ts) to remove any stubbed/placeholder logic and ensure it properly calls the backend actor's getVisitorStats method, returning the actual statistics data structure with all numeric fields.",
+      "reqIds": [
+        "REQ-11"
       ],
       "version": 1
     }
@@ -34,24 +52,76 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Add white 'Mitsubishi Srikandi Subang' title text to Navigation Bar in mobile view with appropriate sizing",
+      "summary": "Implement realtime visitor statistics tracking system with database tables, middleware, backend functions, API endpoints, and admin dashboard integration",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Remove 'Simulasi Kredit' menu item from Navigation Bar",
-      "reqIds": [],
+      "summary": "Create backend data structures for visitor tracking: visits table with fields (id, session_id, ip_address, user_agent, page_url, referrer, device_type, browser, visited_at) and visitor_sessions table with fields (session_id, ip_address, first_visit, last_activity, is_online). Ensure all timestamp fields use Int (nanoseconds since epoch) for compatibility with Internet Computer.",
+      "reqIds": [
+        "REQ-1"
+      ],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Add Bottom CTA Bar in desktop view",
-      "reqIds": [],
+      "summary": "Implement trackVisitor() backend function that accepts session_id, ip_address, user_agent, page_url, referrer, device_type, and browser parameters. Function must insert a new visit record, create or update visitor_sessions entry, set last_activity to current timestamp, and mark is_online as true.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Implement cleanupExpiredSessions() backend function that identifies visitor_sessions with last_activity older than 5 minutes and sets is_online to false for those sessions.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Implement statistics calculation backend functions: getTotalVisitors() counting distinct session_ids from visitor_sessions, getTodayVisitors() filtering by first_visit date equal to current date, getYesterdayVisitors() filtering by first_visit date equal to yesterday, getWeeklyVisitors() filtering by current week, getMonthlyVisitors() filtering by current month and year, getYearlyVisitors() filtering by current year. All functions must return accurate numeric Nat values.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Implement getOnlineUsers() backend function that counts visitor_sessions with last_activity within the last 5 minutes and is_online set to true, returning the count as Nat.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Implement page view tracking functions: getTotalPageViews() returning total count of visits, getPageViewsByUrl() returning array of tuples with page_url and visit count sorted by count descending, and getVisitorTrendLast30Days() returning daily visitor counts for the last 30 days as an array of tuples (date, count).",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Update getVisitorStats() backend method to return comprehensive statistics object with fields: totalVisitors, todayVisitors, yesterdayVisitors, weeklyVisitors, monthlyVisitors, yearlyVisitors, onlineUsers, and totalPageViews. Call the respective calculation functions to populate these fields with real data.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "Implement periodic cleanup job that calls cleanupExpiredSessions() every 5 minutes to maintain accurate online user counts by marking inactive sessions as offline.",
+      "reqIds": [
+        "REQ-12"
+      ],
       "status": "pending"
     }
   ],
-  "projectName": "Mitsubishi Srikandi Subang",
+  "projectName": "Visitor Statistics Module",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

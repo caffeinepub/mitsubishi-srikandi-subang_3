@@ -1,24 +1,49 @@
+import Map "mo:core/Map";
+import Principal "mo:core/Principal";
+import Time "mo:core/Time";
+import Array "mo:core/Array";
+import Int "mo:core/Int";
+import Nat "mo:core/Nat";
+import Text "mo:core/Text";
+import Runtime "mo:core/Runtime";
 import MixinStorage "blob-storage/Mixin";
 import AccessControl "authorization/access-control";
-import OutCall "http-outcalls/outcall";
 import MixinAuthorization "authorization/MixinAuthorization";
-import Map "mo:core/Map";
-import Nat "mo:core/Nat";
-import Iter "mo:core/Iter";
-import Principal "mo:core/Principal";
-import Runtime "mo:core/Runtime";
-import Array "mo:core/Array";
-import Time "mo:core/Time";
+import Migration "migration";
 import List "mo:core/List";
-import Text "mo:core/Text";
-import Int "mo:core/Int";
+import Set "mo:core/Set";
 
-
-
+(with migration = Migration.run)
 actor {
   include MixinStorage();
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
+
+  public type DailyStats = {
+    date : Int;
+    visitors : Nat;
+    pageViews : Nat;
+  };
+
+  public type VisitorSession = {
+    sessionId : Text;
+    ipAddress : Text;
+    firstVisit : Int;
+    lastActivity : Int;
+    isOnline : Bool;
+  };
+
+  public type Visit = {
+    id : Text;
+    sessionId : Text;
+    ipAddress : Text;
+    userAgent : Text;
+    pageUrl : Text;
+    referrer : Text;
+    deviceType : Text;
+    browser : Text;
+    visitedAt : Int;
+  };
 
   public type GoogleTokens = {
     idToken : Text;
@@ -33,8 +58,6 @@ actor {
     createdAt : Int;
     lastSyncAt : Int;
   };
-
-  let sessionStorage = Map.empty<Principal, SessionStorage>();
 
   public type Variant = {
     id : Nat;
@@ -240,9 +263,12 @@ actor {
 
   public type VisitorStats = {
     totalVisitors : Nat;
-    dailyVisitors : Nat;
+    todayVisitors : Nat;
+    yesterdayVisitors : Nat;
     weeklyVisitors : Nat;
     monthlyVisitors : Nat;
+    yearlyVisitors : Nat;
+    onlineUsers : Nat;
     pageViews : Nat;
   };
 
@@ -267,6 +293,9 @@ actor {
   let articleComments = Map.empty<Nat, ArticleComment>();
   let contactSubmissions = Map.empty<Nat, ContactSubmission>();
 
+  let visitorSessions = Map.empty<Text, VisitorSession>();
+  let visits = Map.empty<Text, Visit>();
+
   var variantIdCounter = 1;
   var colorIdCounter = 1;
   var mappingIdCounter = 1;
@@ -284,35 +313,17 @@ actor {
   var shareCounter = 1;
   var commentCounter = 1;
   var contactCounter = 1;
+  var visitIdCounter = 1;
 
-  var visitorStats : VisitorStats = {
+  stable var visitorStats : VisitorStats = {
     totalVisitors = 0;
-    dailyVisitors = 0;
+    todayVisitors = 0;
+    yesterdayVisitors = 0;
     weeklyVisitors = 0;
     monthlyVisitors = 0;
+    yearlyVisitors = 0;
+    onlineUsers = 0;
     pageViews = 0;
-  };
-
-  // Helper Functions
-
-  func incrementTotalVisitors() {
-    visitorStats := {
-      totalVisitors = visitorStats.totalVisitors + 1;
-      dailyVisitors = visitorStats.dailyVisitors + 1;
-      weeklyVisitors = visitorStats.weeklyVisitors + 1;
-      monthlyVisitors = visitorStats.monthlyVisitors + 1;
-      pageViews = visitorStats.pageViews;
-    };
-  };
-
-  func incrementPageViews() {
-    visitorStats := {
-      totalVisitors = visitorStats.totalVisitors;
-      dailyVisitors = visitorStats.dailyVisitors;
-      weeklyVisitors = visitorStats.weeklyVisitors;
-      monthlyVisitors = visitorStats.monthlyVisitors;
-      pageViews = visitorStats.pageViews + 1;
-    };
   };
 
   // User Profile Management (Required by instructions)
@@ -337,142 +348,258 @@ actor {
     userProfiles.add(caller, profile);
   };
 
-  // Variant Management - Admin only
-  public shared ({ caller }) func createVariant(vehicleId : Nat, name : Text, displayOrder : Nat, overridePrice : ?Nat) : async Variant {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can create variants");
-    };
-    let newVariant : Variant = {
-      id = variantIdCounter;
-      vehicleId;
-      name;
-      displayOrder;
-      overridePrice;
-    };
-    variants.add(variantIdCounter, newVariant);
-    variantIdCounter += 1;
-    newVariant;
-  };
+  // Visitor Tracking - Public access for anonymous visitors
 
-  // Media Asset Management - Admin only
-  public shared ({ caller }) func uploadMediaAsset(filename : Text, assetId : Text, mimeType : Text, size : Nat) : async MediaAsset {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can upload media assets");
-    };
-    let newMediaAsset : MediaAsset = {
-      id = mediaAssetIdCounter;
-      filename;
-      assetId;
-      mimeType;
-      size;
-      uploadedBy = caller;
-      uploadedAt = Time.now();
-    };
-    mediaAssets.add(mediaAssetIdCounter, newMediaAsset);
-    mediaAssetIdCounter += 1;
-    newMediaAsset;
-  };
+  public shared func trackVisitor(
+    sessionId : Text,
+    ipAddress : Text,
+    userAgent : Text,
+    pageUrl : Text,
+    referrer : Text,
+    deviceType : Text,
+    browser : Text,
+  ) : async () {
+    // No authorization check - must be accessible to anonymous visitors
+    let currentTime = Time.now();
 
-  // Blog Post Management - Admin only for create/update
-  public shared ({ caller }) func createBlogPost(title : Text, content : Text, excerpt : Text, authorId : Principal, imageId : ?Text, published : Bool, publishedAt : ?Int) : async BlogPost {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can create blog posts");
+    // Create a new visit record
+    let visit : Visit = {
+      id = visitIdCounter.toText();
+      sessionId;
+      ipAddress;
+      userAgent;
+      pageUrl;
+      referrer;
+      deviceType;
+      browser;
+      visitedAt = currentTime;
     };
-    let newBlogPost : BlogPost = {
-      id = blogPostIdCounter;
-      title;
-      content;
-      excerpt;
-      authorId;
-      imageId;
-      published;
-      publishedAt;
-      createdAt = Time.now();
-      updatedAt = Time.now();
-    };
-    blogPosts.add(blogPostIdCounter, newBlogPost);
-    blogPostIdCounter += 1;
-    newBlogPost;
-  };
+    visits.add(visit.id, visit);
+    visitIdCounter += 1;
 
-  public shared ({ caller }) func updateBlogPost(id : Nat, title : Text, content : Text, excerpt : Text, authorId : Principal, imageId : ?Text, published : Bool, publishedAt : ?Int) : async ?BlogPost {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update blog posts");
-    };
-    switch (blogPosts.get(id)) {
-      case (null) { null };
-      case (?existing) {
-        let updated : BlogPost = {
-          id;
-          title;
-          content;
-          excerpt;
-          authorId;
-          imageId;
-          published;
-          publishedAt;
-          createdAt = existing.createdAt;
-          updatedAt = Time.now();
+    // Update or create visitor session
+    let updatedSession = switch (visitorSessions.get(sessionId)) {
+      case (?existingSession) {
+        {
+          existingSession with
+          lastActivity = currentTime;
+          isOnline = true;
         };
-        blogPosts.add(id, updated);
-        ?updated;
-      };
-    };
-  };
-
-  // Public read access, but unpublished posts only visible to admins
-  public query ({ caller }) func getBlogPosts(start : Nat, limit : Nat, publishedFilter : ?Bool) : async [BlogPost] {
-    let isAdmin = AccessControl.isAdmin(accessControlState, caller);
-    let posts = List.empty<BlogPost>();
-
-    let iter = blogPosts.values();
-
-    switch (publishedFilter) {
-      case (?published) {
-        iter.forEach(
-          func(post) {
-            if (post.published == published) {
-              // Only show unpublished posts to admins
-              if (published or isAdmin) {
-                posts.add(post);
-              };
-            };
-          }
-        );
       };
       case (null) {
-        iter.forEach(
-          func(post) {
-            // Only show unpublished posts to admins
-            if (post.published or isAdmin) {
-              posts.add(post);
-            };
-          }
-        );
+        {
+          sessionId;
+          ipAddress;
+          firstVisit = currentTime;
+          lastActivity = currentTime;
+          isOnline = true;
+        };
+      };
+    };
+    visitorSessions.add(sessionId, updatedSession);
+  };
+
+  public shared ({ caller }) func cleanupExpiredSessions() : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can cleanup expired sessions");
+    };
+
+    let currentTime = Time.now();
+    let timeout = 5 * 60 * 1_000_000_000; // 5 minutes in nanoseconds
+
+    for ((sessionId, session) in visitorSessions.entries()) {
+      if (currentTime - session.lastActivity > timeout and session.isOnline) {
+        let updatedSession = { session with isOnline = false };
+        visitorSessions.add(sessionId, updatedSession);
+      };
+    };
+  };
+
+  // Statistics Calculations - Admin only (sensitive business intelligence)
+
+  public query ({ caller }) func getTotalVisitors() : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
+    };
+    visitorSessions.size();
+  };
+
+  public query ({ caller }) func getTodayVisitors() : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
+    };
+
+    let currentTime = Time.now();
+    let oneDay = 24 * 60 * 60 * 1_000_000_000;
+
+    visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= (currentTime - oneDay) }).size();
+  };
+
+  public query ({ caller }) func getYesterdayVisitors() : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
+    };
+
+    let currentTime = Time.now();
+    let oneDay = 24 * 60 * 60 * 1_000_000_000;
+    let yesterdayStart = currentTime - (2 * oneDay);
+
+    visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= yesterdayStart and session.firstVisit < (yesterdayStart + oneDay) }).size();
+  };
+
+  public query ({ caller }) func getWeeklyVisitors() : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
+    };
+
+    let currentTime = Time.now();
+    let oneWeek = 7 * 24 * 60 * 60 * 1_000_000_000;
+
+    visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= (currentTime - oneWeek) }).size();
+  };
+
+  public query ({ caller }) func getMonthlyVisitors() : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
+    };
+
+    let currentTime = Time.now();
+    let oneMonth = 30 * 24 * 60 * 60 * 1_000_000_000;
+
+    visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= (currentTime - oneMonth) }).size();
+  };
+
+  public query ({ caller }) func getYearlyVisitors() : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
+    };
+
+    let currentTime = Time.now();
+    let oneYear = 365 * 24 * 60 * 60 * 1_000_000_000;
+
+    visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= (currentTime - oneYear) }).size();
+  };
+
+  public query ({ caller }) func getOnlineUsers() : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
+    };
+
+    let currentTime = Time.now();
+    let timeout = 5 * 60 * 1_000_000_000;
+
+    visitorSessions.values().toArray().filter(func(session) {
+      currentTime - session.lastActivity <= timeout and session.isOnline
+    }).size();
+  };
+
+  public query ({ caller }) func getTotalPageViews() : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
+    };
+
+    visits.size();
+  };
+
+  public query ({ caller }) func getPageViewsByUrl() : async [(Text, Nat)] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
+    };
+
+    let pageViewCounts = Map.empty<Text, Nat>();
+
+    for ((_, visit) in visits.entries()) {
+      switch (pageViewCounts.get(visit.pageUrl)) {
+        case (?count) {
+          pageViewCounts.add(visit.pageUrl, count + 1);
+        };
+        case (null) {
+          pageViewCounts.add(visit.pageUrl, 1);
+        };
       };
     };
 
-    let postsArray = posts.toArray();
-    let end = if ((start + limit) > postsArray.size()) { postsArray.size() } else {
-      start + limit;
-    };
-    postsArray.sliceToArray(start, end);
+    pageViewCounts.toArray();
   };
 
-  // Visitor Stats - Admin only
+  public query ({ caller }) func getVisitorTrendLast30Days() : async [(Int, Nat)] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
+    };
+
+    let currentTime = Time.now();
+    let oneDay = 24 * 60 * 60 * 1_000_000_000;
+
+    let dailyCounts = Map.empty<Int, Nat>();
+
+    for ((_, visit) in visits.entries()) {
+      let day = Int.abs((visit.visitedAt / oneDay) * oneDay);
+
+      switch (dailyCounts.get(day)) {
+        case (?count) {
+          dailyCounts.add(day, count + 1);
+        };
+        case (null) {
+          dailyCounts.add(day, 1);
+        };
+      };
+    };
+
+    let startTime = currentTime - (30 * oneDay);
+
+    dailyCounts.toArray().filter(func((day, _)) { day >= startTime });
+  };
+
   public query ({ caller }) func getVisitorStats() : async VisitorStats {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view visitor stats");
+      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
     };
-    visitorStats;
+
+    let currentTime = Time.now();
+    let oneDay = 24 * 60 * 60 * 1_000_000_000;
+    let oneWeek = 7 * 24 * 60 * 60 * 1_000_000_000;
+    let oneMonth = 30 * 24 * 60 * 60 * 1_000_000_000;
+    let oneYear = 365 * 24 * 60 * 60 * 1_000_000_000;
+    let timeout = 5 * 60 * 1_000_000_000;
+    let yesterdayStart = currentTime - (2 * oneDay);
+
+    let stats : VisitorStats = {
+      totalVisitors = visitorSessions.size();
+      todayVisitors = visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= (currentTime - oneDay) }).size();
+      yesterdayVisitors = visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= yesterdayStart and session.firstVisit < (yesterdayStart + oneDay) }).size();
+      weeklyVisitors = visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= (currentTime - oneWeek) }).size();
+      monthlyVisitors = visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= (currentTime - oneMonth) }).size();
+      yearlyVisitors = visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= (currentTime - oneYear) }).size();
+      onlineUsers = visitorSessions.values().toArray().filter(func(session) {
+        currentTime - session.lastActivity <= timeout and session.isOnline
+      }).size();
+      pageViews = visits.size();
+    };
+    stats;
   };
 
-  // Public visitor tracking (no auth needed)
-  public shared func trackVisitor() : async () {
-    incrementTotalVisitors();
+  // Periodic Cleanup - Admin only
+  public shared ({ caller }) func periodicCleanup() : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can trigger periodic cleanup");
+    };
+
+    await cleanupExpiredSessions();
   };
 
-  public shared func trackPageView() : async () {
-    incrementPageViews();
+  // Admin-only function to get all visitor sessions
+  public query ({ caller }) func getAllVisitorSessions() : async [VisitorSession] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view all visitor sessions");
+    };
+    visitorSessions.values().toArray();
+  };
+
+  // Admin-only function to get all visits
+  public query ({ caller }) func getAllVisits() : async [Visit] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view all visits");
+    };
+    visits.values().toArray();
   };
 };

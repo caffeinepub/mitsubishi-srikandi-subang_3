@@ -1,60 +1,146 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-20T09:18:48.100Z",
+  "generatedAt": "2026-02-20T12:18:49.668Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 3,
-    "implemented": 3,
+    "total": 12,
+    "implemented": 4,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Add white 'Mitsubishi Srikandi Subang' title text to the Navigation Bar component in mobile view with appropriate font sizing",
+        "summary": "Create backend data structures for visitor tracking: visits table with fields (id, session_id, ip_address, user_agent, page_url, referrer, device_type, browser, visited_at) and visitor_sessions table with fields (session_id, ip_address, first_visit, last_activity, is_online). Ensure all timestamp fields use Int (nanoseconds since epoch) for compatibility with Internet Computer.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-10",
+        "summary": "Add line chart to VisitorStatsPage showing visitor trend for last 30 days by calling backend getVisitorTrendLast30Days() method and rendering with a charting library. Add bar chart showing top 10 most visited pages by calling backend getPageViewsByUrl() and displaying the top 10 results.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/public/Navbar.tsx"
+          "frontend/src/hooks/useVisitorTrend.ts",
+          "frontend/src/hooks/usePageViews.ts",
+          "frontend/src/components/admin/VisitorTrendChart.tsx",
+          "frontend/src/components/admin/TopPagesChart.tsx",
+          "frontend/src/pages/admin/VisitorStatsPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/public/Navbar.tsx"
+          "frontend/src/components/admin/VisitorTrendChart.tsx",
+          "frontend/src/components/admin/TopPagesChart.tsx",
+          "frontend/src/pages/admin/VisitorStatsPage.tsx"
         ]
+      },
+      {
+        "id": "REQ-11",
+        "summary": "Update useVisitorStats hook (frontend/src/hooks/useVisitorStats.ts) to remove any stubbed/placeholder logic and ensure it properly calls the backend actor's getVisitorStats method, returning the actual statistics data structure with all numeric fields.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useVisitorStats.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useVisitorStats.ts"
+        ]
+      },
+      {
+        "id": "REQ-12",
+        "summary": "Implement periodic cleanup job that calls cleanupExpiredSessions() every 5 minutes to maintain accurate online user counts by marking inactive sessions as offline.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "Remove the 'Simulasi Kredit' menu item from the Navigation Bar component",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/public/Navbar.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/public/Navbar.tsx"
-        ]
+        "summary": "Implement trackVisitor() backend function that accepts session_id, ip_address, user_agent, page_url, referrer, device_type, and browser parameters. Function must insert a new visit record, create or update visitor_sessions entry, set last_activity to current timestamp, and mark is_online as true.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       },
       {
         "id": "REQ-3",
-        "summary": "Add Bottom CTA Bar component to desktop view that is currently only visible on mobile",
+        "summary": "Implement cleanupExpiredSessions() backend function that identifies visitor_sessions with last_activity older than 5 minutes and sets is_online to false for those sessions.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Implement statistics calculation backend functions: getTotalVisitors() counting distinct session_ids from visitor_sessions, getTodayVisitors() filtering by first_visit date equal to current date, getYesterdayVisitors() filtering by first_visit date equal to yesterday, getWeeklyVisitors() filtering by current week, getMonthlyVisitors() filtering by current month and year, getYearlyVisitors() filtering by current year. All functions must return accurate numeric Nat values.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Implement getOnlineUsers() backend function that counts visitor_sessions with last_activity within the last 5 minutes and is_online set to true, returning the count as Nat.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Implement page view tracking functions: getTotalPageViews() returning total count of visits, getPageViewsByUrl() returning array of tuples with page_url and visit count sorted by count descending, and getVisitorTrendLast30Days() returning daily visitor counts for the last 30 days as an array of tuples (date, count).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-7",
+        "summary": "Update getVisitorStats() backend method to return comprehensive statistics object with fields: totalVisitors, todayVisitors, yesterdayVisitors, weeklyVisitors, monthlyVisitors, yearlyVisitors, onlineUsers, and totalPageViews. Call the respective calculation functions to populate these fields with real data.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-8",
+        "summary": "Implement frontend tracking middleware that automatically executes on every public page load (excluding admin routes). Generate or retrieve session_id from sessionStorage, detect device_type and browser from user agent, capture current page URL and referrer, then call backend trackVisitor() with all collected data. Exclude known bot user agents from tracking.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/public/BottomCTABar.tsx",
-          "frontend/src/layouts/PublicLayout.tsx"
+          "frontend/src/hooks/useVisitorTracking.ts",
+          "frontend/src/layouts/PublicLayout.tsx",
+          "frontend/src/utils/visitorTracking.ts"
         ],
         "matchedFiles": [
-          "frontend/src/components/public/BottomCTABar.tsx",
-          "frontend/src/layouts/PublicLayout.tsx"
+          "frontend/src/hooks/useVisitorTracking.ts",
+          "frontend/src/layouts/PublicLayout.tsx",
+          "frontend/src/utils/visitorTracking.ts"
+        ]
+      },
+      {
+        "id": "REQ-9",
+        "summary": "Update frontend VisitorStatsPage (frontend/src/pages/admin/VisitorStatsPage.tsx) to fetch and display realtime statistics including Total Visitors, Today, Yesterday, Weekly, Monthly, Yearly, Online Users, and Total Page Views using the updated backend getVisitorStats() method. Implement auto-refresh every 15 seconds using React Query refetchInterval.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/admin/VisitorStatsPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/admin/VisitorStatsPage.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/public/BottomCTABar.tsx",
-    "frontend/src/components/public/Navbar.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/admin/TopPagesChart.tsx",
+    "frontend/src/components/admin/VisitorTrendChart.tsx",
+    "frontend/src/components/public/Footer.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useVisitorStats.ts",
+    "frontend/src/hooks/useVisitorTracking.ts",
     "frontend/src/layouts/PublicLayout.tsx",
+    "frontend/src/pages/admin/VisitorStatsPage.tsx",
+    "frontend/src/utils/visitorTracking.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

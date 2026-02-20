@@ -10,27 +10,6 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
-export interface BlogPost {
-  'id' : bigint,
-  'title' : string,
-  'content' : string,
-  'authorId' : Principal,
-  'published' : boolean,
-  'createdAt' : bigint,
-  'publishedAt' : [] | [bigint],
-  'updatedAt' : bigint,
-  'excerpt' : string,
-  'imageId' : [] | [string],
-}
-export interface MediaAsset {
-  'id' : bigint,
-  'assetId' : string,
-  'size' : bigint,
-  'mimeType' : string,
-  'filename' : string,
-  'uploadedAt' : bigint,
-  'uploadedBy' : Principal,
-}
 export interface UserProfile {
   'name' : string,
   'email' : string,
@@ -39,18 +18,32 @@ export interface UserProfile {
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
-export interface Variant {
-  'id' : bigint,
-  'displayOrder' : bigint,
-  'name' : string,
-  'overridePrice' : [] | [bigint],
-  'vehicleId' : bigint,
+export interface Visit {
+  'id' : string,
+  'referrer' : string,
+  'visitedAt' : bigint,
+  'pageUrl' : string,
+  'deviceType' : string,
+  'browser' : string,
+  'sessionId' : string,
+  'userAgent' : string,
+  'ipAddress' : string,
+}
+export interface VisitorSession {
+  'lastActivity' : bigint,
+  'isOnline' : boolean,
+  'firstVisit' : bigint,
+  'sessionId' : string,
+  'ipAddress' : string,
 }
 export interface VisitorStats {
+  'todayVisitors' : bigint,
+  'yesterdayVisitors' : bigint,
   'totalVisitors' : bigint,
+  'onlineUsers' : bigint,
   'weeklyVisitors' : bigint,
+  'yearlyVisitors' : bigint,
   'monthlyVisitors' : bigint,
-  'dailyVisitors' : bigint,
   'pageViews' : bigint,
 }
 export interface _CaffeineStorageCreateCertificateResult {
@@ -82,42 +75,29 @@ export interface _SERVICE {
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'createBlogPost' : ActorMethod<
-    [string, string, string, Principal, [] | [string], boolean, [] | [bigint]],
-    BlogPost
-  >,
-  'createVariant' : ActorMethod<
-    [bigint, string, bigint, [] | [bigint]],
-    Variant
-  >,
-  'getBlogPosts' : ActorMethod<
-    [bigint, bigint, [] | [boolean]],
-    Array<BlogPost>
-  >,
+  'cleanupExpiredSessions' : ActorMethod<[], undefined>,
+  'getAllVisitorSessions' : ActorMethod<[], Array<VisitorSession>>,
+  'getAllVisits' : ActorMethod<[], Array<Visit>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getMonthlyVisitors' : ActorMethod<[], bigint>,
+  'getOnlineUsers' : ActorMethod<[], bigint>,
+  'getPageViewsByUrl' : ActorMethod<[], Array<[string, bigint]>>,
+  'getTodayVisitors' : ActorMethod<[], bigint>,
+  'getTotalPageViews' : ActorMethod<[], bigint>,
+  'getTotalVisitors' : ActorMethod<[], bigint>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getVisitorStats' : ActorMethod<[], VisitorStats>,
+  'getVisitorTrendLast30Days' : ActorMethod<[], Array<[bigint, bigint]>>,
+  'getWeeklyVisitors' : ActorMethod<[], bigint>,
+  'getYearlyVisitors' : ActorMethod<[], bigint>,
+  'getYesterdayVisitors' : ActorMethod<[], bigint>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'periodicCleanup' : ActorMethod<[], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
-  'trackPageView' : ActorMethod<[], undefined>,
-  'trackVisitor' : ActorMethod<[], undefined>,
-  'updateBlogPost' : ActorMethod<
-    [
-      bigint,
-      string,
-      string,
-      string,
-      Principal,
-      [] | [string],
-      boolean,
-      [] | [bigint],
-    ],
-    [] | [BlogPost]
-  >,
-  'uploadMediaAsset' : ActorMethod<
-    [string, string, string, bigint],
-    MediaAsset
+  'trackVisitor' : ActorMethod<
+    [string, string, string, string, string, string, string],
+    undefined
   >,
 }
 export declare const idlService: IDL.ServiceClass;

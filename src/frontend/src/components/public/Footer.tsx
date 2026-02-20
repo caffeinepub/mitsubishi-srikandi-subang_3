@@ -7,7 +7,8 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
   const appIdentifier = typeof window !== 'undefined' ? window.location.hostname : 'mitsubishi-srikandi-subang';
   
-  const { data: visitorStats, isLoading } = useGetVisitorStats();
+  // Auto-refresh every 15 seconds
+  const { data: visitorStats, isLoading } = useGetVisitorStats({ refetchInterval: 15000 });
 
   const formatNumber = (num: bigint | undefined): string => {
     if (num === undefined) return '0';
@@ -19,7 +20,7 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Logo & Description */}
-          <div className="lg:col-span-2">
+          <div>
             <img
               src="/assets/logomitsubishi-1.png"
               alt="Mitsubishi Motors Logo"
@@ -99,51 +100,51 @@ export default function Footer() {
               <p>Senin - Sabtu: 08:30 - 16:00</p>
             </div>
           </div>
-        </div>
 
-        {/* Visitor Stats */}
-        <div className="border-t border-gray-700 pt-8 mb-8">
-          <h3 className="text-lg font-bold mb-6 text-center">Statistik Pengunjung</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="text-center">
-              {isLoading ? (
-                <Skeleton className="h-8 w-20 mx-auto mb-2 bg-gray-700" />
-              ) : (
-                <div className="text-2xl font-bold text-[#C90010] mb-1">
-                  {formatNumber(visitorStats?.totalVisitors)}
-                </div>
-              )}
-              <div className="text-sm text-gray-400">Total Pengunjung</div>
-            </div>
-            <div className="text-center">
-              {isLoading ? (
-                <Skeleton className="h-8 w-20 mx-auto mb-2 bg-gray-700" />
-              ) : (
-                <div className="text-2xl font-bold text-[#C90010] mb-1">
-                  {formatNumber(visitorStats?.weeklyVisitors)}
-                </div>
-              )}
-              <div className="text-sm text-gray-400">Pengguna Aktif</div>
-            </div>
-            <div className="text-center">
-              {isLoading ? (
-                <Skeleton className="h-8 w-20 mx-auto mb-2 bg-gray-700" />
-              ) : (
-                <div className="text-2xl font-bold text-[#C90010] mb-1">
-                  {formatNumber(visitorStats?.pageViews)}
-                </div>
-              )}
-              <div className="text-sm text-gray-400">Tampilan Halaman</div>
-            </div>
-            <div className="text-center">
-              {isLoading ? (
-                <Skeleton className="h-8 w-20 mx-auto mb-2 bg-gray-700" />
-              ) : (
-                <div className="text-2xl font-bold text-[#C90010] mb-1">
-                  {formatNumber(visitorStats?.dailyVisitors)}
-                </div>
-              )}
-              <div className="text-sm text-gray-400">Trafik Hari Ini</div>
+          {/* Visitor Stats */}
+          <div>
+            <h3 className="text-lg font-bold mb-4">Statistik Pengunjung</h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Total:</span>
+                {isLoading ? (
+                  <Skeleton className="h-5 w-16 bg-gray-700" />
+                ) : (
+                  <span className="font-bold text-[#C90010]">
+                    {formatNumber(visitorStats?.totalVisitors)}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Hari Ini:</span>
+                {isLoading ? (
+                  <Skeleton className="h-5 w-16 bg-gray-700" />
+                ) : (
+                  <span className="font-bold text-[#C90010]">
+                    {formatNumber(visitorStats?.todayVisitors)}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Online:</span>
+                {isLoading ? (
+                  <Skeleton className="h-5 w-16 bg-gray-700" />
+                ) : (
+                  <span className="font-bold text-[#C90010]">
+                    {formatNumber(visitorStats?.onlineUsers)}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Page Views:</span>
+                {isLoading ? (
+                  <Skeleton className="h-5 w-16 bg-gray-700" />
+                ) : (
+                  <span className="font-bold text-[#C90010]">
+                    {formatNumber(visitorStats?.pageViews)}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -1,9 +1,26 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from '@tanstack/react-router';
 import { Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    if (mobileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [mobileMenuOpen]);
 
   const menuItems = [
     { label: 'Beranda', href: '/' },
@@ -56,7 +73,10 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#262729] border-t border-gray-700 animate-in slide-in-from-top">
+        <div 
+          ref={menuRef}
+          className="md:hidden bg-[#262729] border-t border-gray-700 animate-in slide-in-from-top absolute left-0 right-0 shadow-lg"
+        >
           <div className="container mx-auto px-4 py-4 space-y-3">
             {menuItems.map((item) => (
               <Link

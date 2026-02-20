@@ -1,60 +1,103 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Update navigation bar and add desktop CTA bar",
+  "title": "Frontend Implementation for Realtime Visitor Statistics System",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Add white 'Mitsubishi Srikandi Subang' title text to the Navigation Bar component in mobile view with appropriate font sizing",
+      "id": "REQ-8",
+      "summary": "Implement automatic visitor tracking middleware that executes on every public page load, capturing session data and sending it to the backend",
       "acceptanceCriteria": [
-        "Title text 'Mitsubishi Srikandi Subang' is visible in the mobile view of the Navigation Bar",
-        "Text color is white",
-        "Font size is appropriately scaled for mobile screens",
-        "Title is positioned correctly within the Navigation Bar layout"
+        "Tracking logic executes automatically on public page renders",
+        "session_id persisted in sessionStorage and reused across pages",
+        "device_type and browser detected from navigator.userAgent",
+        "Admin routes (/admin/*) excluded from tracking",
+        "Bot user agents filtered out before calling backend"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/public/Navbar.tsx",
-          "operation": "modify",
-          "description": "Add white title text 'Mitsubishi Srikandi Subang' to the mobile navigation bar. Position the text between the logo and mobile menu button. Use responsive text sizing (text-sm or text-base) and ensure white text color (text-white). The title should only be visible on mobile screens using Tailwind's responsive classes (block md:hidden)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Remove the 'Simulasi Kredit' menu item from the Navigation Bar component",
-      "acceptanceCriteria": [
-        "'Simulasi Kredit' menu item is no longer visible in the Navigation Bar",
-        "Other navigation menu items remain functional",
-        "Navigation layout adjusts properly after removal"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/public/Navbar.tsx",
-          "operation": "modify",
-          "description": "Remove the 'Simulasi Kredit' button from the desktop navigation menu. This button is currently positioned on the right side of the desktop menu with a yellow background and calls-to-action styling. After removal, ensure the remaining menu items (Beranda, Mobil Keluarga, Mobil Niaga, Promo, Kontak, Testimoni) remain properly aligned and functional."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Add Bottom CTA Bar component to desktop view that is currently only visible on mobile",
-      "acceptanceCriteria": [
-        "Bottom CTA Bar is visible in desktop view",
-        "Bottom CTA Bar continues to function in mobile view",
-        "CTA Bar is positioned at the bottom of the viewport in desktop view",
-        "All interactive elements (call, WhatsApp, credit simulation, menu) remain functional"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/public/BottomCTABar.tsx",
-          "operation": "modify",
-          "description": "Update the BottomCTABar component to be visible on both mobile and desktop views. Currently the component uses 'md:hidden' which hides it on desktop. Remove or modify this class so the bar is visible at all screen sizes. The component should remain fixed at the bottom of the viewport with proper z-index layering to stay above other content. Ensure all four CTA buttons (call, WhatsApp, credit simulation, menu) and the dropdown menu continue to function properly on desktop."
+          "path": "frontend/src/hooks/useVisitorTracking.ts",
+          "operation": "create",
+          "description": "Create a custom React hook that implements automatic visitor tracking. The hook should: generate or retrieve session_id from sessionStorage, detect device_type and browser from navigator.userAgent, capture current page URL and referrer from window.location, exclude admin routes (/admin/*) and known bot user agents, call backend trackVisitor() method with all collected data on mount. Use useEffect with pathname dependency to trigger on navigation."
         },
         {
           "path": "frontend/src/layouts/PublicLayout.tsx",
           "operation": "modify",
-          "description": "Verify that the BottomCTABar is properly rendered in the PublicLayout and that the layout provides adequate bottom padding or margin on desktop views to prevent content from being obscured by the fixed bottom bar. Add responsive padding-bottom to the main content area if needed (e.g., pb-20 or pb-24 on all screen sizes)."
+          "description": "Import and invoke useVisitorTracking hook at the top level of the PublicLayout component to ensure automatic tracking executes on every public page render. This wires the tracking middleware into all public routes without requiring individual page modifications."
+        },
+        {
+          "path": "frontend/src/utils/visitorTracking.ts",
+          "operation": "create",
+          "description": "Create utility functions for visitor tracking: generateSessionId() to create unique session identifiers, getOrCreateSessionId() to manage sessionStorage persistence, detectDeviceType() to parse user agent for device classification, detectBrowser() to identify browser from user agent, isBot() to filter known bot user agents. Export these utilities for use by the tracking hook."
+        }
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "summary": "Update VisitorStatsPage to fetch and display realtime statistics with auto-refresh every 15 seconds",
+      "acceptanceCriteria": [
+        "VisitorStatsPage displays all 8 statistic values from backend",
+        "Statistics auto-refresh every 15 seconds via React Query",
+        "No hardcoded dummy data displayed",
+        "Loading states shown during fetch"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/admin/VisitorStatsPage.tsx",
+          "operation": "modify",
+          "description": "Update the VisitorStatsPage component to display all 8 statistics fields from the backend VisitorStats type: totalVisitors, todayVisitors, yesterdayVisitors, weeklyVisitors, monthlyVisitors, yearlyVisitors, onlineUsers, and pageViews (mapped from totalPageViews). Use the useVisitorStats hook with refetchInterval set to 15000ms for automatic refresh. Remove any hardcoded zero values and ensure all data comes from the backend response. Add loading skeleton states during data fetch."
+        }
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "summary": "Add line chart showing 30-day visitor trend and bar chart showing top 10 most visited pages to VisitorStatsPage",
+      "acceptanceCriteria": [
+        "Line chart renders 30-day visitor trend data",
+        "Bar chart renders top 10 pages by view count",
+        "Charts update on data refresh",
+        "Charts handle empty data gracefully"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useVisitorTrend.ts",
+          "operation": "create",
+          "description": "Create a React Query hook that calls backend getVisitorTrendLast30Days() method to fetch daily visitor counts for the last 30 days. Return the data as an array of tuples [timestamp, count]. Include error handling and loading states. Set refetchInterval to 15000ms to match the stats refresh rate."
+        },
+        {
+          "path": "frontend/src/hooks/usePageViews.ts",
+          "operation": "create",
+          "description": "Create a React Query hook that calls backend getPageViewsByUrl() method to fetch page view counts grouped by URL. Return the data as an array of tuples [url, count]. Include error handling and loading states. Set refetchInterval to 15000ms to match the stats refresh rate."
+        },
+        {
+          "path": "frontend/src/components/admin/VisitorTrendChart.tsx",
+          "operation": "create",
+          "description": "Create a line chart component that visualizes 30-day visitor trend data. Use a charting library (recharts recommended for React) to render the chart. Accept trend data as props in the format Array<[timestamp, count]>. Convert timestamps to readable dates for x-axis labels. Handle empty data gracefully with a placeholder message. Include loading state support."
+        },
+        {
+          "path": "frontend/src/components/admin/TopPagesChart.tsx",
+          "operation": "create",
+          "description": "Create a bar chart component that visualizes top 10 most visited pages. Use a charting library (recharts recommended) to render horizontal bars. Accept page view data as props in the format Array<[url, count]>. Slice to top 10 entries. Truncate long URLs for readability. Handle empty data gracefully with a placeholder message. Include loading state support."
+        },
+        {
+          "path": "frontend/src/pages/admin/VisitorStatsPage.tsx",
+          "operation": "modify",
+          "description": "Import and integrate VisitorTrendChart and TopPagesChart components into the VisitorStatsPage layout. Use useVisitorTrend and usePageViews hooks to fetch data for the charts. Position charts below the statistics cards in a responsive grid layout. Pass fetched data and loading states to chart components."
+        }
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "summary": "Update useVisitorStats hook to properly call backend getVisitorStats method without stubbed logic",
+      "acceptanceCriteria": [
+        "useVisitorStats hook calls backend getVisitorStats method",
+        "Hook returns actual backend data without modification",
+        "Error handling implemented for failed requests"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useVisitorStats.ts",
+          "operation": "modify",
+          "description": "Review and update the useVisitorStats hook to ensure it properly calls the backend actor's getVisitorStats() method and returns the actual VisitorStats data structure. Remove any placeholder or stubbed logic. Verify error handling for network failures and auth issues. The backend method already exists and returns the correct data type, so focus on ensuring the frontend hook correctly invokes it and processes the response."
         }
       ]
     }

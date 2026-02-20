@@ -1,39 +1,45 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { VisitorStats } from '../types/local';
+import type { VisitorStats } from '../backend';
 
-export function useGetVisitorStats() {
+export function useGetVisitorStats(options?: { refetchInterval?: number }) {
   const { actor, isFetching } = useActor();
 
   return useQuery<VisitorStats>({
     queryKey: ['visitorStats'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      const stats = await actor.getVisitorStats();
-      return {
-        totalVisitors: stats.totalVisitors,
-        dailyVisitors: stats.dailyVisitors,
-        weeklyVisitors: stats.weeklyVisitors,
-        monthlyVisitors: stats.monthlyVisitors,
-        pageViews: stats.pageViews,
-      } as VisitorStats;
+      return actor.getVisitorStats();
     },
     enabled: !!actor && !isFetching,
+    refetchInterval: options?.refetchInterval,
   });
 }
 
-export function useUpdateVisitorStats() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
+export function useGetVisitorTrend() {
+  const { actor, isFetching } = useActor();
 
-  return useMutation({
-    mutationFn: async (stats: VisitorStats) => {
+  return useQuery<Array<[bigint, bigint]>>({
+    queryKey: ['visitorTrend'],
+    queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      // Backend method missing - stub
-      console.warn('updateVisitorStats not implemented in backend');
+      return actor.getVisitorTrendLast30Days();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['visitorStats'] });
+    enabled: !!actor && !isFetching,
+    refetchInterval: 15000, // 15 seconds
+  });
+}
+
+export function useGetPageViews() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<Array<[string, bigint]>>({
+    queryKey: ['pageViews'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getPageViewsByUrl();
     },
+    enabled: !!actor && !isFetching,
+    refetchInterval: 15000, // 15 seconds
   });
 }

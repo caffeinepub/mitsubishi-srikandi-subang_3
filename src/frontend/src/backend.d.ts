@@ -7,40 +7,33 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
-export interface BlogPost {
-    id: bigint;
-    title: string;
-    content: string;
-    authorId: Principal;
-    published: boolean;
-    createdAt: bigint;
-    publishedAt?: bigint;
-    updatedAt: bigint;
-    excerpt: string;
-    imageId?: string;
-}
-export interface MediaAsset {
-    id: bigint;
-    assetId: string;
-    size: bigint;
-    mimeType: string;
-    filename: string;
-    uploadedAt: bigint;
-    uploadedBy: Principal;
-}
-export interface Variant {
-    id: bigint;
-    displayOrder: bigint;
-    name: string;
-    overridePrice?: bigint;
-    vehicleId: bigint;
+export interface VisitorSession {
+    lastActivity: bigint;
+    isOnline: boolean;
+    firstVisit: bigint;
+    sessionId: string;
+    ipAddress: string;
 }
 export interface VisitorStats {
+    todayVisitors: bigint;
+    yesterdayVisitors: bigint;
     totalVisitors: bigint;
+    onlineUsers: bigint;
     weeklyVisitors: bigint;
+    yearlyVisitors: bigint;
     monthlyVisitors: bigint;
-    dailyVisitors: bigint;
     pageViews: bigint;
+}
+export interface Visit {
+    id: string;
+    referrer: string;
+    visitedAt: bigint;
+    pageUrl: string;
+    deviceType: string;
+    browser: string;
+    sessionId: string;
+    userAgent: string;
+    ipAddress: string;
 }
 export interface UserProfile {
     name: string;
@@ -54,17 +47,25 @@ export enum UserRole {
 }
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    createBlogPost(title: string, content: string, excerpt: string, authorId: Principal, imageId: string | null, published: boolean, publishedAt: bigint | null): Promise<BlogPost>;
-    createVariant(vehicleId: bigint, name: string, displayOrder: bigint, overridePrice: bigint | null): Promise<Variant>;
-    getBlogPosts(start: bigint, limit: bigint, publishedFilter: boolean | null): Promise<Array<BlogPost>>;
+    cleanupExpiredSessions(): Promise<void>;
+    getAllVisitorSessions(): Promise<Array<VisitorSession>>;
+    getAllVisits(): Promise<Array<Visit>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getMonthlyVisitors(): Promise<bigint>;
+    getOnlineUsers(): Promise<bigint>;
+    getPageViewsByUrl(): Promise<Array<[string, bigint]>>;
+    getTodayVisitors(): Promise<bigint>;
+    getTotalPageViews(): Promise<bigint>;
+    getTotalVisitors(): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getVisitorStats(): Promise<VisitorStats>;
+    getVisitorTrendLast30Days(): Promise<Array<[bigint, bigint]>>;
+    getWeeklyVisitors(): Promise<bigint>;
+    getYearlyVisitors(): Promise<bigint>;
+    getYesterdayVisitors(): Promise<bigint>;
     isCallerAdmin(): Promise<boolean>;
+    periodicCleanup(): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
-    trackPageView(): Promise<void>;
-    trackVisitor(): Promise<void>;
-    updateBlogPost(id: bigint, title: string, content: string, excerpt: string, authorId: Principal, imageId: string | null, published: boolean, publishedAt: bigint | null): Promise<BlogPost | null>;
-    uploadMediaAsset(filename: string, assetId: string, mimeType: string, size: bigint): Promise<MediaAsset>;
+    trackVisitor(sessionId: string, ipAddress: string, userAgent: string, pageUrl: string, referrer: string, deviceType: string, browser: string): Promise<void>;
 }
