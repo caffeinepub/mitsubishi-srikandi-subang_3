@@ -39,61 +39,49 @@ export default function MediaUploadZone({ onUploadSuccess }: MediaUploadZoneProp
     return null;
   };
 
-  const validateTokenAndRefresh = async (): Promise<boolean> => {
-    console.log('[MediaUpload] Starting token validation');
-    
-    if (!identity) {
-      console.log('[MediaUpload] No identity found');
-      toast.error('Anda harus login terlebih dahulu');
-      return false;
-    }
-
-    // Check if identity is a DelegationIdentity with expiration
-    if (identity instanceof DelegationIdentity) {
-      const delegation = identity.getDelegation();
-      const expiration = delegation.delegations[0]?.delegation.expiration;
-      
-      if (expiration) {
-        const expiryTime = Number(expiration) / 1000000; // Convert to milliseconds
-        const currentTime = Date.now();
-        const timeUntilExpiry = expiryTime - currentTime;
-        
-        console.log('[MediaUpload] Token validation:', {
-          expiryTime: new Date(expiryTime).toISOString(),
-          currentTime: new Date(currentTime).toISOString(),
-          timeUntilExpiry: `${Math.floor(timeUntilExpiry / 1000 / 60)} minutes`,
-          isValid: isDelegationValid(delegation)
-        });
-
-        // Check if token is expired or expiring within 5 minutes
-        if (!isDelegationValid(delegation) || timeUntilExpiry < (5 * 60 * 1000)) {
-          console.log('[MediaUpload] Token expired or expiring soon');
-          toast.error('Sesi Anda telah berakhir. Silakan login kembali.');
-          return false;
-        }
-      }
-    }
-
-    console.log('[MediaUpload] Token validation successful');
-    return true;
-  };
-
   const handleFileUpload = useCallback(
     async (files: FileList | null) => {
       console.log('[MediaUpload] Upload initiated at', new Date().toISOString());
       
       if (!files || files.length === 0) return;
-      
-      // Validate token before proceeding
-      const isTokenValid = await validateTokenAndRefresh();
-      if (!isTokenValid) {
-        console.log('[MediaUpload] Upload aborted due to invalid token');
-        return;
-      }
 
       if (!identity) {
         toast.error('Anda harus login terlebih dahulu');
         return;
+      }
+
+      // Validate delegation only once at the start, with proper time conversion
+      if (identity instanceof DelegationIdentity) {
+        const delegation = identity.getDelegation();
+        
+        if (!isDelegationValid(delegation)) {
+          console.log('[MediaUpload] Delegation is invalid');
+          toast.error('Sesi Anda telah berakhir. Silakan login kembali.');
+          return;
+        }
+
+        const expiration = delegation.delegations[0]?.delegation.expiration;
+        if (expiration) {
+          // FIXED: Correct conversion from nanoseconds to milliseconds
+          const expiryTime = Number(expiration) / 1_000_000; // nanoseconds to milliseconds
+          const currentTime = Date.now();
+          const timeUntilExpiry = expiryTime - currentTime;
+          
+          console.log('[MediaUpload] Token validation:', {
+            expiryTime: new Date(expiryTime).toISOString(),
+            currentTime: new Date(currentTime).toISOString(),
+            timeUntilExpiryMinutes: Math.floor(timeUntilExpiry / 1000 / 60),
+            isValid: isDelegationValid(delegation)
+          });
+
+          // FIXED: Only check if already expired, don't block uploads that have time remaining
+          // Allow uploads as long as there's at least 1 minute remaining
+          if (timeUntilExpiry < (1 * 60 * 1000)) {
+            console.log('[MediaUpload] Token expiring very soon (< 1 minute)');
+            toast.error('Sesi Anda akan segera berakhir. Silakan login kembali.');
+            return;
+          }
+        }
       }
 
       const file = files[0];

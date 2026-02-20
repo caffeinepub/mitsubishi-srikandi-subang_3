@@ -1,139 +1,57 @@
 {
   "kind": "build_request",
-  "title": "Implement stable persistence storage for media manager",
+  "title": "Fix Media Manager Thumbnail Display",
   "projectName": "Mitsubishi Srikandi Subang",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Implement stable storage backend for media assets using Motoko's stable memory. Store uploaded images as blobs in a stable HashMap or StableBuffer to ensure data persists across canister upgrades.",
-      "target": "backend",
+      "text": "Replace generic car icon thumbnails in Media Manager with actual image thumbnails. In the MediaAssetGrid component (frontend/src/components/admin/MediaAssetGrid.tsx), fetch and display the actual uploaded images using their blob IDs instead of showing placeholder icons.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-user-latest"
+          "msg-latest"
         ],
         "quotes": [
-          "kita perbaiki media manager dulu agar bisa menyimpan dan upload gambar ke stable persistence storage"
+          "Ok, fokus perbaikan thumbnail di media manajer dulu"
         ]
       },
       "acceptanceCriteria": [
-        "Images uploaded through MediaUploadZone persist across canister upgrades",
-        "Backend uses stable storage structures (e.g., stable HashMap) for blob data",
-        "Uploaded media can be retrieved by ID after upgrade"
+        "Media Manager grid displays actual image thumbnails instead of generic car icons",
+        "Image thumbnails are loaded from blob storage using their asset IDs",
+        "Thumbnails maintain proper aspect ratio and fit within grid cells",
+        "Loading state shows skeleton while thumbnails are being fetched"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Implement the uploadMediaAsset backend method to accept image files (JPEG, PNG, GIF, WebP) and PDF documents, validate file types and sizes (max 5MB for images, 10MB for PDFs), store them in stable storage, and return a unique asset ID.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-user-latest"
-        ],
-        "quotes": [
-          "Backend method uploadMediaAsset not implemented yet"
-        ]
-      },
-      "acceptanceCriteria": [
-        "uploadMediaAsset method accepts blob data, filename, and content type",
-        "Method validates file size constraints (5MB images, 10MB PDFs)",
-        "Method stores media in stable storage and returns unique asset ID",
-        "Method requires valid Internet Identity delegation token"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Implement the getAllMediaAssets backend method to retrieve all stored media assets with metadata (ID, filename, content type, upload timestamp, file size).",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-user-latest"
-        ]
-      },
-      "acceptanceCriteria": [
-        "getAllMediaAssets returns array of media asset records",
-        "Each record includes ID, filename, contentType, timestamp, and size",
-        "Method works with both authenticated and public access"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Implement the getMediaAssetById backend method to retrieve a specific media asset's blob data and metadata by its unique ID.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-user-latest"
-        ]
-      },
-      "acceptanceCriteria": [
-        "getMediaAssetById accepts asset ID parameter",
-        "Method returns blob data and metadata for the specified asset",
-        "Method returns null or error for non-existent IDs"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Implement the deleteMediaAsset backend method to remove a media asset from stable storage by its ID, requiring authenticated access.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-user-latest"
-        ]
-      },
-      "acceptanceCriteria": [
-        "deleteMediaAsset removes asset from stable storage",
-        "Method requires valid Internet Identity delegation token",
-        "Method returns success confirmation or error message"
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Update the MediaUploadZone component to successfully upload images and PDFs through the implemented backend methods, displaying upload progress and success/error feedback.",
+      "text": "Implement proper image URL generation for media assets. Create a utility function that generates blob URLs from asset IDs using the canister's HTTP endpoint pattern, and integrate it into MediaAssetGrid to display thumbnails.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-user-latest"
+          "msg-latest"
         ]
       },
       "acceptanceCriteria": [
-        "File upload triggers backend uploadMediaAsset call",
-        "Upload progress is displayed to user",
-        "Success toast shown on successful upload",
-        "Error toast shown with descriptive message on failure"
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Update the MediaAssetGrid component to display uploaded media assets from the backend, showing thumbnails for images and appropriate icons for PDFs, with copy ID and delete functionality working correctly.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-user-latest"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Grid fetches and displays all media assets from backend",
-        "Images display as thumbnails using blob data",
-        "PDF files show with document icon",
-        "Copy ID button copies asset ID to clipboard",
-        "Delete button removes asset from backend and refreshes grid"
+        "Utility function correctly constructs blob URLs from asset IDs",
+        "Function handles both image and PDF asset types appropriately",
+        "URLs are properly formatted for the Internet Computer canister HTTP interface",
+        "Error handling for failed image loads shows fallback UI"
       ]
     }
   ],
   "constraints": [
-    "Use Motoko stable storage structures (stable HashMap or StableBuffer) for persistence",
-    "Maintain single-actor architecture in backend/main.mo",
-    "Respect file size limits: 5MB for images, 10MB for PDFs",
-    "Require Internet Identity authentication for upload and delete operations",
-    "Support file types: JPEG, PNG, GIF, WebP, PDF only"
+    "Do not modify backend/main.mo, backend/migration.mo, or any Phase 1 and Phase 2 foundation files unless absolutely necessary",
+    "Do not alter frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useActor.ts",
+    "Do not edit Shadcn UI component files in frontend/src/components/ui",
+    "Maintain the single-actor backend architecture",
+    "Keep existing blob storage implementation intact"
   ],
   "nonGoals": [
-    "Image editing or transformation features",
-    "Batch upload functionality",
-    "Folder organization or categorization",
-    "External storage integration (AWS S3, Cloudinary, etc.)",
-    "Video file support",
-    "Advanced permissions or access control beyond authentication"
+    "Fixing Website Settings page image persistence (deferred to next request)",
+    "Updating homepage banner images (deferred to next request)",
+    "Modifying upload functionality or file validation",
+    "Changing media asset data structure or backend storage"
   ],
   "imageRequirements": {
     "required": [],

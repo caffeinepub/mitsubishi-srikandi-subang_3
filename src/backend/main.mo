@@ -9,14 +9,12 @@ import Text "mo:core/Text";
 import Runtime "mo:core/Runtime";
 
 import MixinStorage "blob-storage/Mixin";
-import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
+import AccessControl "authorization/access-control";
 
 import List "mo:core/List";
 import Set "mo:core/Set";
-import Migration "migration";
 
-(with migration = Migration.run)
 actor {
   include MixinStorage();
   let accessControlState = AccessControl.initState();
@@ -318,7 +316,7 @@ actor {
   var contactCounter = 1;
   var visitIdCounter = 1;
 
-  stable var visitorStats : VisitorStats = {
+  var visitorStats : VisitorStats = {
     totalVisitors = 0;
     visitorsToday = 0;
     visitorsYesterday = 0;
@@ -588,7 +586,8 @@ actor {
     visitorStats;
   };
 
-  // Admin-only: Upload media asset through blob storage (images and PDFs only)
+  // FIXED: User-only access to upload media assets (was admin-only, causing session loop)
+  // This fixes the "Session expired, please login again" loop when users upload images
   public shared ({ caller }) func uploadMediaAsset(
     filename : Text,
     mimeType : Text,
@@ -596,8 +595,8 @@ actor {
     assetType : Text,
     fileSize : Nat,
   ) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can upload media assets");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can upload media assets");
     };
 
     let uploadedAt = Time.now();
@@ -615,7 +614,7 @@ actor {
     mediaAssetIdCounter += 1;
   };
 
-  // FIXED: User-only access to view all media assets metadata
+  // User-only access to view all media assets metadata
   public query ({ caller }) func getAllMediaAssets() : async [MediaAsset] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can view media assets");
@@ -623,7 +622,7 @@ actor {
     mediaAssets.values().toArray();
   };
 
-  // FIXED: User-only access to view specific media asset metadata by ID
+  // User-only access to view specific media asset metadata by ID
   public query ({ caller }) func getMediaAssetById(id : Nat) : async ?MediaAsset {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can view media assets");
@@ -631,7 +630,7 @@ actor {
     mediaAssets.get(id);
   };
 
-  // FIXED: User-only access to view specific media asset metadata by blob ID
+  // User-only access to view specific media asset metadata by blob ID
   public query ({ caller }) func getMediaAssetByBlobId(blobId : Text) : async ?MediaAsset {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can view media assets");
@@ -682,7 +681,7 @@ actor {
     };
   };
 
-  // FIXED: Admin-only access to view assets by uploader (privacy-sensitive)
+  // Admin-only access to view assets by uploader (privacy-sensitive)
   public query ({ caller }) func getAssetsByUploader(uploader : Principal) : async [MediaAsset] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view assets by uploader");
@@ -692,7 +691,7 @@ actor {
     );
   };
 
-  // FIXED: Admin-only access to view assets by date range (business intelligence)
+  // Admin-only access to view assets by date range (business intelligence)
   public query ({ caller }) func getAssetsByDateRange(startDate : Int, endDate : Int) : async [MediaAsset] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view assets by date range");

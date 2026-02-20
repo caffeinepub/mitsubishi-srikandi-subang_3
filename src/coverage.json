@@ -1,96 +1,48 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-20T14:21:35.586Z",
+  "generatedAt": "2026-02-20T15:15:53.248Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 7,
+    "total": 2,
     "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Implement stable storage backend for media assets using Motoko's stable memory. Store uploaded images as blobs in a stable HashMap or StableBuffer to ensure data persists across canister upgrades.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Implement the uploadMediaAsset backend method to accept image files (JPEG, PNG, GIF, WebP) and PDF documents, validate file types and sizes (max 5MB for images, 10MB for PDFs), store them in stable storage, and return a unique asset ID.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Implement the getAllMediaAssets backend method to retrieve all stored media assets with metadata (ID, filename, content type, upload timestamp, file size).",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Implement the getMediaAssetById backend method to retrieve a specific media asset's blob data and metadata by its unique ID.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-5",
-        "summary": "Implement the deleteMediaAsset backend method to remove a media asset from stable storage by its ID, requiring authenticated access.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-6",
-        "summary": "Update the MediaUploadZone component to successfully upload images and PDFs through the implemented backend methods, displaying upload progress and success/error feedback.",
+        "summary": "Replace generic car icon thumbnails in Media Manager with actual image thumbnails. In the MediaAssetGrid component (frontend/src/components/admin/MediaAssetGrid.tsx), fetch and display the actual uploaded images using their blob IDs instead of showing placeholder icons.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/admin/MediaUploadZone.tsx",
-          "frontend/src/hooks/useMediaAssets.ts"
+          "frontend/src/components/admin/MediaAssetGrid.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/admin/MediaUploadZone.tsx",
-          "frontend/src/hooks/useMediaAssets.ts"
+          "frontend/src/components/admin/MediaAssetGrid.tsx"
         ]
       },
       {
-        "id": "REQ-7",
-        "summary": "Update the MediaAssetGrid component to display uploaded media assets from the backend, showing thumbnails for images and appropriate icons for PDFs, with copy ID and delete functionality working correctly.",
+        "id": "REQ-2",
+        "summary": "Implement proper image URL generation for media assets. Create a utility function that generates blob URLs from asset IDs using the canister's HTTP endpoint pattern, and integrate it into MediaAssetGrid to display thumbnails.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/admin/MediaAssetGrid.tsx",
-          "frontend/src/hooks/useMediaAssets.ts"
+          "frontend/src/utils/blobUrl.ts",
+          "frontend/src/components/admin/MediaAssetGrid.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/admin/MediaAssetGrid.tsx",
-          "frontend/src/hooks/useMediaAssets.ts"
+          "frontend/src/utils/blobUrl.ts",
+          "frontend/src/components/admin/MediaAssetGrid.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/components/admin/BannerImagePicker.tsx",
     "frontend/src/components/admin/MediaAssetGrid.tsx",
-    "frontend/src/components/admin/MediaUploadZone.tsx",
-    "frontend/src/components/public/CTABanner.tsx",
-    "frontend/src/components/public/MainBanner.tsx",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useMediaAssets.ts",
-    "frontend/src/types/local.ts",
+    "frontend/src/utils/blobUrl.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

@@ -1,26 +1,31 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Building a media manager with stable image upload and storage capabilities",
-  "architectural_notes": [],
+  "summary": "Media manager and website settings project with persistent image storage",
+  "architectural_notes": [
+    "Must maintain foundation structure from Phase 1 and 2",
+    "Only modify Phase 1/2 foundation if needed to complete missing structure"
+  ],
   "known_issues": [
-    "Visitor statistics not updating properly"
+    "Media manager shows only icons instead of actual image thumbnails",
+    "Website settings images appear saved but disappear when returning to menu",
+    "Homepage images not updating with saved changes"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-update-the-mediauploadzone-component-to-successfully-upload-images-and-pdfs-through-the-implemented-backend-methods-displaying-upload-progress-and-success-error-feedback",
-      "title": "Update the MediaUploadZone component to successfully upload images and PDFs through the implemented backend methods, displaying upload progress and success/error feedback.",
+      "id": "feature-replace-generic-car-icon-thumbnails-in-media-manager-with-actual-image-thumbnails-in-the-mediaassetgrid-component-frontend-src-components-admin-mediaassetgrid-tsx-fetch-and-display-the-actual-uploaded-images-using-their-blob-ids-instead-of-showing-placeholder-icons",
+      "title": "Replace generic car icon thumbnails in Media Manager with actual image thumbnails. In the MediaAssetGrid component (frontend/src/components/admin/MediaAssetGrid.tsx), fetch and display the actual uploaded images using their blob IDs instead of showing placeholder icons.",
       "reqIds": [
-        "REQ-6"
+        "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-update-the-mediaassetgrid-component-to-display-uploaded-media-assets-from-the-backend-showing-thumbnails-for-images-and-appropriate-icons-for-pdfs-with-copy-id-and-delete-functionality-working-correctly",
-      "title": "Update the MediaAssetGrid component to display uploaded media assets from the backend, showing thumbnails for images and appropriate icons for PDFs, with copy ID and delete functionality working correctly.",
+      "id": "feature-implement-proper-image-url-generation-for-media-assets-create-a-utility-function-that-generates-blob-urls-from-asset-ids-using-the-canister-s-http-endpoint-pattern-and-integrate-it-into-mediaassetgrid-to-display-thumbnails",
+      "title": "Implement proper image URL generation for media assets. Create a utility function that generates blob URLs from asset IDs using the canister's HTTP endpoint pattern, and integrate it into MediaAssetGrid to display thumbnails.",
       "reqIds": [
-        "REQ-7"
+        "REQ-2"
       ],
       "version": 1
     }
@@ -28,48 +33,14 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Media manager with stable persistence storage for image upload",
+      "summary": "Display actual image thumbnails in media manager instead of icons",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Implement stable storage backend for media assets using Motoko's stable memory. Store uploaded images as blobs in a stable HashMap or StableBuffer to ensure data persists across canister upgrades.",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Implement the uploadMediaAsset backend method to accept image files (JPEG, PNG, GIF, WebP) and PDF documents, validate file types and sizes (max 5MB for images, 10MB for PDFs), store them in stable storage, and return a unique asset ID.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Implement the getAllMediaAssets backend method to retrieve all stored media assets with metadata (ID, filename, content type, upload timestamp, file size).",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Implement the getMediaAssetById backend method to retrieve a specific media asset's blob data and metadata by its unique ID.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Implement the deleteMediaAsset backend method to remove a media asset from stable storage by its ID, requiring authenticated access.",
-      "reqIds": [
-        "REQ-5"
-      ],
+      "summary": "Display actual saved images in website settings and persist all field data permanently",
+      "reqIds": [],
       "status": "pending"
     }
   ],

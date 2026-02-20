@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Copy, Trash2, FileText } from 'lucide-react';
+import { Copy, Trash2, FileText, Car } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useGetAllMediaAssets, useDeleteMediaAsset } from '@/hooks/useMediaAssets';
@@ -15,12 +15,14 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import { getBlobUrl, isImageMimeType, isPdfMimeType } from '@/utils/blobUrl';
 
 export default function MediaAssetGrid() {
   const { data: assets, isLoading } = useGetAllMediaAssets();
   const deleteAsset = useDeleteMediaAsset();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState<MediaAsset | null>(null);
+  const [imageLoadErrors, setImageLoadErrors] = useState<Set<string>>(new Set());
 
   const handleCopyId = (assetId: bigint) => {
     navigator.clipboard.writeText(assetId.toString());
@@ -43,10 +45,9 @@ export default function MediaAssetGrid() {
     }
   };
 
-  const getImageUrl = (blobId: string): string => {
-    // Use the blobId to construct a URL for the blob storage
-    // The backend's blob-storage mixin will serve this via HTTP
-    return `/api/blob/${blobId}`;
+  const handleImageError = (blobId: string) => {
+    console.error('[MediaAssetGrid] Image load error for blobId:', blobId);
+    setImageLoadErrors((prev) => new Set(prev).add(blobId));
   };
 
   if (isLoading) {
@@ -71,8 +72,10 @@ export default function MediaAssetGrid() {
     <>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {assets.map((asset) => {
-          const isPdf = asset.mimeType.startsWith('application/pdf');
-          const imageUrl = !isPdf ? getImageUrl(asset.blobId) : '';
+          const isImage = isImageMimeType(asset.mimeType);
+          const isPdf = isPdfMimeType(asset.mimeType);
+          const hasLoadError = imageLoadErrors.has(asset.blobId);
+          const imageUrl = isImage ? getBlobUrl(asset.blobId) : '';
 
           return (
             <div key={asset.id.toString()} className="border rounded-lg overflow-hidden">
@@ -83,16 +86,22 @@ export default function MediaAssetGrid() {
                     <p className="text-sm font-medium">{asset.filename}</p>
                     <p className="text-xs">PDF Document</p>
                   </div>
-                ) : (
+                ) : isImage && !hasLoadError ? (
                   <img
                     src={imageUrl}
                     alt={asset.filename}
                     className="w-full h-full object-cover"
-                    onError={(e) => {
-                      console.error('[MediaAssetGrid] Image load error for:', asset.blobId);
-                      e.currentTarget.src = '/assets/generated/vehicle-placeholder.dim_800x600.png';
-                    }}
+                    loading="lazy"
+                    onError={() => handleImageError(asset.blobId)}
                   />
+                ) : (
+                  <div className="text-gray-400 text-center p-4">
+                    <Car className="h-16 w-16 mx-auto mb-2" />
+                    <p className="text-sm font-medium">{asset.filename}</p>
+                    <p className="text-xs">
+                      {hasLoadError ? 'Gagal memuat gambar' : 'File tidak didukung'}
+                    </p>
+                  </div>
                 )}
               </div>
               <div className="p-2 space-y-2">

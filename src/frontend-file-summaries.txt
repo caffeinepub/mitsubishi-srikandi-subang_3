@@ -74,8 +74,8 @@
   "frontend/src/components/admin/TestimonialDialog.tsx": "Dialog component for creating and editing testimonials importing Testimonial type from local types with star rating validation.",
   "frontend/src/components/admin/BlogPostList.tsx": "Table component displaying blog posts importing BlogPost type from local types with inline publish toggle and delete confirmation.",
   "frontend/src/components/admin/BlogPostDialog.tsx": "Dialog component for creating and editing blog posts with token validation before form submission, detailed logging for all submission stages, and onSuccess callback for cache invalidation.",
-  "frontend/src/components/admin/MediaAssetGrid.tsx": "Grid component displaying media assets with blob URL construction for image thumbnails, PDF document icon display, copy ID functionality, and delete confirmation dialog.",
-  "frontend/src/components/admin/MediaUploadZone.tsx": "Drag-and-drop file upload component with blob-storage integration, token validation, progress tracking using Progress component, and comprehensive error handling for file type/size validation.",
+  "frontend/src/components/admin/MediaAssetGrid.tsx": "Grid component displaying media assets with actual image thumbnails loaded from blob storage using proper URL construction, PDF document icon display, error handling with fallback UI, copy ID functionality, and delete confirmation dialog.",
+  "frontend/src/components/admin/MediaUploadZone.tsx": "Drag-and-drop file upload component with blob-storage integration, fixed token validation with correct nanosecond-to-millisecond conversion and less aggressive expiration check (1 minute threshold instead of 5 minutes), progress tracking using Progress component, and comprehensive error handling for file type/size validation.",
   "frontend/src/components/admin/AdminUserList.tsx": "Table component displaying admin users using local AdminUser type with edit and delete actions including last admin protection.",
   "frontend/src/components/admin/AdminUserDialog.tsx": "Dialog component for creating and editing admin users using local AdminUser type with form validation and Principal ID input.",
   "frontend/src/components/admin/BannerImagePicker.tsx": "Modal dialog for selecting banner images with radio button selection, live preview using blobId for image URLs, and filtering for banner-related assets.",
@@ -85,5 +85,6 @@
   "frontend/src/utils/visitorTracking.ts": "Visitor tracking utility functions with UUID generation, device/browser detection, bot filtering, and localStorage-based session persistence with debug logging.",
   "frontend/src/hooks/useVisitorTracking.ts": "Deprecated legacy visitor tracking hook that now logs a deprecation message since tracking is handled by PublicLayout.",
   "frontend/src/components/admin/VisitorTrendChart.tsx": "Line chart component displaying 30-day visitor trend using Recharts with loading states and empty data handling.",
-  "frontend/src/components/admin/TopPagesChart.tsx": "Horizontal bar chart component showing top 10 most visited pages using Recharts with URL truncation and loading states."
+  "frontend/src/components/admin/TopPagesChart.tsx": "Horizontal bar chart component showing top 10 most visited pages using Recharts with URL truncation and loading states.",
+  "frontend/src/utils/blobUrl.ts": "Utility functions for constructing blob URLs from asset IDs using Internet Computer's HTTP interface pattern and determining asset types based on MIME types."
 }

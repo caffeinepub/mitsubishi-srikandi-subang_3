@@ -1,15 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Implement stable persistence storage for the media manager to enable reliable image and PDF uploads with data persistence across canister upgrades.
+**Goal:** Fix Media Manager to display actual image thumbnails instead of generic car icon placeholders.
 
 **Planned changes:**
-- Implement stable storage backend using Motoko's stable HashMap/StableBuffer for media asset blobs
-- Create uploadMediaAsset backend method with file validation (5MB images, 10MB PDFs)
-- Create getAllMediaAssets backend method to retrieve all stored media with metadata
-- Create getMediaAssetById backend method to retrieve specific media assets
-- Create deleteMediaAsset backend method with authentication requirement
-- Update MediaUploadZone component to successfully upload files through backend
-- Update MediaAssetGrid component to display uploaded media from backend with copy ID and delete functionality
+- Replace car icon placeholders in MediaAssetGrid with actual uploaded image thumbnails
+- Implement utility function to generate blob URLs from asset IDs using canister HTTP endpoint
+- Add proper image loading states and error handling with fallback UI
+- Ensure thumbnails maintain aspect ratio within grid cells
 
-**User-visible outcome:** Users can upload images (JPEG, PNG, GIF, WebP) and PDFs through the Media Manager interface, view their uploaded media library with thumbnails, copy asset IDs, delete assets, and all data persists across canister upgrades.
+**User-visible outcome:** Media Manager shows actual preview thumbnails of uploaded images, making it easier to identify and manage media assets visually.
