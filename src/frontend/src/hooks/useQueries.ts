@@ -1,49 +1,16 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { VisitorStats, WebsiteSettings } from '../backend';
+import type { WebsiteSettings } from '../types/local';
 
-/**
- * Phase 1 Foundation Hooks
- * Basic queries for testing backend connectivity
- */
-
-export function useGetVisitorStats() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<VisitorStats>({
-    queryKey: ['visitorStats'],
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getVisitorStats();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useGetWebsiteSettings(id: number = 1) {
+export function useGetWebsiteSettings() {
   const { actor, isFetching } = useActor();
 
   return useQuery<WebsiteSettings | null>({
-    queryKey: ['websiteSettings', id],
+    queryKey: ['websiteSettings'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getWebsiteSettings(BigInt(id));
+      if (!actor) return null;
+      return null;
     },
     enabled: !!actor && !isFetching,
-  });
-}
-
-export function useIncrementPageView() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      await actor.incrementPageView();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['visitorStats'] });
-    },
   });
 }

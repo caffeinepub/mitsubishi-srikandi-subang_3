@@ -1,214 +1,60 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-19T17:19:48.782Z",
+  "generatedAt": "2026-02-20T09:18:48.100Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 14,
-    "implemented": 0,
+    "total": 3,
+    "implemented": 3,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Implement stable canister storage architecture with persistent blob storage for media assets that survives refresh, rebuild, redeploy, and upgrade operations",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-10",
-        "summary": "Implement stable memory mapping binding: Collection → Stable segment, Variant mapping → Stable relational index, Media binding → Stable blob index, Counter → Stable write lock",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-11",
-        "summary": "Implement admin authentication foundation system with seeded super admin account (email: blankster2024@gmail.com, password: dewi4more) including password hashing, session persistence, auth guard logic, and role schema for Super Admin scope",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-12",
-        "summary": "Implement canister lifecycle hooks pre_upgrade() and post_upgrade() with snapshot and restore functionality for: Vehicles, Variants, Colors, Mapping, Images, Specs, Features, Media, Users, Counters using stable binary mapping serialization format",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-13",
-        "summary": "Implement media library backend manager with blob-only operations: Upload, Replace, Delete, and Index binding - no Base64 or browser blob URLs",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-14",
-        "summary": "Implement deployment safety lock to prevent modification of: Storage binding, DB mapping, Vehicle relations, Media index, Auth system during deployment operations",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
+        "summary": "Add white 'Mitsubishi Srikandi Subang' title text to the Navigation Bar component in mobile view with appropriate font sizing",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/public/Navbar.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/public/Navbar.tsx"
+        ]
       },
       {
         "id": "REQ-2",
-        "summary": "Implement deterministic blob storage binding with public HTTPS gateway resolver using URL pattern /media/{collection}/{assetId}/{fileName}, including file hash fingerprint and URL integrity validation",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
+        "summary": "Remove the 'Simulasi Kredit' menu item from the Navigation Bar component",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/public/Navbar.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/public/Navbar.tsx"
+        ]
       },
       {
         "id": "REQ-3",
-        "summary": "Create stable canister database with auto-persistent and upgrade-safe collections: passengerVehicles, commercialVehicles, promotions, testimonials, blogPosts, contacts, creditSimulations, visitorStats, mediaAssets, adminUsers, websiteSettings, productLikes, productShares, articleLikes, articleShares, articleComments",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Implement visitorStats collection with fields: id, totalVisitors, dailyVisitors, yesterdayVisitors, weeklyVisitors, monthlyVisitors, yearlyVisitors, onlineVisitors, pageViews, lastUpdated (timestamp, auto-updates on events), and optional advanced tracking fields (uniqueIPs, referrerSources, deviceStats, browserStats, locationStats)",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-5",
-        "summary": "Implement websiteSettings collection with fields: id, siteName, mainBannerImageId (reference to mediaAssets.id), ctaBannerImageId, dealerLogoId, contactPhone, contactWhatsapp, contactEmail, dealerAddress, operationalHours, facebookUrl, instagramUrl, tiktokUrl, youtubeUrl, lastUpdated (timestamp, auto-updates on change)",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-6",
-        "summary": "Create passenger vehicle relational data layer with collections: passengerVehicles (id, vehicleName, slug, description, basePrice, thumbnailMediaId, brochureMediaId, publishStatus), passengerVehicleVariants (id, vehicleId, variantName, price, isPremium, displayOrder), passengerVehicleColors (id, vehicleId, colorName, colorHex, thumbnailMediaId, isActive), passengerVehicleVariantColorMapping (id, vehicleId, variantId, colorId, isDefault, displayOrder), passengerVehicleImages (id, vehicleId, variantId, colorId, mediaId, angle, backgroundType), passengerVehicleSpecifications, passengerVehicleFeatures",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-7",
-        "summary": "Create commercial vehicle relational data layer with collections: commercialVehicles (id, vehicleName, slug, categoryId, description, basePrice, thumbnailMediaId, brochureMediaId, publishStatus), commercialVehicleCategories (id, categoryName, displayOrder), commercialVehicleVariants (id, vehicleId, variantName, price, displayOrder), commercialVehicleVariantMapping (id, vehicleId, variantId), commercialVehicleVariantImages (id, vehicleId, variantId, mediaId, angle), commercialVehicleSpecifications, commercialVehicleFeatures - with no color system",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-8",
-        "summary": "Implement nested CMS data hierarchy for passenger vehicles with cascade delete and relational integrity: Vehicle → [Variants, Colors, Variant-Color Mapping, Interactive Images, Specifications, Features, CTA Config], all children bound by vehicleId with no orphan records allowed",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-9",
-        "summary": "Implement nested CMS data hierarchy for commercial vehicles with cascade delete and relational integrity: Vehicle → [Category, Variants, Variant Mapping, Variant Images, Specifications, Features, CTA Config] with no color layer, variant images per variant, and category routing binding ready",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
+        "summary": "Add Bottom CTA Bar component to desktop view that is currently only visible on mobile",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/public/BottomCTABar.tsx",
+          "frontend/src/layouts/PublicLayout.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/public/BottomCTABar.tsx",
+          "frontend/src/layouts/PublicLayout.tsx"
+        ]
       }
     ]
   },
   "changedFiles": [
-    "backend/authorization/MixinAuthorization.mo",
-    "backend/authorization/access-control.mo",
-    "backend/blob-storage/Mixin.mo",
-    "backend/blob-storage/Storage.mo",
-    "backend/main.mo",
     "build-request.json",
-    "build-template/Dockerfile",
-    "build-template/LICENSE",
-    "build-template/README.md",
-    "build-template/deploy.sh",
-    "build-template/icp.yaml",
-    "build-template/package.json",
-    "build-template/pnpm-lock.yaml",
-    "build-template/pnpm-workspace.yaml",
-    "build-template/scripts/prune-unused-images.js",
-    "build-template/scripts/resize-images.js",
-    "build-template/src/backend/canister.yaml",
-    "build-template/src/backend/system-idl/aaaaa-aa.did",
-    "build-template/src/frontend/canister.yaml",
-    "build-template/src/frontend/components.json",
-    "build-template/src/frontend/env.json",
-    "build-template/src/frontend/eslint-rules/no-bigint-in-query-keys.js",
-    "build-template/src/frontend/eslint-rules/require-internet-identity-provider.js",
-    "build-template/src/frontend/eslint.config.js",
-    "build-template/src/frontend/package.json",
-    "build-template/src/frontend/postcss.config.js",
-    "build-template/src/frontend/src/components/ui/accordion.tsx",
-    "build-template/src/frontend/src/components/ui/alert-dialog.tsx",
-    "build-template/src/frontend/src/components/ui/alert.tsx",
-    "build-template/src/frontend/src/components/ui/aspect-ratio.tsx",
-    "build-template/src/frontend/src/components/ui/avatar.tsx",
-    "build-template/src/frontend/src/components/ui/badge.tsx",
-    "build-template/src/frontend/src/components/ui/breadcrumb.tsx",
-    "build-template/src/frontend/src/components/ui/button.tsx",
-    "build-template/src/frontend/src/components/ui/calendar.tsx",
-    "build-template/src/frontend/src/components/ui/card.tsx",
-    "build-template/src/frontend/src/components/ui/carousel.tsx",
-    "build-template/src/frontend/src/components/ui/chart.tsx",
-    "build-template/src/frontend/src/components/ui/checkbox.tsx",
-    "build-template/src/frontend/src/components/ui/collapsible.tsx",
-    "build-template/src/frontend/src/components/ui/command.tsx",
-    "build-template/src/frontend/src/components/ui/context-menu.tsx",
-    "build-template/src/frontend/src/components/ui/dialog.tsx",
-    "build-template/src/frontend/src/components/ui/drawer.tsx",
-    "build-template/src/frontend/src/components/ui/dropdown-menu.tsx",
-    "build-template/src/frontend/src/components/ui/form.tsx",
-    "build-template/src/frontend/src/components/ui/hover-card.tsx",
-    "build-template/src/frontend/src/components/ui/input-otp.tsx",
-    "build-template/src/frontend/src/components/ui/input.tsx",
-    "build-template/src/frontend/src/components/ui/label.tsx",
-    "build-template/src/frontend/src/components/ui/menubar.tsx",
-    "build-template/src/frontend/src/components/ui/navigation-menu.tsx",
-    "build-template/src/frontend/src/components/ui/pagination.tsx",
-    "build-template/src/frontend/src/components/ui/popover.tsx",
-    "build-template/src/frontend/src/components/ui/progress.tsx",
-    "build-template/src/frontend/src/components/ui/radio-group.tsx",
-    "build-template/src/frontend/src/components/ui/resizable.tsx",
-    "build-template/src/frontend/src/components/ui/scroll-area.tsx",
-    "build-template/src/frontend/src/components/ui/select.tsx",
-    "build-template/src/frontend/src/components/ui/separator.tsx",
-    "build-template/src/frontend/src/components/ui/sheet.tsx",
-    "build-template/src/frontend/src/components/ui/sidebar.tsx",
-    "build-template/src/frontend/src/components/ui/skeleton.tsx",
-    "build-template/src/frontend/src/components/ui/slider.tsx",
-    "build-template/src/frontend/src/components/ui/sonner.tsx",
-    "build-template/src/frontend/src/components/ui/switch.tsx",
-    "build-template/src/frontend/src/components/ui/table.tsx",
-    "build-template/src/frontend/src/components/ui/tabs.tsx",
-    "build-template/src/frontend/src/components/ui/textarea.tsx",
-    "build-template/src/frontend/src/components/ui/toggle-group.tsx",
-    "build-template/src/frontend/src/components/ui/toggle.tsx",
-    "build-template/src/frontend/src/components/ui/tooltip.tsx",
-    "build-template/src/frontend/src/hooks/use-mobile.tsx",
-    "build-template/src/frontend/src/lib/utils.ts",
-    "build-template/src/frontend/tsconfig.json",
-    "build-template/src/frontend/vite.config.js",
-    "build-template/tsconfig.json",
-    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/index.css",
-    "frontend/index.html",
-    "frontend/src/App.tsx",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/config.ts",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useActor.ts",
-    "frontend/src/hooks/useInternetIdentity.ts",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/index.css",
-    "frontend/src/main.tsx",
-    "frontend/src/ui-summary.json",
-    "frontend/src/utils/StorageClient.ts",
-    "frontend/src/utils/urlParams.ts",
-    "frontend/tailwind.config.js",
+    "frontend/src/components/public/BottomCTABar.tsx",
+    "frontend/src/components/public/Navbar.tsx",
+    "frontend/src/layouts/PublicLayout.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

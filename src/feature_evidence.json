@@ -1,4 +1,69 @@
 {
   "kind": "feature_evidence_report",
-  "features": []
+  "features": [
+    {
+      "featureId": "feature-add-white-mitsubishi-srikandi-subang-title-text-to-the-navigation-bar-component-in-mobile-view-with-appropriate-font-sizing",
+      "featureTitle": "Add white 'Mitsubishi Srikandi Subang' title text to the Navigation Bar component in mobile view with appropriate font sizing",
+      "files": [
+        "frontend/src/components/public/Navbar.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-remove-the-simulasi-kredit-menu-item-from-the-navigation-bar-component",
+      "featureTitle": "Remove the 'Simulasi Kredit' menu item from the Navigation Bar component",
+      "files": [
+        "frontend/src/components/public/Navbar.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-bottom-cta-bar-component-to-desktop-view-that-is-currently-only-visible-on-mobile",
+      "featureTitle": "Add Bottom CTA Bar component to desktop view that is currently only visible on mobile",
+      "files": [
+        "frontend/src/components/public/BottomCTABar.tsx",
+        "frontend/src/layouts/PublicLayout.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    }
+  ]
 }

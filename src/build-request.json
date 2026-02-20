@@ -1,301 +1,74 @@
 {
   "kind": "build_request",
-  "title": "Phase 1: Foundation Infrastructure - IC Canister Architecture with Vehicle Data System",
-  "projectName": "Mitsubishi Srikandi Subang",
+  "title": "Update navigation bar and add desktop CTA bar",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Implement stable canister storage architecture with persistent blob storage for media assets that survives refresh, rebuild, redeploy, and upgrade operations",
-      "target": "backend",
+      "text": "Add white 'Mitsubishi Srikandi Subang' title text to the Navigation Bar component in mobile view with appropriate font sizing",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "msg-latest"
         ],
         "quotes": [
-          "STABLE CANISTER STORAGE + BLOB PERSISTENT STORAGE",
-          "Media harus survive: Refresh, Rebuild, Redeploy, Upgrade"
+          "Tambahkan text judul web pada Navigation Bar dengan nama 'Mitsubishi Srikandi Subang' dengan warna putih di mobile view, ukuran disesuaikan"
         ]
       },
       "acceptanceCriteria": [
-        "Stable storage containers declared and bound to canister memory",
-        "Blob storage persistence layer active",
-        "Media assets survive canister upgrades",
-        "No in-memory, temporary, session, or Base64 storage used"
+        "Title text 'Mitsubishi Srikandi Subang' is visible in the mobile view of the Navigation Bar",
+        "Text color is white",
+        "Font size is appropriately scaled for mobile screens",
+        "Title is positioned correctly within the Navigation Bar layout"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Implement deterministic blob storage binding with public HTTPS gateway resolver using URL pattern /media/{collection}/{assetId}/{fileName}, including file hash fingerprint and URL integrity validation",
-      "target": "backend",
+      "text": "Remove the 'Simulasi Kredit' menu item from the Navigation Bar component",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "msg-latest"
         ],
         "quotes": [
-          "URL deterministic: /media/{collection}/{assetId}/{fileName}",
-          "File hash fingerprint, URL integrity validation"
+          "Hilangkan menu Simulasi Kredit pada Navigation Bar"
         ]
       },
       "acceptanceCriteria": [
-        "Stable blob container declared",
-        "Media index mapping active",
-        "Deterministic URL resolution works",
-        "File hash fingerprints generated and validated"
+        "'Simulasi Kredit' menu item is no longer visible in the Navigation Bar",
+        "Other navigation menu items remain functional",
+        "Navigation layout adjusts properly after removal"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Create stable canister database with auto-persistent and upgrade-safe collections: passengerVehicles, commercialVehicles, promotions, testimonials, blogPosts, contacts, creditSimulations, visitorStats, mediaAssets, adminUsers, websiteSettings, productLikes, productShares, articleLikes, articleShares, articleComments",
-      "target": "backend",
+      "text": "Add Bottom CTA Bar component to desktop view that is currently only visible on mobile",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "msg-latest"
         ],
         "quotes": [
-          "Create base collections: passengerVehicles, commercialVehicles, promotions, testimonials, blogPosts, contacts, creditSimulations, visitorStats, mediaAssets, adminUsers, websiteSettings"
+          "Tambahkan Bottom CTA Bar pada desktop view"
         ]
       },
       "acceptanceCriteria": [
-        "All 16 collections created with stable storage binding",
-        "Collections persist across canister upgrades",
-        "Database mapping is deterministic and upgrade-safe"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Implement visitorStats collection with fields: id, totalVisitors, dailyVisitors, yesterdayVisitors, weeklyVisitors, monthlyVisitors, yearlyVisitors, onlineVisitors, pageViews, lastUpdated (timestamp, auto-updates on events), and optional advanced tracking fields (uniqueIPs, referrerSources, deviceStats, browserStats, locationStats)",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "Collection: visitorStats ... totalVisitors, dailyVisitors, yesterdayVisitors, weeklyVisitors, monthlyVisitors, yearlyVisitors, onlineVisitors, pageViews, lastUpdated"
-        ]
-      },
-      "acceptanceCriteria": [
-        "visitorStats collection created with all required fields",
-        "Auto-update mechanism for lastUpdated timestamp",
-        "Optional advanced tracking fields structure in place"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Implement websiteSettings collection with fields: id, siteName, mainBannerImageId (reference to mediaAssets.id), ctaBannerImageId, dealerLogoId, contactPhone, contactWhatsapp, contactEmail, dealerAddress, operationalHours, facebookUrl, instagramUrl, tiktokUrl, youtubeUrl, lastUpdated (timestamp, auto-updates on change)",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "Collection: websiteSettings ... siteName, mainBannerImageId, ctaBannerImageId, dealerLogoId, contactPhone, contactWhatsapp, contactEmail, dealerAddress, operationalHours, facebookUrl, instagramUrl, tiktokUrl, youtubeUrl, lastUpdated"
-        ]
-      },
-      "acceptanceCriteria": [
-        "websiteSettings collection created with all fields",
-        "Media asset references properly linked",
-        "Auto-update timestamp mechanism active"
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Create passenger vehicle relational data layer with collections: passengerVehicles (id, vehicleName, slug, description, basePrice, thumbnailMediaId, brochureMediaId, publishStatus), passengerVehicleVariants (id, vehicleId, variantName, price, isPremium, displayOrder), passengerVehicleColors (id, vehicleId, colorName, colorHex, thumbnailMediaId, isActive), passengerVehicleVariantColorMapping (id, vehicleId, variantId, colorId, isDefault, displayOrder), passengerVehicleImages (id, vehicleId, variantId, colorId, mediaId, angle, backgroundType), passengerVehicleSpecifications, passengerVehicleFeatures",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "Create collections: passengerVehicles, passengerVehicleVariants, passengerVehicleColors, passengerVehicleVariantColorMapping, passengerVehicleImages, passengerVehicleSpecifications, passengerVehicleFeatures"
-        ]
-      },
-      "acceptanceCriteria": [
-        "All 7 passenger vehicle collections created with specified fields",
-        "Relational references properly bound (vehicleId, variantId, colorId)",
-        "Media references linked to mediaAssets collection"
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Create commercial vehicle relational data layer with collections: commercialVehicles (id, vehicleName, slug, categoryId, description, basePrice, thumbnailMediaId, brochureMediaId, publishStatus), commercialVehicleCategories (id, categoryName, displayOrder), commercialVehicleVariants (id, vehicleId, variantName, price, displayOrder), commercialVehicleVariantMapping (id, vehicleId, variantId), commercialVehicleVariantImages (id, vehicleId, variantId, mediaId, angle), commercialVehicleSpecifications, commercialVehicleFeatures - with no color system",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "Create collections: commercialVehicles, commercialVehicleCategories, commercialVehicleVariants, commercialVehicleVariantMapping, commercialVehicleVariantImages, commercialVehicleSpecifications, commercialVehicleFeatures",
-          "NO COLOR SYSTEM"
-        ]
-      },
-      "acceptanceCriteria": [
-        "All 7 commercial vehicle collections created with specified fields",
-        "No color-related fields in commercial vehicle schema",
-        "Category binding properly implemented",
-        "Variant mapping collection links vehicles to variants"
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "text": "Implement nested CMS data hierarchy for passenger vehicles with cascade delete and relational integrity: Vehicle → [Variants, Colors, Variant-Color Mapping, Interactive Images, Specifications, Features, CTA Config], all children bound by vehicleId with no orphan records allowed",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "Passenger Vehicle ├─ Variants ├─ Colors ├─ Variant-Color Mapping ├─ Interactive Images ├─ Specifications ├─ Features └─ CTA Config",
-          "Semua child bind by vehicleId, Cascade delete enabled, Relational integrity lock, No orphan records allowed"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Cascade delete triggers implemented for passenger vehicle hierarchy",
-        "Relational integrity constraints enforce vehicleId binding",
-        "Orphan record prevention logic active",
-        "All child records properly linked to parent vehicle"
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "text": "Implement nested CMS data hierarchy for commercial vehicles with cascade delete and relational integrity: Vehicle → [Category, Variants, Variant Mapping, Variant Images, Specifications, Features, CTA Config] with no color layer, variant images per variant, and category routing binding ready",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "Commercial Vehicle ├─ Category ├─ Variants ├─ Variant Mapping ├─ Variant Images ├─ Specifications ├─ Features └─ CTA Config",
-          "No color layer, Variant image per variant, Category routing bind ready"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Cascade delete triggers implemented for commercial vehicle hierarchy",
-        "Relational integrity constraints enforce vehicleId binding",
-        "Category routing binding structure in place",
-        "No color-related fields or references exist"
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "text": "Implement stable memory mapping binding: Collection → Stable segment, Variant mapping → Stable relational index, Media binding → Stable blob index, Counter → Stable write lock",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "Bind mapping: Collection → Stable segment, Variant mapping → Stable relational index, Media binding → Stable blob index, Counter → Stable write lock"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Collections bound to stable memory segments",
-        "Relational indices stored in stable memory",
-        "Blob index persisted in stable storage",
-        "Write-lock counters use stable memory"
-      ]
-    },
-    {
-      "id": "REQ-11",
-      "text": "Implement admin authentication foundation system with seeded super admin account (email: blankster2024@gmail.com, password: dewi4more) including password hashing, session persistence, auth guard logic, and role schema for Super Admin scope",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "Email: blankster2024@gmail.com, Password: dewi4more",
-          "Password hash, Session persistence, Auth guard ready, Role schema, Scope: Super Admin"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Super admin account seeded with hashed password",
-        "Session persistence mechanism active",
-        "Auth guard functions implemented and ready for use",
-        "Role schema includes Super Admin role",
-        "Password is securely hashed using appropriate algorithm"
-      ]
-    },
-    {
-      "id": "REQ-12",
-      "text": "Implement canister lifecycle hooks pre_upgrade() and post_upgrade() with snapshot and restore functionality for: Vehicles, Variants, Colors, Mapping, Images, Specs, Features, Media, Users, Counters using stable binary mapping serialization format",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "Implement: pre_upgrade() post_upgrade()",
-          "Snapshot: Vehicles, Variants, Colors, Mapping, Images, Specs, Features, Media, Users, Counters",
-          "Format: Stable binary mapping"
-        ]
-      },
-      "acceptanceCriteria": [
-        "pre_upgrade() hook captures all listed data structures",
-        "post_upgrade() hook restores all data structures",
-        "Relational passenger data serialized correctly",
-        "Relational commercial data serialized correctly",
-        "Stable binary format used for serialization"
-      ]
-    },
-    {
-      "id": "REQ-13",
-      "text": "Implement media library backend manager with blob-only operations: Upload, Replace, Delete, and Index binding - no Base64 or browser blob URLs",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "Media Manager backend: Upload, Replace, Delete, Index bind, Blob only"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Upload function stores media as persistent blob",
-        "Replace function updates existing blob entries",
-        "Delete function removes blob and index entry",
-        "Index binding links media to collections",
-        "No Base64 encoding or browser blob URLs used"
-      ]
-    },
-    {
-      "id": "REQ-14",
-      "text": "Implement deployment safety lock to prevent modification of: Storage binding, DB mapping, Vehicle relations, Media index, Auth system during deployment operations",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "Deploy tidak boleh mengubah: Storage binding, DB mapping, Vehicle relations, Media index, Auth system"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Storage binding immutable during deployment",
-        "Database mapping structure locked",
-        "Vehicle relational schema protected",
-        "Media index structure preserved",
-        "Auth system configuration remains unchanged"
+        "Bottom CTA Bar is visible in desktop view",
+        "Bottom CTA Bar continues to function in mobile view",
+        "CTA Bar is positioned at the bottom of the viewport in desktop view",
+        "All interactive elements (call, WhatsApp, credit simulation, menu) remain functional"
       ]
     }
   ],
   "constraints": [
-    "Do not generate any public website UI components or routes",
-    "Do not create router system or listing/detail page UI",
-    "Do not create admin dashboard visual interface or CMS frontend layout",
-    "Do not use in-memory, temporary, session storage, Base64 media, or blob browser URLs",
-    "Commercial vehicles must not have any color system implementation",
-    "All media assets must survive refresh, rebuild, redeploy, and upgrade",
-    "Deployment operations must not modify storage binding, DB mapping, vehicle relations, media index, or auth system"
+    "Do not modify the existing BottomCTABar component functionality",
+    "Maintain responsive design principles",
+    "Keep the Navigation Bar component structure intact for desktop view"
   ],
   "nonGoals": [
-    "Public website rendering or visual components",
-    "Frontend routing system",
-    "Vehicle listing or detail page UI",
-    "Admin dashboard visual interface",
-    "CMS frontend layout or forms",
-    "User-facing authentication UI",
-    "Any temporary or non-persistent storage mechanisms"
+    "Changing the styling or colors of existing Navigation Bar elements beyond adding the title text",
+    "Modifying the BottomCTABar component's internal functionality or button arrangements",
+    "Adding new menu items to the Navigation Bar"
   ],
   "imageRequirements": {
     "required": [],

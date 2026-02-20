@@ -1,185 +1,56 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Automotive company profile and sales website (Mitsubishi Srikandi Subang) - Phase 1: Foundation infrastructure with IC Canister architecture, stable storage, relational vehicle database, blob media storage, lifecycle hooks, and admin authentication",
-  "architectural_notes": [
-    "IC Canister architecture with stable persistence storage and blob-only media (no in-memory/temporary/session storage)",
-    "Relational database mapping with upgrade-safe serialization and deterministic storage binding",
-    "Passenger vehicles: nested structure with variants, colors, variant-color mapping, interactive images, specs, and features",
-    "Commercial vehicles: nested structure with categories, variants, variant mapping, variant images, specs, and features (no colors)",
-    "Media URL format: /media/{collection}/{assetId}/{fileName} with file hash fingerprint and integrity validation",
-    "Cascade delete enabled with relational integrity locks to prevent orphan records",
-    "Stable memory mapping for collections, variant mappings, media bindings, and write-locked counters",
-    "Lifecycle hooks with snapshot/restore for all vehicles, variants, colors, mappings, images, specs, features, media, users, and counters",
-    "Phase 1 scope: NO public UI, router system, listing/detail pages, admin dashboard UI, or CMS frontend layout",
-    "UI language: Bahasa Indonesia"
-  ],
+  "summary": "Mitsubishi Srikandi Subang - automotive dealership website",
+  "architectural_notes": [],
   "known_issues": [],
   "isFixRequest": false,
-  "existing_features": [],
+  "existing_features": [
+    {
+      "id": "feature-add-white-mitsubishi-srikandi-subang-title-text-to-the-navigation-bar-component-in-mobile-view-with-appropriate-font-sizing",
+      "title": "Add white 'Mitsubishi Srikandi Subang' title text to the Navigation Bar component in mobile view with appropriate font sizing",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-the-simulasi-kredit-menu-item-from-the-navigation-bar-component",
+      "title": "Remove the 'Simulasi Kredit' menu item from the Navigation Bar component",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-bottom-cta-bar-component-to-desktop-view-that-is-currently-only-visible-on-mobile",
+      "title": "Add Bottom CTA Bar component to desktop view that is currently only visible on mobile",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    }
+  ],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "IC Canister stable storage architecture with persistent blob storage and deterministic media URLs",
+      "summary": "Add white 'Mitsubishi Srikandi Subang' title text to Navigation Bar in mobile view with appropriate sizing",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Stable canister database with collections for vehicles, promotions, testimonials, blogs, contacts, visitor stats, media assets, admin users, and website settings",
+      "summary": "Remove 'Simulasi Kredit' menu item from Navigation Bar",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Passenger vehicle relational data layer with variants, colors, variant-color mapping, interactive images, specifications, and features",
+      "summary": "Add Bottom CTA Bar in desktop view",
       "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Commercial vehicle relational data layer with categories, variants, variant mapping, variant images, specifications, and features (no color system)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Nested CMS architecture with relational integrity, cascade delete, and nested hierarchy for passenger and commercial vehicles",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Admin authentication system with seeded super admin account (blankster2024@gmail.com), password hashing, session persistence, and role schema",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Canister lifecycle hooks (pre_upgrade/post_upgrade) with snapshot and restore for all collections and counters",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-8",
-      "summary": "Media library backend with upload, replace, delete, and index binding using blob-only storage",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Implement stable canister storage architecture with persistent blob storage for media assets that survives refresh, rebuild, redeploy, and upgrade operations",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-10",
-      "summary": "Implement deterministic blob storage binding with public HTTPS gateway resolver using URL pattern /media/{collection}/{assetId}/{fileName}, including file hash fingerprint and URL integrity validation",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-11",
-      "summary": "Create stable canister database with auto-persistent and upgrade-safe collections: passengerVehicles, commercialVehicles, promotions, testimonials, blogPosts, contacts, creditSimulations, visitorStats, mediaAssets, adminUsers, websiteSettings, productLikes, productShares, articleLikes, articleShares, articleComments",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-12",
-      "summary": "Implement visitorStats collection with fields: id, totalVisitors, dailyVisitors, yesterdayVisitors, weeklyVisitors, monthlyVisitors, yearlyVisitors, onlineVisitors, pageViews, lastUpdated (timestamp, auto-updates on events), and optional advanced tracking fields (uniqueIPs, referrerSources, deviceStats, browserStats, locationStats)",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-13",
-      "summary": "Implement websiteSettings collection with fields: id, siteName, mainBannerImageId (reference to mediaAssets.id), ctaBannerImageId, dealerLogoId, contactPhone, contactWhatsapp, contactEmail, dealerAddress, operationalHours, facebookUrl, instagramUrl, tiktokUrl, youtubeUrl, lastUpdated (timestamp, auto-updates on change)",
-      "reqIds": [
-        "REQ-5"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-14",
-      "summary": "Create passenger vehicle relational data layer with collections: passengerVehicles (id, vehicleName, slug, description, basePrice, thumbnailMediaId, brochureMediaId, publishStatus), passengerVehicleVariants (id, vehicleId, variantName, price, isPremium, displayOrder), passengerVehicleColors (id, vehicleId, colorName, colorHex, thumbnailMediaId, isActive), passengerVehicleVariantColorMapping (id, vehicleId, variantId, colorId, isDefault, displayOrder), passengerVehicleImages (id, vehicleId, variantId, colorId, mediaId, angle, backgroundType), passengerVehicleSpecifications, passengerVehicleFeatures",
-      "reqIds": [
-        "REQ-6"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-15",
-      "summary": "Create commercial vehicle relational data layer with collections: commercialVehicles (id, vehicleName, slug, categoryId, description, basePrice, thumbnailMediaId, brochureMediaId, publishStatus), commercialVehicleCategories (id, categoryName, displayOrder), commercialVehicleVariants (id, vehicleId, variantName, price, displayOrder), commercialVehicleVariantMapping (id, vehicleId, variantId), commercialVehicleVariantImages (id, vehicleId, variantId, mediaId, angle), commercialVehicleSpecifications, commercialVehicleFeatures - with no color system",
-      "reqIds": [
-        "REQ-7"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-16",
-      "summary": "Implement nested CMS data hierarchy for passenger vehicles with cascade delete and relational integrity: Vehicle → [Variants, Colors, Variant-Color Mapping, Interactive Images, Specifications, Features, CTA Config], all children bound by vehicleId with no orphan records allowed",
-      "reqIds": [
-        "REQ-8"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-17",
-      "summary": "Implement nested CMS data hierarchy for commercial vehicles with cascade delete and relational integrity: Vehicle → [Category, Variants, Variant Mapping, Variant Images, Specifications, Features, CTA Config] with no color layer, variant images per variant, and category routing binding ready",
-      "reqIds": [
-        "REQ-9"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-18",
-      "summary": "Implement stable memory mapping binding: Collection → Stable segment, Variant mapping → Stable relational index, Media binding → Stable blob index, Counter → Stable write lock",
-      "reqIds": [
-        "REQ-10"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-19",
-      "summary": "Implement admin authentication foundation system with seeded super admin account (email: blankster2024@gmail.com, password: dewi4more) including password hashing, session persistence, auth guard logic, and role schema for Super Admin scope",
-      "reqIds": [
-        "REQ-11"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-20",
-      "summary": "Implement canister lifecycle hooks pre_upgrade() and post_upgrade() with snapshot and restore functionality for: Vehicles, Variants, Colors, Mapping, Images, Specs, Features, Media, Users, Counters using stable binary mapping serialization format",
-      "reqIds": [
-        "REQ-12"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-21",
-      "summary": "Implement media library backend manager with blob-only operations: Upload, Replace, Delete, and Index binding - no Base64 or browser blob URLs",
-      "reqIds": [
-        "REQ-13"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-22",
-      "summary": "Implement deployment safety lock to prevent modification of: Storage binding, DB mapping, Vehicle relations, Media index, Auth system during deployment operations",
-      "reqIds": [
-        "REQ-14"
-      ],
       "status": "pending"
     }
   ],
-  "gameProjectType": "none",
   "projectName": "Mitsubishi Srikandi Subang",
   "clarification_mode": "instant",
   "clarification_rounds": 0

@@ -1,6 +1,62 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Phase 1: Foundation Infrastructure - No Frontend Changes Required",
-  "requirements": []
+  "title": "Update navigation bar and add desktop CTA bar",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Add white 'Mitsubishi Srikandi Subang' title text to the Navigation Bar component in mobile view with appropriate font sizing",
+      "acceptanceCriteria": [
+        "Title text 'Mitsubishi Srikandi Subang' is visible in the mobile view of the Navigation Bar",
+        "Text color is white",
+        "Font size is appropriately scaled for mobile screens",
+        "Title is positioned correctly within the Navigation Bar layout"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/public/Navbar.tsx",
+          "operation": "modify",
+          "description": "Add white title text 'Mitsubishi Srikandi Subang' to the mobile navigation bar. Position the text between the logo and mobile menu button. Use responsive text sizing (text-sm or text-base) and ensure white text color (text-white). The title should only be visible on mobile screens using Tailwind's responsive classes (block md:hidden)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Remove the 'Simulasi Kredit' menu item from the Navigation Bar component",
+      "acceptanceCriteria": [
+        "'Simulasi Kredit' menu item is no longer visible in the Navigation Bar",
+        "Other navigation menu items remain functional",
+        "Navigation layout adjusts properly after removal"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/public/Navbar.tsx",
+          "operation": "modify",
+          "description": "Remove the 'Simulasi Kredit' button from the desktop navigation menu. This button is currently positioned on the right side of the desktop menu with a yellow background and calls-to-action styling. After removal, ensure the remaining menu items (Beranda, Mobil Keluarga, Mobil Niaga, Promo, Kontak, Testimoni) remain properly aligned and functional."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Add Bottom CTA Bar component to desktop view that is currently only visible on mobile",
+      "acceptanceCriteria": [
+        "Bottom CTA Bar is visible in desktop view",
+        "Bottom CTA Bar continues to function in mobile view",
+        "CTA Bar is positioned at the bottom of the viewport in desktop view",
+        "All interactive elements (call, WhatsApp, credit simulation, menu) remain functional"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/public/BottomCTABar.tsx",
+          "operation": "modify",
+          "description": "Update the BottomCTABar component to be visible on both mobile and desktop views. Currently the component uses 'md:hidden' which hides it on desktop. Remove or modify this class so the bar is visible at all screen sizes. The component should remain fixed at the bottom of the viewport with proper z-index layering to stay above other content. Ensure all four CTA buttons (call, WhatsApp, credit simulation, menu) and the dropdown menu continue to function properly on desktop."
+        },
+        {
+          "path": "frontend/src/layouts/PublicLayout.tsx",
+          "operation": "modify",
+          "description": "Verify that the BottomCTABar is properly rendered in the PublicLayout and that the layout provides adequate bottom padding or margin on desktop views to prevent content from being obscured by the fixed bottom bar. Add responsive padding-bottom to the main content area if needed (e.g., pb-20 or pb-24 on all screen sizes)."
+        }
+      ]
+    }
+  ]
 }

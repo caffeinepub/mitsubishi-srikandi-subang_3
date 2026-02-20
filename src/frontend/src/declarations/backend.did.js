@@ -19,51 +19,34 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
-export const Vehicle = IDL.Record({
-  'id' : IDL.Nat,
-  'vehicleName' : IDL.Text,
-  'publishStatus' : IDL.Bool,
-  'description' : IDL.Text,
-  'basePrice' : IDL.Nat,
-});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
-export const ContactSubmission = IDL.Record({
+export const BlogPost = IDL.Record({
   'id' : IDL.Nat,
-  'userId' : IDL.Opt(IDL.Principal),
-  'name' : IDL.Text,
-  'email' : IDL.Text,
-  'message' : IDL.Text,
-  'timestamp' : IDL.Int,
-});
-export const CreditSimulation = IDL.Record({
-  'id' : IDL.Nat,
-  'userId' : IDL.Principal,
-  'term' : IDL.Nat,
-  'timestamp' : IDL.Int,
-  'amount' : IDL.Nat,
-  'vehicleId' : IDL.Nat,
-});
-export const ArticleComment = IDL.Record({
-  'id' : IDL.Nat,
+  'title' : IDL.Text,
   'content' : IDL.Text,
-  'userId' : IDL.Principal,
-  'articleId' : IDL.Nat,
-  'timestamp' : IDL.Int,
+  'authorId' : IDL.Principal,
+  'published' : IDL.Bool,
+  'createdAt' : IDL.Int,
+  'publishedAt' : IDL.Opt(IDL.Int),
+  'updatedAt' : IDL.Int,
+  'excerpt' : IDL.Text,
+  'imageId' : IDL.Opt(IDL.Text),
+});
+export const Variant = IDL.Record({
+  'id' : IDL.Nat,
+  'displayOrder' : IDL.Nat,
+  'name' : IDL.Text,
+  'overridePrice' : IDL.Opt(IDL.Nat),
+  'vehicleId' : IDL.Nat,
 });
 export const UserProfile = IDL.Record({
   'name' : IDL.Text,
   'email' : IDL.Text,
   'phone' : IDL.Text,
-});
-export const ProductLike = IDL.Record({
-  'id' : IDL.Nat,
-  'userId' : IDL.Principal,
-  'timestamp' : IDL.Int,
-  'vehicleId' : IDL.Nat,
 });
 export const VisitorStats = IDL.Record({
   'totalVisitors' : IDL.Nat,
@@ -72,18 +55,14 @@ export const VisitorStats = IDL.Record({
   'dailyVisitors' : IDL.Nat,
   'pageViews' : IDL.Nat,
 });
-export const WebsiteSettings = IDL.Record({
+export const MediaAsset = IDL.Record({
   'id' : IDL.Nat,
-  'dealerAddress' : IDL.Text,
-  'operationalHours' : IDL.Text,
-  'instagramUrl' : IDL.Text,
-  'siteName' : IDL.Text,
-  'contactEmail' : IDL.Text,
-  'contactWhatsapp' : IDL.Text,
-  'youtubeUrl' : IDL.Text,
-  'facebookUrl' : IDL.Text,
-  'contactPhone' : IDL.Text,
-  'tiktokUrl' : IDL.Text,
+  'assetId' : IDL.Text,
+  'size' : IDL.Nat,
+  'mimeType' : IDL.Text,
+  'filename' : IDL.Text,
+  'uploadedAt' : IDL.Int,
+  'uploadedBy' : IDL.Principal,
 });
 
 export const idlService = IDL.Service({
@@ -114,63 +93,61 @@ export const idlService = IDL.Service({
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-  'addArticleComment' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Nat], []),
-  'addVehicle' : IDL.Func([Vehicle], [IDL.Nat], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-  'createCreditSimulation' : IDL.Func(
-      [IDL.Nat, IDL.Nat, IDL.Nat],
-      [IDL.Nat],
+  'createBlogPost' : IDL.Func(
+      [
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Principal,
+        IDL.Opt(IDL.Text),
+        IDL.Bool,
+        IDL.Opt(IDL.Int),
+      ],
+      [BlogPost],
       [],
     ),
-  'deleteArticleComment' : IDL.Func([IDL.Nat], [], []),
-  'deleteVehicle' : IDL.Func([IDL.Nat], [], []),
-  'getAllContactSubmissions' : IDL.Func(
+  'createVariant' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Nat, IDL.Opt(IDL.Nat)],
+      [Variant],
       [],
-      [IDL.Vec(ContactSubmission)],
-      ['query'],
     ),
-  'getAllCreditSimulations' : IDL.Func(
-      [],
-      [IDL.Vec(CreditSimulation)],
-      ['query'],
-    ),
-  'getAllVehiclePreviews' : IDL.Func([], [IDL.Vec(Vehicle)], ['query']),
-  'getAllVehiclesAdmin' : IDL.Func([], [IDL.Vec(Vehicle)], ['query']),
-  'getArticleComments' : IDL.Func(
-      [IDL.Nat],
-      [IDL.Vec(ArticleComment)],
+  'getBlogPosts' : IDL.Func(
+      [IDL.Nat, IDL.Nat, IDL.Opt(IDL.Bool)],
+      [IDL.Vec(BlogPost)],
       ['query'],
     ),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-  'getMyCreditSimulations' : IDL.Func(
-      [],
-      [IDL.Vec(CreditSimulation)],
-      ['query'],
-    ),
-  'getProductLikes' : IDL.Func([IDL.Nat], [IDL.Vec(ProductLike)], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
-  'getVehicle' : IDL.Func([IDL.Nat], [IDL.Opt(Vehicle)], ['query']),
-  'getVehicleAdmin' : IDL.Func([IDL.Nat], [IDL.Opt(Vehicle)], ['query']),
   'getVisitorStats' : IDL.Func([], [VisitorStats], ['query']),
-  'getWebsiteSettings' : IDL.Func(
-      [IDL.Nat],
-      [IDL.Opt(WebsiteSettings)],
-      ['query'],
-    ),
-  'incrementPageView' : IDL.Func([], [], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-  'likeProduct' : IDL.Func([IDL.Nat], [IDL.Nat], []),
-  'resetVisitorStats' : IDL.Func([], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
-  'saveWebsiteSettings' : IDL.Func([WebsiteSettings], [], []),
-  'submitContactForm' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Nat], []),
-  'unlikeProduct' : IDL.Func([IDL.Nat], [], []),
-  'updateVehicle' : IDL.Func([IDL.Nat, Vehicle], [], []),
+  'trackPageView' : IDL.Func([], [], []),
+  'trackVisitor' : IDL.Func([], [], []),
+  'updateBlogPost' : IDL.Func(
+      [
+        IDL.Nat,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Principal,
+        IDL.Opt(IDL.Text),
+        IDL.Bool,
+        IDL.Opt(IDL.Int),
+      ],
+      [IDL.Opt(BlogPost)],
+      [],
+    ),
+  'uploadMediaAsset' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
+      [MediaAsset],
+      [],
+    ),
 });
 
 export const idlInitArgs = [];
@@ -187,51 +164,34 @@ export const idlFactory = ({ IDL }) => {
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
   });
-  const Vehicle = IDL.Record({
-    'id' : IDL.Nat,
-    'vehicleName' : IDL.Text,
-    'publishStatus' : IDL.Bool,
-    'description' : IDL.Text,
-    'basePrice' : IDL.Nat,
-  });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
-  const ContactSubmission = IDL.Record({
+  const BlogPost = IDL.Record({
     'id' : IDL.Nat,
-    'userId' : IDL.Opt(IDL.Principal),
-    'name' : IDL.Text,
-    'email' : IDL.Text,
-    'message' : IDL.Text,
-    'timestamp' : IDL.Int,
-  });
-  const CreditSimulation = IDL.Record({
-    'id' : IDL.Nat,
-    'userId' : IDL.Principal,
-    'term' : IDL.Nat,
-    'timestamp' : IDL.Int,
-    'amount' : IDL.Nat,
-    'vehicleId' : IDL.Nat,
-  });
-  const ArticleComment = IDL.Record({
-    'id' : IDL.Nat,
+    'title' : IDL.Text,
     'content' : IDL.Text,
-    'userId' : IDL.Principal,
-    'articleId' : IDL.Nat,
-    'timestamp' : IDL.Int,
+    'authorId' : IDL.Principal,
+    'published' : IDL.Bool,
+    'createdAt' : IDL.Int,
+    'publishedAt' : IDL.Opt(IDL.Int),
+    'updatedAt' : IDL.Int,
+    'excerpt' : IDL.Text,
+    'imageId' : IDL.Opt(IDL.Text),
+  });
+  const Variant = IDL.Record({
+    'id' : IDL.Nat,
+    'displayOrder' : IDL.Nat,
+    'name' : IDL.Text,
+    'overridePrice' : IDL.Opt(IDL.Nat),
+    'vehicleId' : IDL.Nat,
   });
   const UserProfile = IDL.Record({
     'name' : IDL.Text,
     'email' : IDL.Text,
     'phone' : IDL.Text,
-  });
-  const ProductLike = IDL.Record({
-    'id' : IDL.Nat,
-    'userId' : IDL.Principal,
-    'timestamp' : IDL.Int,
-    'vehicleId' : IDL.Nat,
   });
   const VisitorStats = IDL.Record({
     'totalVisitors' : IDL.Nat,
@@ -240,18 +200,14 @@ export const idlFactory = ({ IDL }) => {
     'dailyVisitors' : IDL.Nat,
     'pageViews' : IDL.Nat,
   });
-  const WebsiteSettings = IDL.Record({
+  const MediaAsset = IDL.Record({
     'id' : IDL.Nat,
-    'dealerAddress' : IDL.Text,
-    'operationalHours' : IDL.Text,
-    'instagramUrl' : IDL.Text,
-    'siteName' : IDL.Text,
-    'contactEmail' : IDL.Text,
-    'contactWhatsapp' : IDL.Text,
-    'youtubeUrl' : IDL.Text,
-    'facebookUrl' : IDL.Text,
-    'contactPhone' : IDL.Text,
-    'tiktokUrl' : IDL.Text,
+    'assetId' : IDL.Text,
+    'size' : IDL.Nat,
+    'mimeType' : IDL.Text,
+    'filename' : IDL.Text,
+    'uploadedAt' : IDL.Int,
+    'uploadedBy' : IDL.Principal,
   });
   
   return IDL.Service({
@@ -282,67 +238,61 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-    'addArticleComment' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Nat], []),
-    'addVehicle' : IDL.Func([Vehicle], [IDL.Nat], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-    'createCreditSimulation' : IDL.Func(
-        [IDL.Nat, IDL.Nat, IDL.Nat],
-        [IDL.Nat],
+    'createBlogPost' : IDL.Func(
+        [
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Principal,
+          IDL.Opt(IDL.Text),
+          IDL.Bool,
+          IDL.Opt(IDL.Int),
+        ],
+        [BlogPost],
         [],
       ),
-    'deleteArticleComment' : IDL.Func([IDL.Nat], [], []),
-    'deleteVehicle' : IDL.Func([IDL.Nat], [], []),
-    'getAllContactSubmissions' : IDL.Func(
+    'createVariant' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Nat, IDL.Opt(IDL.Nat)],
+        [Variant],
         [],
-        [IDL.Vec(ContactSubmission)],
-        ['query'],
       ),
-    'getAllCreditSimulations' : IDL.Func(
-        [],
-        [IDL.Vec(CreditSimulation)],
-        ['query'],
-      ),
-    'getAllVehiclePreviews' : IDL.Func([], [IDL.Vec(Vehicle)], ['query']),
-    'getAllVehiclesAdmin' : IDL.Func([], [IDL.Vec(Vehicle)], ['query']),
-    'getArticleComments' : IDL.Func(
-        [IDL.Nat],
-        [IDL.Vec(ArticleComment)],
+    'getBlogPosts' : IDL.Func(
+        [IDL.Nat, IDL.Nat, IDL.Opt(IDL.Bool)],
+        [IDL.Vec(BlogPost)],
         ['query'],
       ),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-    'getMyCreditSimulations' : IDL.Func(
-        [],
-        [IDL.Vec(CreditSimulation)],
-        ['query'],
-      ),
-    'getProductLikes' : IDL.Func([IDL.Nat], [IDL.Vec(ProductLike)], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
-    'getVehicle' : IDL.Func([IDL.Nat], [IDL.Opt(Vehicle)], ['query']),
-    'getVehicleAdmin' : IDL.Func([IDL.Nat], [IDL.Opt(Vehicle)], ['query']),
     'getVisitorStats' : IDL.Func([], [VisitorStats], ['query']),
-    'getWebsiteSettings' : IDL.Func(
-        [IDL.Nat],
-        [IDL.Opt(WebsiteSettings)],
-        ['query'],
-      ),
-    'incrementPageView' : IDL.Func([], [], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-    'likeProduct' : IDL.Func([IDL.Nat], [IDL.Nat], []),
-    'resetVisitorStats' : IDL.Func([], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
-    'saveWebsiteSettings' : IDL.Func([WebsiteSettings], [], []),
-    'submitContactForm' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text],
-        [IDL.Nat],
+    'trackPageView' : IDL.Func([], [], []),
+    'trackVisitor' : IDL.Func([], [], []),
+    'updateBlogPost' : IDL.Func(
+        [
+          IDL.Nat,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Principal,
+          IDL.Opt(IDL.Text),
+          IDL.Bool,
+          IDL.Opt(IDL.Int),
+        ],
+        [IDL.Opt(BlogPost)],
         [],
       ),
-    'unlikeProduct' : IDL.Func([IDL.Nat], [], []),
-    'updateVehicle' : IDL.Func([IDL.Nat, Vehicle], [], []),
+    'uploadMediaAsset' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
+        [MediaAsset],
+        [],
+      ),
   });
 };
 

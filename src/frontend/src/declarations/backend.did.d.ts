@@ -10,34 +10,26 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
-export interface ArticleComment {
+export interface BlogPost {
   'id' : bigint,
+  'title' : string,
   'content' : string,
-  'userId' : Principal,
-  'articleId' : bigint,
-  'timestamp' : bigint,
+  'authorId' : Principal,
+  'published' : boolean,
+  'createdAt' : bigint,
+  'publishedAt' : [] | [bigint],
+  'updatedAt' : bigint,
+  'excerpt' : string,
+  'imageId' : [] | [string],
 }
-export interface ContactSubmission {
+export interface MediaAsset {
   'id' : bigint,
-  'userId' : [] | [Principal],
-  'name' : string,
-  'email' : string,
-  'message' : string,
-  'timestamp' : bigint,
-}
-export interface CreditSimulation {
-  'id' : bigint,
-  'userId' : Principal,
-  'term' : bigint,
-  'timestamp' : bigint,
-  'amount' : bigint,
-  'vehicleId' : bigint,
-}
-export interface ProductLike {
-  'id' : bigint,
-  'userId' : Principal,
-  'timestamp' : bigint,
-  'vehicleId' : bigint,
+  'assetId' : string,
+  'size' : bigint,
+  'mimeType' : string,
+  'filename' : string,
+  'uploadedAt' : bigint,
+  'uploadedBy' : Principal,
 }
 export interface UserProfile {
   'name' : string,
@@ -47,12 +39,12 @@ export interface UserProfile {
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
-export interface Vehicle {
+export interface Variant {
   'id' : bigint,
-  'vehicleName' : string,
-  'publishStatus' : boolean,
-  'description' : string,
-  'basePrice' : bigint,
+  'displayOrder' : bigint,
+  'name' : string,
+  'overridePrice' : [] | [bigint],
+  'vehicleId' : bigint,
 }
 export interface VisitorStats {
   'totalVisitors' : bigint,
@@ -60,19 +52,6 @@ export interface VisitorStats {
   'monthlyVisitors' : bigint,
   'dailyVisitors' : bigint,
   'pageViews' : bigint,
-}
-export interface WebsiteSettings {
-  'id' : bigint,
-  'dealerAddress' : string,
-  'operationalHours' : string,
-  'instagramUrl' : string,
-  'siteName' : string,
-  'contactEmail' : string,
-  'contactWhatsapp' : string,
-  'youtubeUrl' : string,
-  'facebookUrl' : string,
-  'contactPhone' : string,
-  'tiktokUrl' : string,
 }
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
@@ -102,35 +81,44 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
-  'addArticleComment' : ActorMethod<[bigint, string], bigint>,
-  'addVehicle' : ActorMethod<[Vehicle], bigint>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'createCreditSimulation' : ActorMethod<[bigint, bigint, bigint], bigint>,
-  'deleteArticleComment' : ActorMethod<[bigint], undefined>,
-  'deleteVehicle' : ActorMethod<[bigint], undefined>,
-  'getAllContactSubmissions' : ActorMethod<[], Array<ContactSubmission>>,
-  'getAllCreditSimulations' : ActorMethod<[], Array<CreditSimulation>>,
-  'getAllVehiclePreviews' : ActorMethod<[], Array<Vehicle>>,
-  'getAllVehiclesAdmin' : ActorMethod<[], Array<Vehicle>>,
-  'getArticleComments' : ActorMethod<[bigint], Array<ArticleComment>>,
+  'createBlogPost' : ActorMethod<
+    [string, string, string, Principal, [] | [string], boolean, [] | [bigint]],
+    BlogPost
+  >,
+  'createVariant' : ActorMethod<
+    [bigint, string, bigint, [] | [bigint]],
+    Variant
+  >,
+  'getBlogPosts' : ActorMethod<
+    [bigint, bigint, [] | [boolean]],
+    Array<BlogPost>
+  >,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getMyCreditSimulations' : ActorMethod<[], Array<CreditSimulation>>,
-  'getProductLikes' : ActorMethod<[bigint], Array<ProductLike>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
-  'getVehicle' : ActorMethod<[bigint], [] | [Vehicle]>,
-  'getVehicleAdmin' : ActorMethod<[bigint], [] | [Vehicle]>,
   'getVisitorStats' : ActorMethod<[], VisitorStats>,
-  'getWebsiteSettings' : ActorMethod<[bigint], [] | [WebsiteSettings]>,
-  'incrementPageView' : ActorMethod<[], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
-  'likeProduct' : ActorMethod<[bigint], bigint>,
-  'resetVisitorStats' : ActorMethod<[], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
-  'saveWebsiteSettings' : ActorMethod<[WebsiteSettings], undefined>,
-  'submitContactForm' : ActorMethod<[string, string, string], bigint>,
-  'unlikeProduct' : ActorMethod<[bigint], undefined>,
-  'updateVehicle' : ActorMethod<[bigint, Vehicle], undefined>,
+  'trackPageView' : ActorMethod<[], undefined>,
+  'trackVisitor' : ActorMethod<[], undefined>,
+  'updateBlogPost' : ActorMethod<
+    [
+      bigint,
+      string,
+      string,
+      string,
+      Principal,
+      [] | [string],
+      boolean,
+      [] | [bigint],
+    ],
+    [] | [BlogPost]
+  >,
+  'uploadMediaAsset' : ActorMethod<
+    [string, string, string, bigint],
+    MediaAsset
+  >,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];
