@@ -1,4 +1,3 @@
-import Migration "migration";
 import Time "mo:core/Time";
 import Array "mo:core/Array";
 import Int "mo:core/Int";
@@ -14,7 +13,6 @@ import MixinStorage "blob-storage/Mixin";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
-(with migration = Migration.run)
 actor {
   include MixinStorage();
   let accessControlState = AccessControl.initState();
@@ -355,7 +353,18 @@ actor {
     (timestamp >= (nowNanos - monthNanos));
   };
 
-  // User Profile Management (Required by instructions)
+  func cleanupExpiredSessionsInternal() {
+    let currentTime = Time.now();
+    let timeout = 5 * 60 * 1_000_000_000; // 5 minutes in nanoseconds
+
+    for ((sessionId, session) in visitorSessions.entries()) {
+      if (currentTime - session.lastActivity > timeout and session.isOnline) {
+        let updatedSession = { session with isOnline = false };
+        visitorSessions.add(sessionId, updatedSession);
+      };
+    };
+  };
+
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view profiles");
@@ -375,18 +384,6 @@ actor {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
     userProfiles.add(caller, profile);
-  };
-
-  func cleanupExpiredSessionsInternal() {
-    let currentTime = Time.now();
-    let timeout = 5 * 60 * 1_000_000_000; // 5 minutes in nanoseconds
-
-    for ((sessionId, session) in visitorSessions.entries()) {
-      if (currentTime - session.lastActivity > timeout and session.isOnline) {
-        let updatedSession = { session with isOnline = false };
-        visitorSessions.add(sessionId, updatedSession);
-      };
-    };
   };
 
   // Visitor Tracking - Public access for anonymous visitors (NO AUTHORIZATION CHECK)
@@ -685,5 +682,12 @@ actor {
     mediaAssets.values().toArray().filter(
       func(asset) { asset.uploadedAt >= startDate and asset.uploadedAt <= endDate }
     );
+  };
+
+  public query ({ caller }) func getMediaAssets() : async [MediaAsset] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can access media assets");
+    };
+    mediaAssets.values().toArray();
   };
 };

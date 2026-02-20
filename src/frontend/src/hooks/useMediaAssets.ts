@@ -16,10 +16,12 @@ function isAuthError(error: any): boolean {
     errorMessage.includes('invalid session') ||
     errorMessage.includes('login required') ||
     errorMessage.includes('permission denied') ||
+    errorMessage.includes('only admins') ||
     errorMessage.includes('sesi anda telah berakhir') ||
     errorMessage.includes('silakan login kembali') ||
     errorString.includes('unauthorized') ||
-    errorString.includes('authentication')
+    errorString.includes('authentication') ||
+    errorString.includes('permission')
   );
   
   console.log('[useMediaAssets] Error classification:', {
@@ -64,16 +66,30 @@ export function useGetAllMediaAssets() {
     queryFn: async () => {
       if (!actor) {
         console.warn('[useGetAllMediaAssets] Actor not available, skipping fetch');
-        throw new Error('Actor not available');
+        return [];
       }
       console.log('[useGetAllMediaAssets] Fetching all media assets from stable storage');
-      const assets = await actor.getAllMediaAssets();
-      console.log('[useGetAllMediaAssets] Fetched assets from persistent storage:', assets.length);
-      return assets;
+      try {
+        const assets = await actor.getAllMediaAssets();
+        console.log('[useGetAllMediaAssets] Fetched assets from persistent storage:', assets.length);
+        return assets;
+      } catch (error: any) {
+        console.error('[useGetAllMediaAssets] Error fetching media assets:', error);
+        // Don't throw for auth errors during initial load - just return empty array
+        if (isAuthError(error)) {
+          console.warn('[useGetAllMediaAssets] Auth error - returning empty array');
+          return [];
+        }
+        throw error;
+      }
     },
     enabled: !!actor && !isFetching,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     retry: (failureCount, error: any) => {
+      // Don't retry auth errors
+      if (isAuthError(error)) {
+        return false;
+      }
       // Don't retry if actor is not available
       if (error?.message?.includes('Actor not available')) {
         return false;
@@ -97,6 +113,9 @@ export function useGetMediaAssetById(assetId: bigint | null) {
     },
     enabled: !!actor && !isFetching && assetId !== null,
     retry: (failureCount, error: any) => {
+      if (isAuthError(error)) {
+        return false;
+      }
       if (error?.message?.includes('Actor not available')) {
         return false;
       }
@@ -188,20 +207,33 @@ export function useDeleteMediaAsset() {
       console.log('[useDeleteMediaAsset] Mutation triggered for asset:', assetId);
       console.log('[useDeleteMediaAsset] Actor available:', !!actor);
       
+      // Validate actor is available and authenticated
       if (!actor) {
         console.error('[useDeleteMediaAsset] Actor not available - cannot delete');
         throw new Error('Actor not available');
       }
       
+      console.log('[useDeleteMediaAsset] Calling backend deleteMediaAsset with authenticated actor');
       console.log('[useDeleteMediaAsset] Deleting media asset from stable storage:', assetId);
-      const success = await actor.deleteMediaAsset(assetId);
-      console.log('[useDeleteMediaAsset] Backend response:', success);
       
-      if (!success) {
-        throw new Error('Gambar tidak ditemukan atau sudah dihapus');
+      try {
+        const success = await actor.deleteMediaAsset(assetId);
+        console.log('[useDeleteMediaAsset] Backend response:', success);
+        
+        if (!success) {
+          throw new Error('Gambar tidak ditemukan atau sudah dihapus');
+        }
+        
+        return success;
+      } catch (error: any) {
+        console.error('[useDeleteMediaAsset] Backend call failed:', error);
+        console.error('[useDeleteMediaAsset] Error details:', {
+          message: error?.message,
+          name: error?.name,
+          stack: error?.stack
+        });
+        throw error;
       }
-      
-      return success;
     },
     onSuccess: (_, assetId) => {
       console.log('[useDeleteMediaAsset] Success - invalidating queries for asset:', assetId);
@@ -221,12 +253,13 @@ export function useDeleteMediaAsset() {
       console.error('[useDeleteMediaAsset] Error deleting asset:', assetId, error);
       console.error('[useDeleteMediaAsset] Full error object:', JSON.stringify(error, null, 2));
       
+      // Classify error and show appropriate message
       if (isCanisterStoppedError(error)) {
         toast.error('Canister sedang dalam pemeliharaan. Silakan coba lagi nanti atau hubungi administrator.');
       } else if (isNetworkError(error)) {
         toast.error('Koneksi gagal. Periksa internet Anda dan coba lagi.');
       } else if (isAuthError(error)) {
-        toast.error('Sesi Anda telah berakhir. Silakan login kembali.');
+        toast.error('Anda tidak memiliki izin untuk menghapus gambar ini. Pastikan Anda sudah login sebagai admin.');
       } else if (error.message?.includes('Actor not available')) {
         toast.error('Sistem belum siap. Silakan tunggu sebentar dan coba lagi.');
       } else {

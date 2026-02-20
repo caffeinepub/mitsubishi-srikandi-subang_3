@@ -67,6 +67,7 @@ export interface backendInterface {
     getCallerUserRole(): Promise<UserRole>;
     getMediaAssetByBlobId(blobId: string): Promise<MediaAsset | null>;
     getMediaAssetById(id: bigint): Promise<MediaAsset | null>;
+    getMediaAssets(): Promise<Array<MediaAsset>>;
     getOnlineUsers(): Promise<bigint>;
     getStableVisitorStats(): Promise<VisitorStats>;
     getTotalPageViews(): Promise<bigint>;

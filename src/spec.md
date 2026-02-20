@@ -1,12 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Fix recurring actor availability errors that cause a regression cycle where fixing one feature breaks another.
+**Goal:** Fix media loading for authenticated admin users by adjusting backend authorization logic.
 
 **Planned changes:**
-- Investigate and resolve root cause of 'actor not available' errors
-- Ensure stable actor initialization and persistence throughout application lifecycle
-- Review and fix frontend actor initialization in useActor.ts to handle authentication state changes
-- Verify and stabilize media asset deletion functionality to work without causing actor availability issues
+- Modify getMediaAssets to allow access for any authenticated user without strict principal validation
+- Keep admin role validation for deleteMediaAsset unchanged
+- Verify media list loads correctly in admin media manager after login
+- Leave upload logic unmodified
 
-**User-visible outcome:** All features work reliably without regression cycles, media assets can be deleted successfully, and the application remains stable during authentication state changes.
+**User-visible outcome:** Admin users can immediately view the media list after logging in without authorization errors.

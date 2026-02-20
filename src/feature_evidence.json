@@ -2,12 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-review-and-fix-frontend-actor-initialization-in-useactor-ts-to-handle-authentication-state-changes-without-breaking-backend-connectivity",
-      "featureTitle": "Review and fix frontend actor initialization in useActor.ts to handle authentication state changes without breaking backend connectivity",
+      "featureId": "feature-test-and-verify-that-media-list-loads-correctly-on-the-admin-media-manager-page-after-user-authentication-and-login",
+      "featureTitle": "Test and verify that media list loads correctly on the admin media manager page after user authentication and login",
       "files": [
         "frontend/src/components/admin/MediaAssetGrid.tsx",
-        "frontend/src/components/admin/MediaUploadZone.tsx",
-        "frontend/src/hooks/useMediaAssets.ts"
+        "frontend/src/hooks/useMediaAssets.ts",
+        "frontend/src/pages/admin/MediaManagerPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -20,29 +20,7 @@
         "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-5"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-verify-and-stabilize-the-media-asset-deletion-functionality-to-work-reliably-without-causing-actor-availability-issues",
-      "featureTitle": "Verify and stabilize the media asset deletion functionality to work reliably without causing actor availability issues",
-      "files": [
-        "frontend/src/components/admin/MediaAssetGrid.tsx",
-        "frontend/src/hooks/useMediaAssets.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "http-outcalls@3.0.0"
-      ],
-      "testIds": [
-        "REQ-6"
+        "REQ-4"
       ],
       "confidence": "high"
     }

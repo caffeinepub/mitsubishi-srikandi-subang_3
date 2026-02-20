@@ -95,6 +95,7 @@ export interface _SERVICE {
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getMediaAssetByBlobId' : ActorMethod<[string], [] | [MediaAsset]>,
   'getMediaAssetById' : ActorMethod<[bigint], [] | [MediaAsset]>,
+  'getMediaAssets' : ActorMethod<[], Array<MediaAsset>>,
   'getOnlineUsers' : ActorMethod<[], bigint>,
   'getStableVisitorStats' : ActorMethod<[], VisitorStats>,
   'getTotalPageViews' : ActorMethod<[], bigint>,

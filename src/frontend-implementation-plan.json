@@ -1,62 +1,31 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix recurring actor availability errors causing feature regressions",
+  "title": "Fix media loading for authenticated admin users - Frontend",
   "requirements": [
     {
-      "id": "REQ-5",
-      "summary": "Review and fix frontend actor initialization in useActor.ts to handle authentication state changes without breaking backend connectivity",
+      "id": "REQ-4",
+      "summary": "Verify and ensure media list loads correctly in admin media manager after user authentication",
       "acceptanceCriteria": [
-        "Frontend successfully connects to backend actor in all authentication states",
-        "Actor instance refreshes correctly when identity changes",
-        "No client-side errors related to actor unavailability"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useActor.ts",
-          "operation": "modify",
-          "description": "Review and stabilize actor initialization logic to prevent race conditions during identity changes. Ensure proper error handling for actor creation failures, add defensive checks for null/undefined actor instances, and verify that query invalidation triggers correctly when the actor becomes available. The current implementation invalidates dependent queries on actor changes, but may need additional safeguards to prevent intermittent availability failures during authentication state transitions."
-        },
-        {
-          "path": "frontend/src/hooks/useMediaAssets.ts",
-          "operation": "modify",
-          "description": "Add robust actor availability checks before invoking media asset operations (getAllMediaAssets, getMediaAssetById, uploadMediaAsset). Ensure the enabled flag properly waits for both actor availability and non-fetching state. Add error recovery logic that distinguishes between actor unavailability and other canister errors to prevent cascading failures during delete operations."
-        },
-        {
-          "path": "frontend/src/components/admin/MediaAssetGrid.tsx",
-          "operation": "modify",
-          "description": "Strengthen delegation identity validation before delete operations and add explicit actor availability checks. Ensure deletion mutations properly handle actor unavailability errors with user-friendly messages. Add retry logic or graceful degradation when actor is temporarily unavailable to prevent breaking other features when fixing media deletion."
-        },
-        {
-          "path": "frontend/src/components/admin/MediaUploadZone.tsx",
-          "operation": "modify",
-          "description": "Verify delegation identity validation occurs before upload initiation and add explicit actor availability checks. Ensure upload progress tracking doesn't interfere with actor lifecycle. Add comprehensive error handling that distinguishes actor unavailability from network or validation errors to prevent upload failures from affecting other components."
-        }
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "summary": "Verify and stabilize the media asset deletion functionality to work reliably without causing actor availability issues",
-      "acceptanceCriteria": [
-        "Media asset deletion completes successfully without errors",
-        "No IC0508 replica rejection errors during delete operations",
-        "Actor remains available for other operations after deletion"
+        "Media assets display in the admin media manager immediately after login",
+        "No authentication errors appear when loading media list",
+        "MediaAssetGrid component successfully renders uploaded assets"
       ],
       "file_operations": [
         {
           "path": "frontend/src/hooks/useMediaAssets.ts",
           "operation": "modify",
-          "description": "Review the deleteMediaAsset mutation implementation (currently not present in the hook) and ensure it properly handles actor availability, delegation validation, and error states. Add mutation logic that invalidates cached media queries on success without disrupting other features. Implement error classification to distinguish between authorization failures, network issues, and actor unavailability to prevent regression cycles."
+          "description": "Review and verify the getMediaAssets query hook handles authentication state correctly. Ensure the query is enabled only when actor is available and properly retries on authentication errors. Confirm error handling displays appropriate messages for authentication failures versus other errors. The hook should leverage the authorization component's authentication flow without blocking authenticated admin users."
         },
         {
           "path": "frontend/src/components/admin/MediaAssetGrid.tsx",
           "operation": "modify",
-          "description": "Review and strengthen the delete operation flow to ensure delegation identity is validated, actor is available, and the deleteMediaAsset backend method is called with proper error handling. Add confirmation dialogs if not present, display user-friendly error messages for different failure modes, and ensure successful deletions trigger cache invalidation without affecting other media operations or components."
+          "description": "Verify the MediaAssetGrid component properly handles loading states and displays media assets after authentication. Ensure the component shows appropriate loading skeletons while fetching data and handles empty states gracefully. Confirm blob URL generation works correctly for all uploaded assets. Add console logging during development to verify data flow from the backend query."
         },
         {
-          "path": "frontend/src/utils/validation.ts",
+          "path": "frontend/src/pages/admin/MediaManagerPage.tsx",
           "operation": "modify",
-          "description": "Review delegation identity validation logic to ensure it correctly checks token expiration and validity before sensitive operations like media deletion. Add additional safeguards or logging to help diagnose intermittent validation failures that might cause actor unavailability errors. Ensure validation failures provide clear feedback without breaking the actor connection."
+          "description": "Review the MediaManagerPage to ensure it properly coordinates between the upload zone and asset grid. Verify query invalidation triggers correctly after uploads to refresh the media list. Confirm the page layout and component composition supports seamless data flow after authentication. Test that the page renders without flickering or multiple authentication checks."
         }
       ]
     }

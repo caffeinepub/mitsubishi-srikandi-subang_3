@@ -167,6 +167,7 @@ export interface backendInterface {
     getCallerUserRole(): Promise<UserRole>;
     getMediaAssetByBlobId(blobId: string): Promise<MediaAsset | null>;
     getMediaAssetById(id: bigint): Promise<MediaAsset | null>;
+    getMediaAssets(): Promise<Array<MediaAsset>>;
     getOnlineUsers(): Promise<bigint>;
     getStableVisitorStats(): Promise<VisitorStats>;
     getTotalPageViews(): Promise<bigint>;
@@ -447,6 +448,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getMediaAssetById(arg0);
             return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getMediaAssets(): Promise<Array<MediaAsset>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getMediaAssets();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getMediaAssets();
+            return result;
         }
     }
     async getOnlineUsers(): Promise<bigint> {

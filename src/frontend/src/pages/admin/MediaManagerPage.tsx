@@ -7,7 +7,7 @@ export default function MediaManagerPage() {
   const queryClient = useQueryClient();
 
   const handleUploadSuccess = () => {
-    console.log('[MediaManagerPage] Invalidating mediaAssets cache');
+    console.log('[MediaManagerPage] Upload successful - invalidating mediaAssets cache');
     queryClient.invalidateQueries({ queryKey: ['mediaAssets'] });
   };
 

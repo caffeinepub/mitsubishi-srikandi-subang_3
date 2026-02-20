@@ -1,83 +1,92 @@
 {
   "kind": "build_request",
-  "title": "Fix recurring actor availability errors causing feature regressions",
-  "projectName": "Mitsubishi Srikandi Subang",
+  "title": "Fix media loading for authenticated admin users",
   "priority": "high",
   "requirements": [
     {
-      "id": "REQ-3",
-      "text": "Investigate and resolve the root cause of recurring 'actor not available' errors that create a regression cycle where fixing one feature breaks another",
+      "id": "REQ-1",
+      "text": "Modify getMediaAssets backend function to allow access for any authenticated user, removing strict principal validation that blocks media listing",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-latest"
         ],
         "quotes": [
-          "Balik lagi tolol, actor not available. A bener B rusak, B bener A rusak lagi, jangan muter-muter tolol!"
+          "Ensure getMediaAssets is accessible for authenticated admin users",
+          "Do not block media listing with strict principal validation"
         ]
       },
       "acceptanceCriteria": [
-        "Actor remains consistently available across all features",
-        "No regression occurs when fixing media deletion or other features",
-        "All previously working features continue to function after any fix"
+        "getMediaAssets returns media assets for authenticated users without principal validation",
+        "Admin users can view media list immediately after login",
+        "Function does not throw authorization errors for valid authenticated sessions"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Ensure deleteMediaAsset retains role-based authorization checking for 'admin' role only, keeping existing admin validation logic",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "Keep admin validation only for deleteMediaAsset"
+        ]
+      },
+      "acceptanceCriteria": [
+        "deleteMediaAsset continues to validate admin role before allowing deletion",
+        "Non-admin users cannot delete media assets",
+        "Authorization logic remains unchanged for delete operations"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Verify media upload logic remains unmodified and continues to function correctly",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "Do not modify upload logic"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Media upload functionality remains unchanged",
+        "Upload authorization and validation logic is preserved",
+        "No modifications to uploadMediaAsset function"
       ]
     },
     {
       "id": "REQ-4",
-      "text": "Ensure stable actor initialization and persistence throughout the application lifecycle to prevent intermittent availability failures",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Actor initializes correctly on canister install and upgrade",
-        "Actor state persists reliably between upgrades",
-        "No actor availability errors occur during normal operation"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Review and fix frontend actor initialization in useActor.ts to handle authentication state changes without breaking backend connectivity",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Frontend successfully connects to backend actor in all authentication states",
-        "Actor instance refreshes correctly when identity changes",
-        "No client-side errors related to actor unavailability"
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Verify and stabilize the media asset deletion functionality to work reliably without causing actor availability issues",
+      "text": "Test and verify that media list loads correctly on the admin media manager page after user authentication and login",
       "target": "both",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-latest"
+        ],
+        "quotes": [
+          "Ensure media list loads correctly after login"
         ]
       },
       "acceptanceCriteria": [
-        "Media asset deletion completes successfully without errors",
-        "No IC0508 replica rejection errors during delete operations",
-        "Actor remains available for other operations after deletion"
+        "Media assets display in the admin media manager immediately after login",
+        "No authentication errors appear when loading media list",
+        "MediaAssetGrid component successfully renders uploaded assets"
       ]
     }
   ],
   "constraints": [
-    "Must maintain single-actor architecture in backend/main.mo",
-    "Cannot modify immutable frontend paths: useInternetIdentity.ts, useInternetIdentity.tsx, useActor.ts, main.tsx, components/ui",
-    "Must preserve all existing data types and storage structures",
-    "Must maintain backward compatibility with existing delegation identity validation"
+    "Do not modify the upload logic or uploadMediaAsset function",
+    "Maintain role-based authorization for deleteMediaAsset using admin role validation",
+    "Remove principal validation only from getMediaAssets, not from delete operations"
   ],
   "nonGoals": [
-    "Rewriting the entire authentication system",
-    "Changing the backend architecture to multi-actor",
-    "Modifying the frontend framework or state management approach"
+    "Changing the media upload functionality",
+    "Modifying authorization logic for other admin operations",
+    "Altering the frontend media display components",
+    "Adding new media management features"
   ],
   "imageRequirements": {
     "required": [],

@@ -20,24 +20,10 @@ import { toast } from 'sonner';
 import { createBlobUrlFromData, isImageMimeType, isPdfMimeType } from '@/utils/blobUrl';
 import { validateDelegationIdentity } from '@/utils/validation';
 
-/**
- * MediaAssetGrid Component
- * 
- * Displays a grid of media assets with the following features:
- * - Thumbnail preview for images
- * - File type icons for PDFs and other files
- * - Copy ID button for each asset
- * - Delete button with confirmation dialog (CRITICAL FEATURE - DO NOT REMOVE)
- * - Delegation identity validation before delete operations
- * - Proper error handling and loading states
- * 
- * IMPORTANT: The delete functionality is a core feature. Any modifications
- * to this component must preserve the delete button and its associated logic.
- */
 export default function MediaAssetGrid() {
   const { actor, isFetching: actorFetching } = useActor();
   const { identity } = useInternetIdentity();
-  const { data: assets, isLoading } = useGetAllMediaAssets();
+  const { data: assets, isLoading, error } = useGetAllMediaAssets();
   const deleteAsset = useDeleteMediaAsset();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState<MediaAsset | null>(null);
@@ -65,27 +51,19 @@ export default function MediaAssetGrid() {
     };
   }, [assets]);
 
-  /**
-   * Copy asset ID to clipboard
-   * Used for referencing media assets in other parts of the application
-   */
   const handleCopyId = (assetId: bigint) => {
     navigator.clipboard.writeText(assetId.toString());
     toast.success('ID asset berhasil disalin');
   };
 
-  /**
-   * Handle delete button click
-   * CRITICAL: This function validates delegation identity before allowing deletion
-   * DO NOT REMOVE OR MODIFY WITHOUT UNDERSTANDING SECURITY IMPLICATIONS
-   */
   const handleDeleteClick = (asset: MediaAsset) => {
     console.log('[MediaAssetGrid] Delete clicked for asset:', asset.id);
     console.log('[MediaAssetGrid] Actor available:', !!actor);
-    console.log('[MediaAssetGrid] Actor fetching:', actorFetching);
+    console.log('[MediaAssetGrid] Identity available:', !!identity);
     
-    // Wait for actor to be ready
+    // Validate actor is ready
     if (!actor) {
+      console.error('[MediaAssetGrid] Actor not available');
       toast.error('Sistem belum siap. Silakan tunggu sebentar dan coba lagi.');
       return;
     }
@@ -93,44 +71,43 @@ export default function MediaAssetGrid() {
     // Validate delegation identity before opening delete dialog
     const validationError = validateDelegationIdentity(identity);
     if (validationError) {
-      console.log('[MediaAssetGrid] Delegation validation failed:', validationError);
+      console.error('[MediaAssetGrid] Delegation validation failed:', validationError);
       toast.error(validationError);
       return;
     }
     
+    console.log('[MediaAssetGrid] All validations passed, opening delete dialog');
     setAssetToDelete(asset);
     setDeleteDialogOpen(true);
   };
 
-  /**
-   * Confirm and execute deletion
-   * CRITICAL: This function performs the actual deletion after user confirmation
-   * DO NOT REMOVE OR MODIFY WITHOUT UNDERSTANDING SECURITY IMPLICATIONS
-   */
   const handleDeleteConfirm = () => {
     if (!assetToDelete) return;
     
     console.log('[MediaAssetGrid] Confirming delete for asset:', assetToDelete.id);
-    console.log('[MediaAssetGrid] Actor available at confirm:', !!actor);
     
-    // Final check before deletion
+    // Final validation: Check actor is still available
     if (!actor) {
+      console.error('[MediaAssetGrid] Actor not available at confirm');
       toast.error('Sistem belum siap. Silakan tunggu sebentar dan coba lagi.');
       setDeleteDialogOpen(false);
       setAssetToDelete(null);
       return;
     }
 
-    // Validate delegation identity again before actual delete
+    // Final validation: Validate delegation identity again before actual delete
     const validationError = validateDelegationIdentity(identity);
     if (validationError) {
-      console.log('[MediaAssetGrid] Delegation validation failed at confirm:', validationError);
+      console.error('[MediaAssetGrid] Delegation validation failed at confirm:', validationError);
       toast.error(validationError);
       setDeleteDialogOpen(false);
       setAssetToDelete(null);
       return;
     }
     
+    console.log('[MediaAssetGrid] All final validations passed, executing delete mutation');
+    
+    // Execute delete mutation - the authenticated actor will be used
     deleteAsset.mutate(assetToDelete.id, {
       onSuccess: () => {
         console.log('[MediaAssetGrid] Delete successful, closing dialog');
@@ -157,6 +134,16 @@ export default function MediaAssetGrid() {
         {[...Array(8)].map((_, i) => (
           <Skeleton key={i} className="aspect-square" />
         ))}
+      </div>
+    );
+  }
+
+  // Show error state if there's an error (but not auth errors which return empty array)
+  if (error && !error.message?.includes('Actor not available')) {
+    console.error('[MediaAssetGrid] Error loading media assets:', error);
+    return (
+      <div className="text-center py-8 text-red-500">
+        Gagal memuat media. Silakan coba lagi.
       </div>
     );
   }
@@ -211,7 +198,7 @@ export default function MediaAssetGrid() {
                 )}
               </div>
 
-              {/* Asset Actions Section - CRITICAL: Contains Copy ID and Delete buttons */}
+              {/* Asset Actions Section */}
               <div className="p-3 bg-white border-t">
                 <p className="text-sm font-medium truncate mb-2" title={asset.filename}>
                   {asset.filename}
@@ -234,7 +221,7 @@ export default function MediaAssetGrid() {
                     className="w-full"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    {deleteAsset.isPending ? 'Menghapus...' : 'Delete'}
+                    {deleteAsset.isPending && assetToDelete?.id === asset.id ? 'Menghapus...' : 'Hapus'}
                   </Button>
                 </div>
               </div>
@@ -263,9 +250,8 @@ export default function MediaAssetGrid() {
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleteAsset.isPending}
             >
-              {deleteAsset.isPending ? 'Menghapus...' : 'Hapus'}
+              Hapus
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
