@@ -12,10 +12,10 @@ import type { Principal } from '@icp-sdk/core/principal';
 
 export interface MediaAsset {
   'id' : bigint,
+  'data' : Uint8Array,
   'size' : bigint,
   'mimeType' : string,
   'filename' : string,
-  'blobId' : string,
   'uploadedAt' : bigint,
   'uploadedBy' : Principal,
 }
@@ -85,7 +85,7 @@ export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'cleanupExpiredSessions' : ActorMethod<[], undefined>,
-  'deleteMediaAsset' : ActorMethod<[bigint], undefined>,
+  'deleteMediaAsset' : ActorMethod<[bigint], boolean>,
   'getAllMediaAssets' : ActorMethod<[], Array<MediaAsset>>,
   'getAllVisitorSessions' : ActorMethod<[], Array<VisitorSession>>,
   'getAllVisits' : ActorMethod<[], Array<Visit>>,
@@ -108,9 +108,12 @@ export interface _SERVICE {
     [string, string, string, string, string, string, string],
     undefined
   >,
-  'updateMediaAsset' : ActorMethod<[bigint, string, string], undefined>,
+  'updateMediaAsset' : ActorMethod<
+    [bigint, string, string, Uint8Array, bigint],
+    undefined
+  >,
   'uploadMediaAsset' : ActorMethod<
-    [string, string, string, string, bigint],
+    [string, string, Uint8Array, bigint],
     undefined
   >,
 }

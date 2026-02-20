@@ -1,13 +1,32 @@
 import { useGetAllMediaAssets } from '@/hooks/useMediaAssets';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useEffect, useState } from 'react';
+import { createBlobUrlFromData } from '@/utils/blobUrl';
 
 export default function MainBanner() {
-  const { data: mediaAssets, isLoading, error } = useGetAllMediaAssets();
+  const { data: mediaAssets, isLoading } = useGetAllMediaAssets();
+  const [imageUrl, setImageUrl] = useState<string>('/assets/generated/main-banner.dim_1920x600.png');
 
   // Find the Main Banner image by filename
   const mainBannerAsset = mediaAssets?.find(
     (asset) => asset.filename === 'Main Banner.png' || asset.filename.toLowerCase().includes('main banner')
   );
+
+  useEffect(() => {
+    if (mainBannerAsset && mainBannerAsset.data) {
+      // Create blob URL from persistent canister storage data
+      const blobUrl = createBlobUrlFromData(mainBannerAsset.data, mainBannerAsset.mimeType);
+      setImageUrl(blobUrl);
+
+      // Cleanup blob URL on unmount
+      return () => {
+        URL.revokeObjectURL(blobUrl);
+      };
+    } else {
+      // Fallback to generated static image
+      setImageUrl('/assets/generated/main-banner.dim_1920x600.png');
+    }
+  }, [mainBannerAsset]);
 
   if (isLoading) {
     return (
@@ -16,12 +35,6 @@ export default function MainBanner() {
       </section>
     );
   }
-
-  // Use the blobId to construct the direct URL for streaming if available
-  // Otherwise fallback to generated static image
-  const imageUrl = mainBannerAsset 
-    ? `/api/blob/${mainBannerAsset.blobId}`
-    : '/assets/generated/main-banner.dim_1920x600.png';
 
   return (
     <section className="w-full">

@@ -91,10 +91,10 @@ export class ExternalBlob {
 }
 export interface MediaAsset {
     id: bigint;
+    data: Uint8Array;
     size: bigint;
     mimeType: string;
     filename: string;
-    blobId: string;
     uploadedAt: bigint;
     uploadedBy: Principal;
 }
@@ -157,7 +157,7 @@ export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     cleanupExpiredSessions(): Promise<void>;
-    deleteMediaAsset(id: bigint): Promise<void>;
+    deleteMediaAsset(id: bigint): Promise<boolean>;
     getAllMediaAssets(): Promise<Array<MediaAsset>>;
     getAllVisitorSessions(): Promise<Array<VisitorSession>>;
     getAllVisits(): Promise<Array<Visit>>;
@@ -177,8 +177,8 @@ export interface backendInterface {
     periodicCleanup(): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     trackVisitor(sessionId: string, ipAddress: string, userAgent: string, pageUrl: string, referrer: string, deviceType: string, browser: string): Promise<void>;
-    updateMediaAsset(id: bigint, newFilename: string, newMimeType: string): Promise<void>;
-    uploadMediaAsset(filename: string, mimeType: string, assetId: string, assetType: string, fileSize: bigint): Promise<void>;
+    updateMediaAsset(id: bigint, newFilename: string, newMimeType: string, newData: Uint8Array, newSize: bigint): Promise<void>;
+    uploadMediaAsset(filename: string, mimeType: string, data: Uint8Array, fileSize: bigint): Promise<void>;
 }
 import type { MediaAsset as _MediaAsset, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -309,7 +309,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async deleteMediaAsset(arg0: bigint): Promise<void> {
+    async deleteMediaAsset(arg0: bigint): Promise<boolean> {
         if (this.processError) {
             try {
                 const result = await this.actor.deleteMediaAsset(arg0);
@@ -589,31 +589,31 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateMediaAsset(arg0: bigint, arg1: string, arg2: string): Promise<void> {
+    async updateMediaAsset(arg0: bigint, arg1: string, arg2: string, arg3: Uint8Array, arg4: bigint): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateMediaAsset(arg0, arg1, arg2);
+                const result = await this.actor.updateMediaAsset(arg0, arg1, arg2, arg3, arg4);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateMediaAsset(arg0, arg1, arg2);
+            const result = await this.actor.updateMediaAsset(arg0, arg1, arg2, arg3, arg4);
             return result;
         }
     }
-    async uploadMediaAsset(arg0: string, arg1: string, arg2: string, arg3: string, arg4: bigint): Promise<void> {
+    async uploadMediaAsset(arg0: string, arg1: string, arg2: Uint8Array, arg3: bigint): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.uploadMediaAsset(arg0, arg1, arg2, arg3, arg4);
+                const result = await this.actor.uploadMediaAsset(arg0, arg1, arg2, arg3);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.uploadMediaAsset(arg0, arg1, arg2, arg3, arg4);
+            const result = await this.actor.uploadMediaAsset(arg0, arg1, arg2, arg3);
             return result;
         }
     }

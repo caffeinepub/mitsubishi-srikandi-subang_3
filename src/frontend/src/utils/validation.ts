@@ -1,4 +1,6 @@
 import { VALIDATION } from '../constants/translations';
+import { DelegationIdentity, isDelegationValid } from '@icp-sdk/core/identity';
+import type { Identity } from '@dfinity/agent';
 
 export function validateRequired(value: string): string | null {
   return value.trim() ? null : VALIDATION.required;
@@ -42,4 +44,38 @@ export function validateUrl(url: string): string | null {
   } catch {
     return 'URL tidak valid';
   }
+}
+
+/**
+ * Validates delegation identity for authenticated operations
+ * Returns null if valid, error message if invalid
+ */
+export function validateDelegationIdentity(identity: Identity | null | undefined): string | null {
+  if (!identity) {
+    return 'Anda harus login terlebih dahulu';
+  }
+
+  // Check if it's a delegation identity and validate it
+  if (identity instanceof DelegationIdentity) {
+    const delegation = identity.getDelegation();
+    
+    if (!isDelegationValid(delegation)) {
+      return 'Sesi Anda telah berakhir. Silakan login kembali.';
+    }
+
+    const expiration = delegation.delegations[0]?.delegation.expiration;
+    if (expiration) {
+      // Convert from nanoseconds to milliseconds
+      const expiryTime = Number(expiration) / 1_000_000;
+      const currentTime = Date.now();
+      const timeUntilExpiry = expiryTime - currentTime;
+      
+      // Warn if expiring within 1 minute
+      if (timeUntilExpiry < 60_000) {
+        return 'Sesi Anda akan segera berakhir. Silakan login kembali.';
+      }
+    }
+  }
+
+  return null;
 }

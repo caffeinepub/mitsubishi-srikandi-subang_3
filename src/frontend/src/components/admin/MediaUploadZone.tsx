@@ -3,8 +3,9 @@ import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useUploadMediaAsset } from '@/hooks/useMediaAssets';
+import { useActor } from '@/hooks/useActor';
 import { useInternetIdentity } from '@/hooks/useInternetIdentity';
-import { DelegationIdentity, isDelegationValid } from '@icp-sdk/core/identity';
+import { validateDelegationIdentity } from '@/utils/validation';
 import { toast } from 'sonner';
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -17,6 +18,7 @@ interface MediaUploadZoneProps {
 }
 
 export default function MediaUploadZone({ onUploadSuccess }: MediaUploadZoneProps) {
+  const { actor, isFetching: actorFetching } = useActor();
   const { identity } = useInternetIdentity();
   const uploadAsset = useUploadMediaAsset();
   const [isDragging, setIsDragging] = useState(false);
@@ -45,43 +47,18 @@ export default function MediaUploadZone({ onUploadSuccess }: MediaUploadZoneProp
       
       if (!files || files.length === 0) return;
 
-      if (!identity) {
-        toast.error('Anda harus login terlebih dahulu');
+      // Check if actor is ready
+      if (!actor) {
+        toast.error('Sistem belum siap. Silakan tunggu sebentar dan coba lagi.');
         return;
       }
 
-      // Validate delegation only once at the start, with proper time conversion
-      if (identity instanceof DelegationIdentity) {
-        const delegation = identity.getDelegation();
-        
-        if (!isDelegationValid(delegation)) {
-          console.log('[MediaUpload] Delegation is invalid');
-          toast.error('Sesi Anda telah berakhir. Silakan login kembali.');
-          return;
-        }
-
-        const expiration = delegation.delegations[0]?.delegation.expiration;
-        if (expiration) {
-          // FIXED: Correct conversion from nanoseconds to milliseconds
-          const expiryTime = Number(expiration) / 1_000_000; // nanoseconds to milliseconds
-          const currentTime = Date.now();
-          const timeUntilExpiry = expiryTime - currentTime;
-          
-          console.log('[MediaUpload] Token validation:', {
-            expiryTime: new Date(expiryTime).toISOString(),
-            currentTime: new Date(currentTime).toISOString(),
-            timeUntilExpiryMinutes: Math.floor(timeUntilExpiry / 1000 / 60),
-            isValid: isDelegationValid(delegation)
-          });
-
-          // FIXED: Only check if already expired, don't block uploads that have time remaining
-          // Allow uploads as long as there's at least 1 minute remaining
-          if (timeUntilExpiry < (1 * 60 * 1000)) {
-            console.log('[MediaUpload] Token expiring very soon (< 1 minute)');
-            toast.error('Sesi Anda akan segera berakhir. Silakan login kembali.');
-            return;
-          }
-        }
+      // Validate delegation identity
+      const validationError = validateDelegationIdentity(identity);
+      if (validationError) {
+        console.log('[MediaUpload] Delegation validation failed:', validationError);
+        toast.error(validationError);
+        return;
       }
 
       const file = files[0];
@@ -91,10 +68,10 @@ export default function MediaUploadZone({ onUploadSuccess }: MediaUploadZoneProp
         type: file.type
       });
 
-      const validationError = validateFile(file);
-      if (validationError) {
-        console.log('[MediaUpload] File validation failed:', validationError);
-        toast.error(validationError);
+      const fileValidationError = validateFile(file);
+      if (fileValidationError) {
+        console.log('[MediaUpload] File validation failed:', fileValidationError);
+        toast.error(fileValidationError);
         return;
       }
 
@@ -141,7 +118,7 @@ export default function MediaUploadZone({ onUploadSuccess }: MediaUploadZoneProp
 
       reader.readAsArrayBuffer(file);
     },
-    [identity, uploadAsset, onUploadSuccess]
+    [actor, identity, uploadAsset, onUploadSuccess]
   );
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -158,6 +135,8 @@ export default function MediaUploadZone({ onUploadSuccess }: MediaUploadZoneProp
     setIsDragging(false);
     handleFileUpload(e.dataTransfer.files);
   };
+
+  const isActorReady = !!actor && !actorFetching;
 
   return (
     <div
@@ -182,13 +161,13 @@ export default function MediaUploadZone({ onUploadSuccess }: MediaUploadZoneProp
         className="hidden"
         accept={[...ALLOWED_IMAGE_TYPES, ...ALLOWED_DOCUMENT_TYPES].join(',')}
         onChange={(e) => handleFileUpload(e.target.files)}
-        disabled={uploadAsset.isPending}
+        disabled={!isActorReady || uploadAsset.isPending}
       />
       <Button
         onClick={() => document.getElementById('file-upload')?.click()}
-        disabled={uploadAsset.isPending}
+        disabled={!isActorReady || uploadAsset.isPending}
       >
-        {uploadAsset.isPending ? 'Mengunggah...' : 'Pilih File'}
+        {uploadAsset.isPending ? 'Mengunggah...' : isActorReady ? 'Pilih File' : 'Memuat...'}
       </Button>
       {uploadProgress !== null && (
         <div className="mt-4">

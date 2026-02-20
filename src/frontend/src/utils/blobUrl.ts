@@ -1,19 +1,23 @@
 /**
- * Utility functions for constructing blob URLs from asset IDs
+ * Utility functions for constructing blob URLs from MediaAsset data
  * and determining asset types based on MIME types.
+ * 
+ * All images are stored in stable canister storage with persistent blob data.
  */
 
 /**
- * Constructs a blob URL from an asset blob ID using the Internet Computer
- * canister HTTP endpoint pattern.
+ * Converts MediaAsset blob data (Uint8Array) to a browser-displayable blob URL.
+ * This creates a temporary object URL from the persistent canister blob data.
  * 
- * @param blobId - The blob ID from the media asset
- * @returns A URL string that can be used to access the blob via HTTP
+ * @param data - The Uint8Array blob data from stable canister storage
+ * @param mimeType - The MIME type of the blob
+ * @returns A blob URL that can be used in img src attributes
  */
-export function getBlobUrl(blobId: string): string {
-  // Use the Internet Computer's HTTP interface pattern
-  // The blob-storage mixin serves blobs via query parameter
-  return `${window.location.origin}/?assetId=${encodeURIComponent(blobId)}`;
+export function createBlobUrlFromData(data: Uint8Array, mimeType: string): string {
+  // Convert to standard Uint8Array to ensure TypeScript compatibility
+  const standardArray = new Uint8Array(data);
+  const blob = new Blob([standardArray], { type: mimeType });
+  return URL.createObjectURL(blob);
 }
 
 /**

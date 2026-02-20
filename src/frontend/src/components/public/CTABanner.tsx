@@ -1,13 +1,32 @@
 import { useGetAllMediaAssets } from '@/hooks/useMediaAssets';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useEffect, useState } from 'react';
+import { createBlobUrlFromData } from '@/utils/blobUrl';
 
 export default function CTABanner() {
-  const { data: mediaAssets, isLoading, error } = useGetAllMediaAssets();
+  const { data: mediaAssets, isLoading } = useGetAllMediaAssets();
+  const [imageUrl, setImageUrl] = useState<string>('/assets/generated/cta-banner.dim_1920x400.png');
 
   // Find the CTA Banner image by filename
   const ctaBannerAsset = mediaAssets?.find(
     (asset) => asset.filename === 'CTA Banner.png' || asset.filename.toLowerCase().includes('cta banner')
   );
+
+  useEffect(() => {
+    if (ctaBannerAsset && ctaBannerAsset.data) {
+      // Create blob URL from persistent canister storage data
+      const blobUrl = createBlobUrlFromData(ctaBannerAsset.data, ctaBannerAsset.mimeType);
+      setImageUrl(blobUrl);
+
+      // Cleanup blob URL on unmount
+      return () => {
+        URL.revokeObjectURL(blobUrl);
+      };
+    } else {
+      // Fallback to generated static image
+      setImageUrl('/assets/generated/cta-banner.dim_1920x400.png');
+    }
+  }, [ctaBannerAsset]);
 
   if (isLoading) {
     return (
@@ -18,12 +37,6 @@ export default function CTABanner() {
       </section>
     );
   }
-
-  // Use the blobId to construct the direct URL for streaming if available
-  // Otherwise fallback to generated static image
-  const imageUrl = ctaBannerAsset 
-    ? `/api/blob/${ctaBannerAsset.blobId}`
-    : '/assets/generated/cta-banner.dim_1920x400.png';
 
   return (
     <section className="w-full bg-[#262729] py-8">

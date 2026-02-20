@@ -1,20 +1,20 @@
-import Map "mo:core/Map";
-import Principal "mo:core/Principal";
+import Migration "migration";
 import Time "mo:core/Time";
 import Array "mo:core/Array";
 import Int "mo:core/Int";
 import Nat "mo:core/Nat";
-import Iter "mo:core/Iter";
+import Map "mo:core/Map";
 import Text "mo:core/Text";
+import Iter "mo:core/Iter";
+import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
+import Blob "mo:core/Blob";
 
 import MixinStorage "blob-storage/Mixin";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
-import List "mo:core/List";
-import Set "mo:core/Set";
-
+(with migration = Migration.run)
 actor {
   include MixinStorage();
   let accessControlState = AccessControl.initState();
@@ -202,11 +202,11 @@ actor {
   public type MediaAsset = {
     id : Nat;
     filename : Text;
-    blobId : Text;
     mimeType : Text;
     size : Nat;
     uploadedBy : Principal;
     uploadedAt : Int;
+    data : Blob;
   };
 
   public type CommercialVehicleCategory = {
@@ -237,6 +237,7 @@ actor {
     size : Nat;
     uploadedBy : Principal;
     uploadedAt : Int;
+    blobData : Blob;
   };
 
   public type WebsiteSettings = {
@@ -327,10 +328,8 @@ actor {
     pageViewsToday = 0;
   };
 
-  // Updated daily stats handling
   let dailyStats = Map.empty<Int, DailyStats>();
 
-  // Helper functions for time calculations
   func isToday(timestamp : Int, now : Int) : Bool {
     let nowNanos = now;
     let dayNanos = 24 * 60 * 60 * 1_000_000_000;
@@ -378,7 +377,6 @@ actor {
     userProfiles.add(caller, profile);
   };
 
-  // Internal function to cleanup expired sessions (no authorization needed - internal only)
   func cleanupExpiredSessionsInternal() {
     let currentTime = Time.now();
     let timeout = 5 * 60 * 1_000_000_000; // 5 minutes in nanoseconds
@@ -404,7 +402,6 @@ actor {
   ) : async () {
     // NO AUTHORIZATION CHECK - Must be accessible to anonymous visitors
     // as per implementation plan: "without requiring authentication"
-    
     let currentTime = Time.now();
 
     // Create a new visit record
@@ -475,7 +472,6 @@ actor {
     };
   };
 
-  // Admin-only manual cleanup trigger
   public shared ({ caller }) func cleanupExpiredSessions() : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can cleanup expired sessions");
@@ -483,7 +479,6 @@ actor {
     cleanupExpiredSessionsInternal();
   };
 
-  // Recalculate daily stats using helper functions
   func recalculateStats() : async VisitorStats {
     let currentTime = Time.now();
 
@@ -517,7 +512,6 @@ actor {
     };
   };
 
-  // Statistics Calculations - Admin only (sensitive business intelligence)
   public query ({ caller }) func getTotalVisitors() : async Nat {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view visitor statistics");
@@ -553,7 +547,6 @@ actor {
     visitorStats;
   };
 
-  // Periodic Cleanup - Admin only
   public shared ({ caller }) func periodicCleanup() : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can trigger periodic cleanup");
@@ -562,7 +555,6 @@ actor {
     cleanupExpiredSessionsInternal();
   };
 
-  // Admin-only function to get all visitor sessions
   public query ({ caller }) func getAllVisitorSessions() : async [VisitorSession] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view all visitor sessions");
@@ -570,7 +562,6 @@ actor {
     visitorSessions.values().toArray();
   };
 
-  // Admin-only function to get all visits
   public query ({ caller }) func getAllVisits() : async [Visit] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view all visits");
@@ -578,7 +569,6 @@ actor {
     visits.values().toArray();
   };
 
-  // Admin-only function for stable visitor stats
   public query ({ caller }) func getStableVisitorStats() : async VisitorStats {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view visitor statistics");
@@ -586,13 +576,10 @@ actor {
     visitorStats;
   };
 
-  // FIXED: User-only access to upload media assets (was admin-only, causing session loop)
-  // This fixes the "Session expired, please login again" loop when users upload images
   public shared ({ caller }) func uploadMediaAsset(
     filename : Text,
     mimeType : Text,
-    assetId : Text,
-    assetType : Text,
+    data : Blob,
     fileSize : Nat,
   ) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
@@ -603,9 +590,9 @@ actor {
     let mediaAsset : MediaAsset = {
       id = mediaAssetIdCounter;
       filename;
-      blobId = assetId;
       mimeType;
       size = fileSize;
+      data;
       uploadedBy = caller;
       uploadedAt;
     };
@@ -614,7 +601,6 @@ actor {
     mediaAssetIdCounter += 1;
   };
 
-  // User-only access to view all media assets metadata
   public query ({ caller }) func getAllMediaAssets() : async [MediaAsset] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can view media assets");
@@ -622,7 +608,6 @@ actor {
     mediaAssets.values().toArray();
   };
 
-  // User-only access to view specific media asset metadata by ID
   public query ({ caller }) func getMediaAssetById(id : Nat) : async ?MediaAsset {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can view media assets");
@@ -630,23 +615,24 @@ actor {
     mediaAssets.get(id);
   };
 
-  // User-only access to view specific media asset metadata by blob ID
+  // Keeping this method for compatibility (filtering by id)
   public query ({ caller }) func getMediaAssetByBlobId(blobId : Text) : async ?MediaAsset {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can view media assets");
     };
     let assets = mediaAssets.values().toArray();
-    switch (assets.find(func(asset) { asset.blobId == blobId })) {
+    switch (assets.find(func(asset) { asset.id.toText() == blobId })) {
       case (?asset) { ?asset };
       case (null) { null };
     };
   };
 
-  // Admin-only: Update existing media asset details
   public shared ({ caller }) func updateMediaAsset(
     id : Nat,
     newFilename : Text,
     newMimeType : Text,
+    newData : Blob,
+    newSize : Nat,
   ) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update media assets");
@@ -658,6 +644,8 @@ actor {
           existingAsset with
           filename = newFilename;
           mimeType = newMimeType;
+          data = newData;
+          size = newSize;
         };
         mediaAssets.add(id, updatedAsset);
       };
@@ -667,21 +655,20 @@ actor {
     };
   };
 
-  // Admin-only: Delete media asset by ID
-  public shared ({ caller }) func deleteMediaAsset(id : Nat) : async () {
+  public shared ({ caller }) func deleteMediaAsset(id : Nat) : async Bool {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can delete media assets");
     };
 
     let existed = mediaAssets.containsKey(id);
-    mediaAssets.remove(id);
-
     if (not existed) {
-      Runtime.trap("Media asset not found. Cannot delete non-existent asset.");
+      return false;
     };
+
+    mediaAssets.remove(id);
+    true;
   };
 
-  // Admin-only access to view assets by uploader (privacy-sensitive)
   public query ({ caller }) func getAssetsByUploader(uploader : Principal) : async [MediaAsset] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view assets by uploader");
@@ -691,7 +678,6 @@ actor {
     );
   };
 
-  // Admin-only access to view assets by date range (business intelligence)
   public query ({ caller }) func getAssetsByDateRange(startDate : Int, endDate : Int) : async [MediaAsset] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view assets by date range");

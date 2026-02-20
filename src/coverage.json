@@ -1,48 +1,71 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-20T15:15:53.248Z",
+  "generatedAt": "2026-02-20T17:14:53.499Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
+    "total": 4,
     "implemented": 2,
     "items": [
       {
-        "id": "REQ-1",
-        "summary": "Replace generic car icon thumbnails in Media Manager with actual image thumbnails. In the MediaAssetGrid component (frontend/src/components/admin/MediaAssetGrid.tsx), fetch and display the actual uploaded images using their blob IDs instead of showing placeholder icons.",
+        "id": "REQ-3",
+        "summary": "Investigate and resolve the root cause of recurring 'actor not available' errors that create a regression cycle where fixing one feature breaks another",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Ensure stable actor initialization and persistence throughout the application lifecycle to prevent intermittent availability failures",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Review and fix frontend actor initialization in useActor.ts to handle authentication state changes without breaking backend connectivity",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/admin/MediaAssetGrid.tsx"
+          "frontend/src/hooks/useActor.ts",
+          "frontend/src/hooks/useMediaAssets.ts",
+          "frontend/src/components/admin/MediaAssetGrid.tsx",
+          "frontend/src/components/admin/MediaUploadZone.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/admin/MediaAssetGrid.tsx"
+          "frontend/src/hooks/useMediaAssets.ts",
+          "frontend/src/components/admin/MediaAssetGrid.tsx",
+          "frontend/src/components/admin/MediaUploadZone.tsx"
         ]
       },
       {
-        "id": "REQ-2",
-        "summary": "Implement proper image URL generation for media assets. Create a utility function that generates blob URLs from asset IDs using the canister's HTTP endpoint pattern, and integrate it into MediaAssetGrid to display thumbnails.",
+        "id": "REQ-6",
+        "summary": "Verify and stabilize the media asset deletion functionality to work reliably without causing actor availability issues",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/utils/blobUrl.ts",
-          "frontend/src/components/admin/MediaAssetGrid.tsx"
+          "frontend/src/hooks/useMediaAssets.ts",
+          "frontend/src/components/admin/MediaAssetGrid.tsx",
+          "frontend/src/utils/validation.ts"
         ],
         "matchedFiles": [
-          "frontend/src/utils/blobUrl.ts",
+          "frontend/src/hooks/useMediaAssets.ts",
           "frontend/src/components/admin/MediaAssetGrid.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/src/components/admin/MediaAssetGrid.tsx",
-    "frontend/src/utils/blobUrl.ts",
+    "frontend/src/components/admin/MediaUploadZone.tsx",
+    "frontend/src/hooks/useMediaAssets.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

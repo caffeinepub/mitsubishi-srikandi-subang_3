@@ -1,31 +1,26 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Media manager and website settings project with persistent image storage",
-  "architectural_notes": [
-    "Must maintain foundation structure from Phase 1 and 2",
-    "Only modify Phase 1/2 foundation if needed to complete missing structure"
-  ],
+  "summary": "New project",
+  "architectural_notes": [],
   "known_issues": [
-    "Media manager shows only icons instead of actual image thumbnails",
-    "Website settings images appear saved but disappear when returning to menu",
-    "Homepage images not updating with saved changes"
+    "Actor availability error recurring - fixing one feature breaks another (regression cycle)"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-replace-generic-car-icon-thumbnails-in-media-manager-with-actual-image-thumbnails-in-the-mediaassetgrid-component-frontend-src-components-admin-mediaassetgrid-tsx-fetch-and-display-the-actual-uploaded-images-using-their-blob-ids-instead-of-showing-placeholder-icons",
-      "title": "Replace generic car icon thumbnails in Media Manager with actual image thumbnails. In the MediaAssetGrid component (frontend/src/components/admin/MediaAssetGrid.tsx), fetch and display the actual uploaded images using their blob IDs instead of showing placeholder icons.",
+      "id": "feature-review-and-fix-frontend-actor-initialization-in-useactor-ts-to-handle-authentication-state-changes-without-breaking-backend-connectivity",
+      "title": "Review and fix frontend actor initialization in useActor.ts to handle authentication state changes without breaking backend connectivity",
       "reqIds": [
-        "REQ-1"
+        "REQ-5"
       ],
       "version": 1
     },
     {
-      "id": "feature-implement-proper-image-url-generation-for-media-assets-create-a-utility-function-that-generates-blob-urls-from-asset-ids-using-the-canister-s-http-endpoint-pattern-and-integrate-it-into-mediaassetgrid-to-display-thumbnails",
-      "title": "Implement proper image URL generation for media assets. Create a utility function that generates blob URLs from asset IDs using the canister's HTTP endpoint pattern, and integrate it into MediaAssetGrid to display thumbnails.",
+      "id": "feature-verify-and-stabilize-the-media-asset-deletion-functionality-to-work-reliably-without-causing-actor-availability-issues",
+      "title": "Verify and stabilize the media asset deletion functionality to work reliably without causing actor availability issues",
       "reqIds": [
-        "REQ-2"
+        "REQ-6"
       ],
       "version": 1
     }
@@ -33,14 +28,18 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Display actual image thumbnails in media manager instead of icons",
-      "reqIds": [],
+      "summary": "Investigate and resolve the root cause of recurring 'actor not available' errors that create a regression cycle where fixing one feature breaks another",
+      "reqIds": [
+        "REQ-3"
+      ],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Display actual saved images in website settings and persist all field data permanently",
-      "reqIds": [],
+      "summary": "Ensure stable actor initialization and persistence throughout the application lifecycle to prevent intermittent availability failures",
+      "reqIds": [
+        "REQ-4"
+      ],
       "status": "pending"
     }
   ],

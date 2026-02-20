@@ -26,10 +26,10 @@ export const UserRole = IDL.Variant({
 });
 export const MediaAsset = IDL.Record({
   'id' : IDL.Nat,
+  'data' : IDL.Vec(IDL.Nat8),
   'size' : IDL.Nat,
   'mimeType' : IDL.Text,
   'filename' : IDL.Text,
-  'blobId' : IDL.Text,
   'uploadedAt' : IDL.Int,
   'uploadedBy' : IDL.Principal,
 });
@@ -97,7 +97,7 @@ export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'cleanupExpiredSessions' : IDL.Func([], [], []),
-  'deleteMediaAsset' : IDL.Func([IDL.Nat], [], []),
+  'deleteMediaAsset' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'getAllMediaAssets' : IDL.Func([], [IDL.Vec(MediaAsset)], ['query']),
   'getAllVisitorSessions' : IDL.Func([], [IDL.Vec(VisitorSession)], ['query']),
   'getAllVisits' : IDL.Func([], [IDL.Vec(Visit)], ['query']),
@@ -137,9 +137,13 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
-  'updateMediaAsset' : IDL.Func([IDL.Nat, IDL.Text, IDL.Text], [], []),
+  'updateMediaAsset' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Text, IDL.Vec(IDL.Nat8), IDL.Nat],
+      [],
+      [],
+    ),
   'uploadMediaAsset' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
+      [IDL.Text, IDL.Text, IDL.Vec(IDL.Nat8), IDL.Nat],
       [],
       [],
     ),
@@ -166,10 +170,10 @@ export const idlFactory = ({ IDL }) => {
   });
   const MediaAsset = IDL.Record({
     'id' : IDL.Nat,
+    'data' : IDL.Vec(IDL.Nat8),
     'size' : IDL.Nat,
     'mimeType' : IDL.Text,
     'filename' : IDL.Text,
-    'blobId' : IDL.Text,
     'uploadedAt' : IDL.Int,
     'uploadedBy' : IDL.Principal,
   });
@@ -237,7 +241,7 @@ export const idlFactory = ({ IDL }) => {
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'cleanupExpiredSessions' : IDL.Func([], [], []),
-    'deleteMediaAsset' : IDL.Func([IDL.Nat], [], []),
+    'deleteMediaAsset' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'getAllMediaAssets' : IDL.Func([], [IDL.Vec(MediaAsset)], ['query']),
     'getAllVisitorSessions' : IDL.Func(
         [],
@@ -281,9 +285,13 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
-    'updateMediaAsset' : IDL.Func([IDL.Nat, IDL.Text, IDL.Text], [], []),
+    'updateMediaAsset' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Vec(IDL.Nat8), IDL.Nat],
+        [],
+        [],
+      ),
     'uploadMediaAsset' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Nat],
+        [IDL.Text, IDL.Text, IDL.Vec(IDL.Nat8), IDL.Nat],
         [],
         [],
       ),
