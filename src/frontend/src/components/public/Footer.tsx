@@ -5,8 +5,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
-  const appIdentifier = typeof window !== 'undefined' ? window.location.hostname : 'mitsubishi-srikandi-subang';
-  
+  const appIdentifier =
+    typeof window !== 'undefined' ? window.location.hostname : 'mitsubishi-srikandi-subang';
+
   // Auto-refresh every 15 seconds
   const { data: visitorStats, isLoading } = useGetVisitorStats({ refetchInterval: 15000 });
 
@@ -27,7 +28,8 @@ export default function Footer() {
               className="h-16 mb-4"
             />
             <p className="text-gray-300 text-sm leading-relaxed">
-              Dealer resmi Mitsubishi di Subang, Jawa Barat. Melayani penjualan mobil keluarga dan niaga dengan layanan terbaik.
+              Dealer resmi Mitsubishi di Subang, Jawa Barat. Melayani penjualan mobil keluarga dan
+              niaga dengan layanan terbaik.
             </p>
           </div>
 
@@ -54,42 +56,42 @@ export default function Footer() {
           <div>
             <h3 className="text-lg font-bold mb-4">Ikuti Kami</h3>
             <div className="flex space-x-3 mb-6">
-              <a 
-                href="https://facebook.com" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-[#C90010] hover:bg-[#A00008] flex items-center justify-center transition-colors"
               >
                 <SiFacebook size={20} />
               </a>
-              <a 
-                href="https://instagram.com" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-[#C90010] hover:bg-[#A00008] flex items-center justify-center transition-colors"
               >
                 <SiInstagram size={20} />
               </a>
-              <a 
-                href="https://x.com" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://x.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-[#C90010] hover:bg-[#A00008] flex items-center justify-center transition-colors"
               >
                 <SiX size={20} />
               </a>
-              <a 
-                href="https://tiktok.com" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://tiktok.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-[#C90010] hover:bg-[#A00008] flex items-center justify-center transition-colors"
               >
                 <SiTiktok size={20} />
               </a>
-              <a 
-                href="https://youtube.com" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://youtube.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-[#C90010] hover:bg-[#A00008] flex items-center justify-center transition-colors"
               >
                 <SiYoutube size={20} />
@@ -121,7 +123,7 @@ export default function Footer() {
                   <Skeleton className="h-5 w-16 bg-gray-700" />
                 ) : (
                   <span className="font-bold text-[#C90010]">
-                    {formatNumber(visitorStats?.todayVisitors)}
+                    {formatNumber(visitorStats?.visitorsToday)}
                   </span>
                 )}
               </div>
@@ -131,7 +133,7 @@ export default function Footer() {
                   <Skeleton className="h-5 w-16 bg-gray-700" />
                 ) : (
                   <span className="font-bold text-[#C90010]">
-                    {formatNumber(visitorStats?.onlineUsers)}
+                    {formatNumber(visitorStats?.onlineNow)}
                   </span>
                 )}
               </div>
@@ -141,7 +143,7 @@ export default function Footer() {
                   <Skeleton className="h-5 w-16 bg-gray-700" />
                 ) : (
                   <span className="font-bold text-[#C90010]">
-                    {formatNumber(visitorStats?.pageViews)}
+                    {formatNumber(visitorStats?.pageViewsToday)}
                   </span>
                 )}
               </div>
@@ -150,16 +152,14 @@ export default function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="border-t border-gray-700 pt-6 text-center text-sm text-gray-400">
-          <p className="mb-2">
-            © {currentYear} Mitsubishi Srikandi Subang. All rights reserved.
-          </p>
-          <p className="flex items-center justify-center space-x-1">
-            <span>Built with</span>
-            <Heart size={14} className="text-[#C90010] fill-current" />
-            <span>using</span>
+        <div className="border-t border-gray-700 pt-8 text-center text-sm text-gray-400">
+          <p>
+            © {currentYear} Mitsubishi Srikandi Subang. All rights reserved. | Built with{' '}
+            <Heart size={14} className="inline text-[#C90010]" /> using{' '}
             <a
-              href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(appIdentifier)}`}
+              href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(
+                appIdentifier
+              )}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[#C90010] hover:underline"

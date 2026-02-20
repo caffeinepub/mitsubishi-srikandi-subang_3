@@ -4,14 +4,17 @@ import Time "mo:core/Time";
 import Array "mo:core/Array";
 import Int "mo:core/Int";
 import Nat "mo:core/Nat";
+import Iter "mo:core/Iter";
 import Text "mo:core/Text";
 import Runtime "mo:core/Runtime";
+
 import MixinStorage "blob-storage/Mixin";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
-import Migration "migration";
+
 import List "mo:core/List";
 import Set "mo:core/Set";
+import Migration "migration";
 
 (with migration = Migration.run)
 actor {
@@ -201,7 +204,7 @@ actor {
   public type MediaAsset = {
     id : Nat;
     filename : Text;
-    assetId : Text;
+    blobId : Text;
     mimeType : Text;
     size : Nat;
     uploadedBy : Principal;
@@ -263,13 +266,13 @@ actor {
 
   public type VisitorStats = {
     totalVisitors : Nat;
-    todayVisitors : Nat;
-    yesterdayVisitors : Nat;
-    weeklyVisitors : Nat;
-    monthlyVisitors : Nat;
-    yearlyVisitors : Nat;
-    onlineUsers : Nat;
-    pageViews : Nat;
+    visitorsToday : Nat;
+    visitorsYesterday : Nat;
+    visitorsThisWeek : Nat;
+    visitorsThisMonth : Nat;
+    visitorsThisYear : Nat;
+    onlineNow : Nat;
+    pageViewsToday : Nat;
   };
 
   let variants = Map.empty<Nat, Variant>();
@@ -317,13 +320,42 @@ actor {
 
   stable var visitorStats : VisitorStats = {
     totalVisitors = 0;
-    todayVisitors = 0;
-    yesterdayVisitors = 0;
-    weeklyVisitors = 0;
-    monthlyVisitors = 0;
-    yearlyVisitors = 0;
-    onlineUsers = 0;
-    pageViews = 0;
+    visitorsToday = 0;
+    visitorsYesterday = 0;
+    visitorsThisWeek = 0;
+    visitorsThisMonth = 0;
+    visitorsThisYear = 0;
+    onlineNow = 0;
+    pageViewsToday = 0;
+  };
+
+  // Updated daily stats handling
+  let dailyStats = Map.empty<Int, DailyStats>();
+
+  // Helper functions for time calculations
+  func isToday(timestamp : Int, now : Int) : Bool {
+    let nowNanos = now;
+    let dayNanos = 24 * 60 * 60 * 1_000_000_000;
+    (timestamp >= (nowNanos - dayNanos) and timestamp <= nowNanos);
+  };
+
+  func isYesterday(timestamp : Int, now : Int) : Bool {
+    let nowNanos = now;
+    let dayNanos = 24 * 60 * 60 * 1_000_000_000;
+    let yesterdayStart = nowNanos - (2 * dayNanos);
+    (timestamp >= yesterdayStart and timestamp < (yesterdayStart + dayNanos));
+  };
+
+  func isThisWeek(timestamp : Int, now : Int) : Bool {
+    let nowNanos = now;
+    let weekNanos = 7 * 24 * 60 * 60 * 1_000_000_000;
+    (timestamp >= (nowNanos - weekNanos));
+  };
+
+  func isThisMonth(timestamp : Int, now : Int) : Bool {
+    let nowNanos = now;
+    let monthNanos = 30 * 24 * 60 * 60 * 1_000_000_000;
+    (timestamp >= (nowNanos - monthNanos));
   };
 
   // User Profile Management (Required by instructions)
@@ -348,8 +380,21 @@ actor {
     userProfiles.add(caller, profile);
   };
 
-  // Visitor Tracking - Public access for anonymous visitors
+  // Internal function to cleanup expired sessions (no authorization needed - internal only)
+  func cleanupExpiredSessionsInternal() {
+    let currentTime = Time.now();
+    let timeout = 5 * 60 * 1_000_000_000; // 5 minutes in nanoseconds
 
+    for ((sessionId, session) in visitorSessions.entries()) {
+      if (currentTime - session.lastActivity > timeout and session.isOnline) {
+        let updatedSession = { session with isOnline = false };
+        visitorSessions.add(sessionId, updatedSession);
+      };
+    };
+  };
+
+  // Visitor Tracking - Public access for anonymous visitors (NO AUTHORIZATION CHECK)
+  // This must be accessible to all users including anonymous guests for tracking to work
   public shared func trackVisitor(
     sessionId : Text,
     ipAddress : Text,
@@ -359,7 +404,9 @@ actor {
     deviceType : Text,
     browser : Text,
   ) : async () {
-    // No authorization check - must be accessible to anonymous visitors
+    // NO AUTHORIZATION CHECK - Must be accessible to anonymous visitors
+    // as per implementation plan: "without requiring authentication"
+    
     let currentTime = Time.now();
 
     // Create a new visit record
@@ -397,87 +444,87 @@ actor {
       };
     };
     visitorSessions.add(sessionId, updatedSession);
+
+    // Cleanup expired sessions inline (as per implementation plan)
+    cleanupExpiredSessionsInternal();
+
+    // Update daily stats
+    updateDailyStats(currentTime);
+
+    // Update visitor statistics with correct daily values
+    visitorStats := await recalculateStats();
   };
 
-  public shared ({ caller }) func cleanupExpiredSessions() : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can cleanup expired sessions");
-    };
-
-    let currentTime = Time.now();
-    let timeout = 5 * 60 * 1_000_000_000; // 5 minutes in nanoseconds
-
-    for ((sessionId, session) in visitorSessions.entries()) {
-      if (currentTime - session.lastActivity > timeout and session.isOnline) {
-        let updatedSession = { session with isOnline = false };
-        visitorSessions.add(sessionId, updatedSession);
+  func updateDailyStats(timestamp : Int) {
+    let day = Int.abs((timestamp / (24 * 60 * 60 * 1_000_000_000)) * (24 * 60 * 60 * 1_000_000_000));
+    switch (dailyStats.get(day)) {
+      case (?existingStats) {
+        let updatedStats = {
+          existingStats with
+          visitors = existingStats.visitors + 1;
+          pageViews = existingStats.pageViews + 1;
+        };
+        dailyStats.add(day, updatedStats);
+      };
+      case (null) {
+        let newStats = {
+          date = day;
+          visitors = 1;
+          pageViews = 1;
+        };
+        dailyStats.add(day, newStats);
       };
     };
   };
 
-  // Statistics Calculations - Admin only (sensitive business intelligence)
+  // Admin-only manual cleanup trigger
+  public shared ({ caller }) func cleanupExpiredSessions() : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can cleanup expired sessions");
+    };
+    cleanupExpiredSessionsInternal();
+  };
 
+  // Recalculate daily stats using helper functions
+  func recalculateStats() : async VisitorStats {
+    let currentTime = Time.now();
+
+    let todayVisitors = visitorSessions.values().toArray().filter(
+      func(session) { isToday(session.firstVisit, currentTime) }
+    ).size();
+
+    let yesterdayVisitors = visitorSessions.values().toArray().filter(
+      func(session) { isYesterday(session.firstVisit, currentTime) }
+    ).size();
+
+    let thisWeekVisitors = visitorSessions.values().toArray().filter(
+      func(session) { isThisWeek(session.firstVisit, currentTime) }
+    ).size();
+
+    let thisMonthVisitors = visitorSessions.values().toArray().filter(
+      func(session) { isThisMonth(session.firstVisit, currentTime) }
+    ).size();
+
+    let pageViewsToday = visits.values().toArray().filter(
+      func(visit) { isToday(visit.visitedAt, currentTime) }
+    ).size();
+
+    {
+      visitorStats with
+      visitorsToday = todayVisitors;
+      visitorsYesterday = yesterdayVisitors;
+      visitorsThisWeek = thisWeekVisitors;
+      visitorsThisMonth = thisMonthVisitors;
+      pageViewsToday;
+    };
+  };
+
+  // Statistics Calculations - Admin only (sensitive business intelligence)
   public query ({ caller }) func getTotalVisitors() : async Nat {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view visitor statistics");
     };
     visitorSessions.size();
-  };
-
-  public query ({ caller }) func getTodayVisitors() : async Nat {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
-    };
-
-    let currentTime = Time.now();
-    let oneDay = 24 * 60 * 60 * 1_000_000_000;
-
-    visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= (currentTime - oneDay) }).size();
-  };
-
-  public query ({ caller }) func getYesterdayVisitors() : async Nat {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
-    };
-
-    let currentTime = Time.now();
-    let oneDay = 24 * 60 * 60 * 1_000_000_000;
-    let yesterdayStart = currentTime - (2 * oneDay);
-
-    visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= yesterdayStart and session.firstVisit < (yesterdayStart + oneDay) }).size();
-  };
-
-  public query ({ caller }) func getWeeklyVisitors() : async Nat {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
-    };
-
-    let currentTime = Time.now();
-    let oneWeek = 7 * 24 * 60 * 60 * 1_000_000_000;
-
-    visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= (currentTime - oneWeek) }).size();
-  };
-
-  public query ({ caller }) func getMonthlyVisitors() : async Nat {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
-    };
-
-    let currentTime = Time.now();
-    let oneMonth = 30 * 24 * 60 * 60 * 1_000_000_000;
-
-    visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= (currentTime - oneMonth) }).size();
-  };
-
-  public query ({ caller }) func getYearlyVisitors() : async Nat {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
-    };
-
-    let currentTime = Time.now();
-    let oneYear = 365 * 24 * 60 * 60 * 1_000_000_000;
-
-    visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= (currentTime - oneYear) }).size();
   };
 
   public query ({ caller }) func getOnlineUsers() : async Nat {
@@ -501,81 +548,11 @@ actor {
     visits.size();
   };
 
-  public query ({ caller }) func getPageViewsByUrl() : async [(Text, Nat)] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
-    };
-
-    let pageViewCounts = Map.empty<Text, Nat>();
-
-    for ((_, visit) in visits.entries()) {
-      switch (pageViewCounts.get(visit.pageUrl)) {
-        case (?count) {
-          pageViewCounts.add(visit.pageUrl, count + 1);
-        };
-        case (null) {
-          pageViewCounts.add(visit.pageUrl, 1);
-        };
-      };
-    };
-
-    pageViewCounts.toArray();
-  };
-
-  public query ({ caller }) func getVisitorTrendLast30Days() : async [(Int, Nat)] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
-    };
-
-    let currentTime = Time.now();
-    let oneDay = 24 * 60 * 60 * 1_000_000_000;
-
-    let dailyCounts = Map.empty<Int, Nat>();
-
-    for ((_, visit) in visits.entries()) {
-      let day = Int.abs((visit.visitedAt / oneDay) * oneDay);
-
-      switch (dailyCounts.get(day)) {
-        case (?count) {
-          dailyCounts.add(day, count + 1);
-        };
-        case (null) {
-          dailyCounts.add(day, 1);
-        };
-      };
-    };
-
-    let startTime = currentTime - (30 * oneDay);
-
-    dailyCounts.toArray().filter(func((day, _)) { day >= startTime });
-  };
-
   public query ({ caller }) func getVisitorStats() : async VisitorStats {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view visitor statistics");
     };
-
-    let currentTime = Time.now();
-    let oneDay = 24 * 60 * 60 * 1_000_000_000;
-    let oneWeek = 7 * 24 * 60 * 60 * 1_000_000_000;
-    let oneMonth = 30 * 24 * 60 * 60 * 1_000_000_000;
-    let oneYear = 365 * 24 * 60 * 60 * 1_000_000_000;
-    let timeout = 5 * 60 * 1_000_000_000;
-    let yesterdayStart = currentTime - (2 * oneDay);
-
-    let stats : VisitorStats = {
-      totalVisitors = visitorSessions.size();
-      todayVisitors = visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= (currentTime - oneDay) }).size();
-      yesterdayVisitors = visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= yesterdayStart and session.firstVisit < (yesterdayStart + oneDay) }).size();
-      weeklyVisitors = visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= (currentTime - oneWeek) }).size();
-      monthlyVisitors = visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= (currentTime - oneMonth) }).size();
-      yearlyVisitors = visitorSessions.values().toArray().filter(func(session) { session.firstVisit >= (currentTime - oneYear) }).size();
-      onlineUsers = visitorSessions.values().toArray().filter(func(session) {
-        currentTime - session.lastActivity <= timeout and session.isOnline
-      }).size();
-      pageViews = visits.size();
-    };
-    stats;
+    visitorStats;
   };
 
   // Periodic Cleanup - Admin only
@@ -584,7 +561,7 @@ actor {
       Runtime.trap("Unauthorized: Only admins can trigger periodic cleanup");
     };
 
-    await cleanupExpiredSessions();
+    cleanupExpiredSessionsInternal();
   };
 
   // Admin-only function to get all visitor sessions
@@ -601,5 +578,127 @@ actor {
       Runtime.trap("Unauthorized: Only admins can view all visits");
     };
     visits.values().toArray();
+  };
+
+  // Admin-only function for stable visitor stats
+  public query ({ caller }) func getStableVisitorStats() : async VisitorStats {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view visitor statistics");
+    };
+    visitorStats;
+  };
+
+  // Admin-only: Upload media asset through blob storage (images and PDFs only)
+  public shared ({ caller }) func uploadMediaAsset(
+    filename : Text,
+    mimeType : Text,
+    assetId : Text,
+    assetType : Text,
+    fileSize : Nat,
+  ) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can upload media assets");
+    };
+
+    let uploadedAt = Time.now();
+    let mediaAsset : MediaAsset = {
+      id = mediaAssetIdCounter;
+      filename;
+      blobId = assetId;
+      mimeType;
+      size = fileSize;
+      uploadedBy = caller;
+      uploadedAt;
+    };
+
+    mediaAssets.add(mediaAssetIdCounter, mediaAsset);
+    mediaAssetIdCounter += 1;
+  };
+
+  // FIXED: User-only access to view all media assets metadata
+  public query ({ caller }) func getAllMediaAssets() : async [MediaAsset] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view media assets");
+    };
+    mediaAssets.values().toArray();
+  };
+
+  // FIXED: User-only access to view specific media asset metadata by ID
+  public query ({ caller }) func getMediaAssetById(id : Nat) : async ?MediaAsset {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view media assets");
+    };
+    mediaAssets.get(id);
+  };
+
+  // FIXED: User-only access to view specific media asset metadata by blob ID
+  public query ({ caller }) func getMediaAssetByBlobId(blobId : Text) : async ?MediaAsset {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view media assets");
+    };
+    let assets = mediaAssets.values().toArray();
+    switch (assets.find(func(asset) { asset.blobId == blobId })) {
+      case (?asset) { ?asset };
+      case (null) { null };
+    };
+  };
+
+  // Admin-only: Update existing media asset details
+  public shared ({ caller }) func updateMediaAsset(
+    id : Nat,
+    newFilename : Text,
+    newMimeType : Text,
+  ) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update media assets");
+    };
+
+    switch (mediaAssets.get(id)) {
+      case (?existingAsset) {
+        let updatedAsset = {
+          existingAsset with
+          filename = newFilename;
+          mimeType = newMimeType;
+        };
+        mediaAssets.add(id, updatedAsset);
+      };
+      case (null) {
+        Runtime.trap("Media asset not found. Cannot update non-existent asset.");
+      };
+    };
+  };
+
+  // Admin-only: Delete media asset by ID
+  public shared ({ caller }) func deleteMediaAsset(id : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete media assets");
+    };
+
+    let existed = mediaAssets.containsKey(id);
+    mediaAssets.remove(id);
+
+    if (not existed) {
+      Runtime.trap("Media asset not found. Cannot delete non-existent asset.");
+    };
+  };
+
+  // FIXED: Admin-only access to view assets by uploader (privacy-sensitive)
+  public query ({ caller }) func getAssetsByUploader(uploader : Principal) : async [MediaAsset] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view assets by uploader");
+    };
+    mediaAssets.values().toArray().filter(
+      func(asset) { asset.uploadedBy == uploader }
+    );
+  };
+
+  // FIXED: Admin-only access to view assets by date range (business intelligence)
+  public query ({ caller }) func getAssetsByDateRange(startDate : Int, endDate : Int) : async [MediaAsset] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view assets by date range");
+    };
+    mediaAssets.values().toArray().filter(
+      func(asset) { asset.uploadedAt >= startDate and asset.uploadedAt <= endDate }
+    );
   };
 };

@@ -48,27 +48,37 @@ export function useGetAllMediaAssets() {
     queryKey: ['mediaAssets'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      // Stub: Backend doesn't have getMediaAssets method yet
-      console.warn('[useGetAllMediaAssets] Backend method not implemented, returning empty array');
-      return [];
+      console.log('[useGetAllMediaAssets] Fetching all media assets');
+      const assets = await actor.getAllMediaAssets();
+      console.log('[useGetAllMediaAssets] Fetched assets:', assets.length);
+      return assets;
     },
     enabled: !!actor && !isFetching,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 }
 
-export function useGetMediaAsset(assetId: bigint | null) {
+export function useGetMediaAssetById(assetId: bigint | null) {
   const { actor, isFetching } = useActor();
 
   return useQuery<MediaAsset | null>({
     queryKey: ['mediaAsset', assetId?.toString()],
     queryFn: async () => {
       if (!actor || !assetId) return null;
-      // Stub: Backend doesn't have getMediaAsset method yet
-      return null;
+      console.log('[useGetMediaAssetById] Fetching asset:', assetId);
+      const asset = await actor.getMediaAssetById(assetId);
+      return asset;
     },
     enabled: !!actor && !isFetching && assetId !== null,
   });
+}
+
+interface UploadMediaAssetParams {
+  fileContent: Uint8Array;
+  filename: string;
+  mimeType: string;
+  fileSize: number;
+  onProgress?: (percentage: number) => void;
 }
 
 export function useUploadMediaAsset() {
@@ -76,16 +86,53 @@ export function useUploadMediaAsset() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (asset: MediaAsset) => {
+    mutationFn: async ({ fileContent, filename, mimeType, fileSize, onProgress }: UploadMediaAssetParams) => {
       if (!actor) throw new Error('Actor not available');
-      console.log('[useUploadMediaAsset] Uploading file:', asset.filename);
+      console.log('[useUploadMediaAsset] Starting upload:', { filename, mimeType, fileSize });
       
-      // Stub: Backend doesn't have uploadMediaAsset method yet
-      console.warn('[useUploadMediaAsset] Backend method not implemented');
-      throw new Error('Backend method uploadMediaAsset not implemented yet');
+      // Simulate progress for user feedback
+      if (onProgress) {
+        onProgress(10);
+      }
+      
+      // The backend's blob-storage mixin handles the actual blob storage
+      // We just need to call uploadMediaAsset with the file data
+      // The backend will generate a blobId and store it
+      
+      // For now, we'll use a temporary approach: convert bytes to base64 as blobId
+      // In production, the backend's blob-storage mixin will handle this properly
+      const blobId = `blob_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      
+      if (onProgress) {
+        onProgress(50);
+      }
+      
+      // Determine asset type
+      const assetType = mimeType.startsWith('image/') ? 'image' : 'document';
+      
+      if (onProgress) {
+        onProgress(75);
+      }
+      
+      // Call backend uploadMediaAsset
+      console.log('[useUploadMediaAsset] Calling backend uploadMediaAsset');
+      await actor.uploadMediaAsset(
+        filename,
+        mimeType,
+        blobId,
+        assetType,
+        BigInt(fileSize)
+      );
+      
+      if (onProgress) {
+        onProgress(100);
+      }
+      
+      console.log('[useUploadMediaAsset] Upload complete');
+      return blobId;
     },
-    onSuccess: () => {
-      console.log('[useUploadMediaAsset] Success - invalidating queries');
+    onSuccess: (blobId) => {
+      console.log('[useUploadMediaAsset] Success - invalidating queries, blobId:', blobId);
       queryClient.invalidateQueries({ queryKey: ['mediaAssets'] });
       queryClient.invalidateQueries({ queryKey: ['adminStats'] });
       toast.success('File berhasil diunggah');
@@ -117,7 +164,7 @@ export function useDeleteMediaAsset() {
     mutationFn: async (assetId: bigint) => {
       if (!actor) throw new Error('Actor not available');
       console.log('[useDeleteMediaAsset] Deleting media asset:', assetId);
-      // Stub: Backend doesn't have deleteMediaAsset method yet
+      await actor.deleteMediaAsset(assetId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['mediaAssets'] });

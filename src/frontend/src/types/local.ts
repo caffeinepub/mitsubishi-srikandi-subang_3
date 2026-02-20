@@ -96,7 +96,7 @@ export interface BlogPost {
 export interface MediaAsset {
   id: bigint;
   filename: string;
-  assetId: string;
+  blobId: string;
   mimeType: string;
   size: bigint;
   uploadedBy: Principal;

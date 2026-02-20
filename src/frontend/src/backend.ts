@@ -89,6 +89,15 @@ export class ExternalBlob {
         return this;
     }
 }
+export interface MediaAsset {
+    id: bigint;
+    size: bigint;
+    mimeType: string;
+    filename: string;
+    blobId: string;
+    uploadedAt: bigint;
+    uploadedBy: Principal;
+}
 export interface _CaffeineStorageRefillInformation {
     proposed_top_up_amount?: bigint;
 }
@@ -104,14 +113,14 @@ export interface _CaffeineStorageCreateCertificateResult {
     blob_hash: string;
 }
 export interface VisitorStats {
-    todayVisitors: bigint;
-    yesterdayVisitors: bigint;
+    visitorsThisWeek: bigint;
+    visitorsYesterday: bigint;
+    visitorsThisYear: bigint;
+    onlineNow: bigint;
     totalVisitors: bigint;
-    onlineUsers: bigint;
-    weeklyVisitors: bigint;
-    yearlyVisitors: bigint;
-    monthlyVisitors: bigint;
-    pageViews: bigint;
+    visitorsToday: bigint;
+    pageViewsToday: bigint;
+    visitorsThisMonth: bigint;
 }
 export interface Visit {
     id: string;
@@ -148,28 +157,30 @@ export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     cleanupExpiredSessions(): Promise<void>;
+    deleteMediaAsset(id: bigint): Promise<void>;
+    getAllMediaAssets(): Promise<Array<MediaAsset>>;
     getAllVisitorSessions(): Promise<Array<VisitorSession>>;
     getAllVisits(): Promise<Array<Visit>>;
+    getAssetsByDateRange(startDate: bigint, endDate: bigint): Promise<Array<MediaAsset>>;
+    getAssetsByUploader(uploader: Principal): Promise<Array<MediaAsset>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
-    getMonthlyVisitors(): Promise<bigint>;
+    getMediaAssetByBlobId(blobId: string): Promise<MediaAsset | null>;
+    getMediaAssetById(id: bigint): Promise<MediaAsset | null>;
     getOnlineUsers(): Promise<bigint>;
-    getPageViewsByUrl(): Promise<Array<[string, bigint]>>;
-    getTodayVisitors(): Promise<bigint>;
+    getStableVisitorStats(): Promise<VisitorStats>;
     getTotalPageViews(): Promise<bigint>;
     getTotalVisitors(): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getVisitorStats(): Promise<VisitorStats>;
-    getVisitorTrendLast30Days(): Promise<Array<[bigint, bigint]>>;
-    getWeeklyVisitors(): Promise<bigint>;
-    getYearlyVisitors(): Promise<bigint>;
-    getYesterdayVisitors(): Promise<bigint>;
     isCallerAdmin(): Promise<boolean>;
     periodicCleanup(): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     trackVisitor(sessionId: string, ipAddress: string, userAgent: string, pageUrl: string, referrer: string, deviceType: string, browser: string): Promise<void>;
+    updateMediaAsset(id: bigint, newFilename: string, newMimeType: string): Promise<void>;
+    uploadMediaAsset(filename: string, mimeType: string, assetId: string, assetType: string, fileSize: bigint): Promise<void>;
 }
-import type { UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
+import type { MediaAsset as _MediaAsset, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _caffeineStorageBlobIsLive(arg0: Uint8Array): Promise<boolean> {
@@ -298,6 +309,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async deleteMediaAsset(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteMediaAsset(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteMediaAsset(arg0);
+            return result;
+        }
+    }
+    async getAllMediaAssets(): Promise<Array<MediaAsset>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllMediaAssets();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllMediaAssets();
+            return result;
+        }
+    }
     async getAllVisitorSessions(): Promise<Array<VisitorSession>> {
         if (this.processError) {
             try {
@@ -323,6 +362,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getAllVisits();
+            return result;
+        }
+    }
+    async getAssetsByDateRange(arg0: bigint, arg1: bigint): Promise<Array<MediaAsset>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAssetsByDateRange(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAssetsByDateRange(arg0, arg1);
+            return result;
+        }
+    }
+    async getAssetsByUploader(arg0: Principal): Promise<Array<MediaAsset>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAssetsByUploader(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAssetsByUploader(arg0);
             return result;
         }
     }
@@ -354,18 +421,32 @@ export class Backend implements backendInterface {
             return from_candid_UserRole_n11(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getMonthlyVisitors(): Promise<bigint> {
+    async getMediaAssetByBlobId(arg0: string): Promise<MediaAsset | null> {
         if (this.processError) {
             try {
-                const result = await this.actor.getMonthlyVisitors();
-                return result;
+                const result = await this.actor.getMediaAssetByBlobId(arg0);
+                return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getMonthlyVisitors();
-            return result;
+            const result = await this.actor.getMediaAssetByBlobId(arg0);
+            return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getMediaAssetById(arg0: bigint): Promise<MediaAsset | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getMediaAssetById(arg0);
+                return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getMediaAssetById(arg0);
+            return from_candid_opt_n13(this._uploadFile, this._downloadFile, result);
         }
     }
     async getOnlineUsers(): Promise<bigint> {
@@ -382,31 +463,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getPageViewsByUrl(): Promise<Array<[string, bigint]>> {
+    async getStableVisitorStats(): Promise<VisitorStats> {
         if (this.processError) {
             try {
-                const result = await this.actor.getPageViewsByUrl();
+                const result = await this.actor.getStableVisitorStats();
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getPageViewsByUrl();
-            return result;
-        }
-    }
-    async getTodayVisitors(): Promise<bigint> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getTodayVisitors();
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getTodayVisitors();
+            const result = await this.actor.getStableVisitorStats();
             return result;
         }
     }
@@ -466,62 +533,6 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getVisitorTrendLast30Days(): Promise<Array<[bigint, bigint]>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getVisitorTrendLast30Days();
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getVisitorTrendLast30Days();
-            return result;
-        }
-    }
-    async getWeeklyVisitors(): Promise<bigint> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getWeeklyVisitors();
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getWeeklyVisitors();
-            return result;
-        }
-    }
-    async getYearlyVisitors(): Promise<bigint> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getYearlyVisitors();
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getYearlyVisitors();
-            return result;
-        }
-    }
-    async getYesterdayVisitors(): Promise<bigint> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getYesterdayVisitors();
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getYesterdayVisitors();
-            return result;
-        }
-    }
     async isCallerAdmin(): Promise<boolean> {
         if (this.processError) {
             try {
@@ -578,6 +589,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async updateMediaAsset(arg0: bigint, arg1: string, arg2: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateMediaAsset(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateMediaAsset(arg0, arg1, arg2);
+            return result;
+        }
+    }
+    async uploadMediaAsset(arg0: string, arg1: string, arg2: string, arg3: string, arg4: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.uploadMediaAsset(arg0, arg1, arg2, arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.uploadMediaAsset(arg0, arg1, arg2, arg3, arg4);
+            return result;
+        }
+    }
 }
 function from_candid_UserRole_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
     return from_candid_variant_n12(_uploadFile, _downloadFile, value);
@@ -586,6 +625,9 @@ function from_candid__CaffeineStorageRefillResult_n4(_uploadFile: (file: Externa
     return from_candid_record_n5(_uploadFile, _downloadFile, value);
 }
 function from_candid_opt_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_MediaAsset]): MediaAsset | null {
     return value.length === 0 ? null : value[0];
 }
 function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [boolean]): boolean | null {

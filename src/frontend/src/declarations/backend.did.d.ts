@@ -10,6 +10,15 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface MediaAsset {
+  'id' : bigint,
+  'size' : bigint,
+  'mimeType' : string,
+  'filename' : string,
+  'blobId' : string,
+  'uploadedAt' : bigint,
+  'uploadedBy' : Principal,
+}
 export interface UserProfile {
   'name' : string,
   'email' : string,
@@ -37,14 +46,14 @@ export interface VisitorSession {
   'ipAddress' : string,
 }
 export interface VisitorStats {
-  'todayVisitors' : bigint,
-  'yesterdayVisitors' : bigint,
+  'visitorsThisWeek' : bigint,
+  'visitorsYesterday' : bigint,
+  'visitorsThisYear' : bigint,
+  'onlineNow' : bigint,
   'totalVisitors' : bigint,
-  'onlineUsers' : bigint,
-  'weeklyVisitors' : bigint,
-  'yearlyVisitors' : bigint,
-  'monthlyVisitors' : bigint,
-  'pageViews' : bigint,
+  'visitorsToday' : bigint,
+  'pageViewsToday' : bigint,
+  'visitorsThisMonth' : bigint,
 }
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
@@ -76,27 +85,32 @@ export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'cleanupExpiredSessions' : ActorMethod<[], undefined>,
+  'deleteMediaAsset' : ActorMethod<[bigint], undefined>,
+  'getAllMediaAssets' : ActorMethod<[], Array<MediaAsset>>,
   'getAllVisitorSessions' : ActorMethod<[], Array<VisitorSession>>,
   'getAllVisits' : ActorMethod<[], Array<Visit>>,
+  'getAssetsByDateRange' : ActorMethod<[bigint, bigint], Array<MediaAsset>>,
+  'getAssetsByUploader' : ActorMethod<[Principal], Array<MediaAsset>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getMonthlyVisitors' : ActorMethod<[], bigint>,
+  'getMediaAssetByBlobId' : ActorMethod<[string], [] | [MediaAsset]>,
+  'getMediaAssetById' : ActorMethod<[bigint], [] | [MediaAsset]>,
   'getOnlineUsers' : ActorMethod<[], bigint>,
-  'getPageViewsByUrl' : ActorMethod<[], Array<[string, bigint]>>,
-  'getTodayVisitors' : ActorMethod<[], bigint>,
+  'getStableVisitorStats' : ActorMethod<[], VisitorStats>,
   'getTotalPageViews' : ActorMethod<[], bigint>,
   'getTotalVisitors' : ActorMethod<[], bigint>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getVisitorStats' : ActorMethod<[], VisitorStats>,
-  'getVisitorTrendLast30Days' : ActorMethod<[], Array<[bigint, bigint]>>,
-  'getWeeklyVisitors' : ActorMethod<[], bigint>,
-  'getYearlyVisitors' : ActorMethod<[], bigint>,
-  'getYesterdayVisitors' : ActorMethod<[], bigint>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'periodicCleanup' : ActorMethod<[], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'trackVisitor' : ActorMethod<
     [string, string, string, string, string, string, string],
+    undefined
+  >,
+  'updateMediaAsset' : ActorMethod<[bigint, string, string], undefined>,
+  'uploadMediaAsset' : ActorMethod<
+    [string, string, string, string, bigint],
     undefined
   >,
 }

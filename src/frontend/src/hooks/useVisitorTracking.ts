@@ -10,41 +10,18 @@ import {
   getClientIP,
 } from '../utils/visitorTracking';
 
+/**
+ * Legacy React hook for visitor tracking.
+ * Note: This hook is deprecated. Primary tracking now happens in PublicLayout.
+ * Kept for backward compatibility only.
+ */
 export function useVisitorTracking() {
   const location = useLocation();
   const { actor } = useActor();
 
   useEffect(() => {
-    // Skip tracking if actor is not ready
-    if (!actor) return;
-
-    const pathname = location.pathname;
-
-    // Skip tracking for admin routes
-    if (isAdminRoute(pathname)) {
-      return;
-    }
-
-    // Skip tracking for bots
-    if (isBot()) {
-      return;
-    }
-
-    // Collect tracking data
-    const sessionId = getOrCreateSessionId();
-    const ipAddress = getClientIP();
-    const userAgent = navigator.userAgent;
-    const pageUrl = window.location.href;
-    const referrer = document.referrer || 'direct';
-    const deviceType = detectDeviceType();
-    const browser = detectBrowser();
-
-    // Track the visit
-    actor
-      .trackVisitor(sessionId, ipAddress, userAgent, pageUrl, referrer, deviceType, browser)
-      .catch((error) => {
-        // Silent fail - don't disrupt user experience if tracking fails
-        console.error('Visitor tracking error:', error);
-      });
+    // This hook is now deprecated - tracking happens in PublicLayout
+    // Keeping this empty to avoid duplicate tracking calls
+    console.log('[useVisitorTracking] Hook is deprecated, tracking handled by PublicLayout');
   }, [location.pathname, actor]);
 }

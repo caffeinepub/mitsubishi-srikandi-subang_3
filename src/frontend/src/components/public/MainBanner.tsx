@@ -17,10 +17,10 @@ export default function MainBanner() {
     );
   }
 
-  // Use the asset ID to construct the direct URL for streaming if available
+  // Use the blobId to construct the direct URL for streaming if available
   // Otherwise fallback to generated static image
   const imageUrl = mainBannerAsset 
-    ? `/api/v2/canister/${mainBannerAsset.assetId}`
+    ? `/api/blob/${mainBannerAsset.blobId}`
     : '/assets/generated/main-banner.dim_1920x600.png';
 
   return (

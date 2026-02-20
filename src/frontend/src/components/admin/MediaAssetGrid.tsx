@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Copy, Trash2 } from 'lucide-react';
+import { Copy, Trash2, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useGetAllMediaAssets, useDeleteMediaAsset } from '@/hooks/useMediaAssets';
@@ -22,8 +22,8 @@ export default function MediaAssetGrid() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState<MediaAsset | null>(null);
 
-  const handleCopyId = (assetId: string) => {
-    navigator.clipboard.writeText(assetId);
+  const handleCopyId = (assetId: bigint) => {
+    navigator.clipboard.writeText(assetId.toString());
     toast.success('ID asset berhasil disalin');
   };
 
@@ -41,6 +41,12 @@ export default function MediaAssetGrid() {
         },
       });
     }
+  };
+
+  const getImageUrl = (blobId: string): string => {
+    // Use the blobId to construct a URL for the blob storage
+    // The backend's blob-storage mixin will serve this via HTTP
+    return `/api/blob/${blobId}`;
   };
 
   if (isLoading) {
@@ -64,46 +70,58 @@ export default function MediaAssetGrid() {
   return (
     <>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {assets.map((asset) => (
-          <div key={asset.id.toString()} className="border rounded-lg overflow-hidden">
-            <div className="aspect-square bg-gray-100 flex items-center justify-center">
-              {asset.mimeType.startsWith('image/') ? (
-                <img
-                  src={`/api/media/${asset.assetId}`}
-                  alt={asset.filename}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="text-gray-400 text-center p-4">
-                  <p className="text-sm font-medium">{asset.filename}</p>
-                  <p className="text-xs">{asset.mimeType}</p>
+        {assets.map((asset) => {
+          const isPdf = asset.mimeType.startsWith('application/pdf');
+          const imageUrl = !isPdf ? getImageUrl(asset.blobId) : '';
+
+          return (
+            <div key={asset.id.toString()} className="border rounded-lg overflow-hidden">
+              <div className="aspect-square bg-gray-100 flex items-center justify-center">
+                {isPdf ? (
+                  <div className="text-gray-400 text-center p-4">
+                    <FileText className="h-16 w-16 mx-auto mb-2" />
+                    <p className="text-sm font-medium">{asset.filename}</p>
+                    <p className="text-xs">PDF Document</p>
+                  </div>
+                ) : (
+                  <img
+                    src={imageUrl}
+                    alt={asset.filename}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('[MediaAssetGrid] Image load error for:', asset.blobId);
+                      e.currentTarget.src = '/assets/generated/vehicle-placeholder.dim_800x600.png';
+                    }}
+                  />
+                )}
+              </div>
+              <div className="p-2 space-y-2">
+                <p className="text-sm font-medium truncate" title={asset.filename}>
+                  {asset.filename}
+                </p>
+                <div className="flex gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => handleCopyId(asset.id)}
+                  >
+                    <Copy className="h-3 w-3 mr-1" />
+                    Copy ID
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteClick(asset)}
+                    disabled={deleteAsset.isPending}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
                 </div>
-              )}
-            </div>
-            <div className="p-2 space-y-2">
-              <p className="text-sm font-medium truncate">{asset.filename}</p>
-              <div className="flex gap-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => handleCopyId(asset.assetId)}
-                >
-                  <Copy className="h-3 w-3 mr-1" />
-                  Copy ID
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDeleteClick(asset)}
-                  disabled={deleteAsset.isPending}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

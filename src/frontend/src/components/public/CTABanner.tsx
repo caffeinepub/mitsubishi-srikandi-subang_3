@@ -19,10 +19,10 @@ export default function CTABanner() {
     );
   }
 
-  // Use the asset ID to construct the direct URL for streaming if available
+  // Use the blobId to construct the direct URL for streaming if available
   // Otherwise fallback to generated static image
   const imageUrl = ctaBannerAsset 
-    ? `/api/v2/canister/${ctaBannerAsset.assetId}`
+    ? `/api/blob/${ctaBannerAsset.blobId}`
     : '/assets/generated/cta-banner.dim_1920x400.png';
 
   return (

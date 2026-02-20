@@ -43,6 +43,10 @@ export default function BannerImagePicker({
       ? 'Rekomendasi: 1920x600px'
       : 'Rekomendasi: 1920x400px';
 
+  const getImageUrl = (blobId: string): string => {
+    return `/api/blob/${blobId}`;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -62,23 +66,23 @@ export default function BannerImagePicker({
                   <div
                     key={asset.id.toString()}
                     className={`border rounded-lg overflow-hidden cursor-pointer transition-all ${
-                      selectedId === asset.assetId
+                      selectedId === asset.blobId
                         ? 'ring-2 ring-primary'
                         : 'hover:border-primary'
                     }`}
-                    onClick={() => setSelectedId(asset.assetId)}
+                    onClick={() => setSelectedId(asset.blobId)}
                   >
                     <div className="aspect-[16/5] bg-gray-100">
                       <img
-                        src={`/api/media/${asset.assetId}`}
+                        src={getImageUrl(asset.blobId)}
                         alt={asset.filename}
                         className="w-full h-full object-cover"
                       />
                     </div>
                     <div className="p-3 flex items-center gap-2">
-                      <RadioGroupItem value={asset.assetId} id={asset.assetId} />
+                      <RadioGroupItem value={asset.blobId} id={asset.blobId} />
                       <Label
-                        htmlFor={asset.assetId}
+                        htmlFor={asset.blobId}
                         className="text-sm font-medium cursor-pointer flex-1"
                       >
                         {asset.filename}

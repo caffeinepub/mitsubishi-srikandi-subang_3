@@ -1,27 +1,35 @@
 // Visitor tracking utility functions
 
 export function generateSessionId(): string {
-  return `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+  // Generate UUID v4
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
 export function getOrCreateSessionId(): string {
   const storageKey = 'visitor_session_id';
-  
-  // Try to get existing session ID from sessionStorage
-  let sessionId = sessionStorage.getItem(storageKey);
-  
+
+  // Try to get existing session ID from localStorage (persists across tabs)
+  let sessionId = localStorage.getItem(storageKey);
+
   if (!sessionId) {
     // Generate new session ID if none exists
     sessionId = generateSessionId();
-    sessionStorage.setItem(storageKey, sessionId);
+    localStorage.setItem(storageKey, sessionId);
+    console.log('[Visitor Tracking] Created new session ID:', sessionId);
+  } else {
+    console.log('[Visitor Tracking] Using existing session ID:', sessionId);
   }
-  
+
   return sessionId;
 }
 
 export function detectDeviceType(): string {
   const ua = navigator.userAgent.toLowerCase();
-  
+
   if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
     return 'tablet';
   }
@@ -33,31 +41,59 @@ export function detectDeviceType(): string {
 
 export function detectBrowser(): string {
   const ua = navigator.userAgent;
-  
+
   if (ua.includes('Firefox')) return 'Firefox';
   if (ua.includes('Edg')) return 'Edge';
   if (ua.includes('Chrome')) return 'Chrome';
   if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari';
   if (ua.includes('Opera') || ua.includes('OPR')) return 'Opera';
   if (ua.includes('Trident') || ua.includes('MSIE')) return 'Internet Explorer';
-  
+
   return 'Unknown';
 }
 
 export function isBot(): boolean {
   const ua = navigator.userAgent.toLowerCase();
   const botPatterns = [
-    'bot', 'crawler', 'spider', 'scraper', 'slurp', 'bingbot', 
-    'googlebot', 'yandexbot', 'baiduspider', 'facebookexternalhit',
-    'twitterbot', 'rogerbot', 'linkedinbot', 'embedly', 'quora link preview',
-    'showyoubot', 'outbrain', 'pinterest', 'slackbot', 'vkshare',
-    'w3c_validator', 'redditbot', 'applebot', 'whatsapp', 'flipboard',
-    'tumblr', 'bitlybot', 'skypeuripreview', 'nuzzel', 'discordbot',
-    'qwantify', 'pinterestbot', 'bitrix link preview', 'xing-contenttabreceiver',
-    'chrome-lighthouse', 'telegrambot'
+    'bot',
+    'crawler',
+    'spider',
+    'scraper',
+    'slurp',
+    'bingbot',
+    'googlebot',
+    'yandexbot',
+    'baiduspider',
+    'facebookexternalhit',
+    'twitterbot',
+    'rogerbot',
+    'linkedinbot',
+    'embedly',
+    'quora link preview',
+    'showyoubot',
+    'outbrain',
+    'pinterest',
+    'slackbot',
+    'vkshare',
+    'w3c_validator',
+    'redditbot',
+    'applebot',
+    'whatsapp',
+    'flipboard',
+    'tumblr',
+    'bitlybot',
+    'skypeuripreview',
+    'nuzzel',
+    'discordbot',
+    'qwantify',
+    'pinterestbot',
+    'bitrix link preview',
+    'xing-contenttabreceiver',
+    'chrome-lighthouse',
+    'telegrambot',
   ];
-  
-  return botPatterns.some(pattern => ua.includes(pattern));
+
+  return botPatterns.some((pattern) => ua.includes(pattern));
 }
 
 export function isAdminRoute(pathname: string): boolean {

@@ -1,103 +1,50 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Frontend Implementation for Realtime Visitor Statistics System",
+  "title": "Implement stable persistence storage for media manager",
   "requirements": [
     {
-      "id": "REQ-8",
-      "summary": "Implement automatic visitor tracking middleware that executes on every public page load, capturing session data and sending it to the backend",
+      "id": "REQ-6",
+      "summary": "Update MediaUploadZone to successfully upload images and PDFs through backend methods",
       "acceptanceCriteria": [
-        "Tracking logic executes automatically on public page renders",
-        "session_id persisted in sessionStorage and reused across pages",
-        "device_type and browser detected from navigator.userAgent",
-        "Admin routes (/admin/*) excluded from tracking",
-        "Bot user agents filtered out before calling backend"
+        "File upload triggers backend uploadMediaAsset call",
+        "Upload progress is displayed to user",
+        "Success toast shown on successful upload",
+        "Error toast shown with descriptive message on failure"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useVisitorTracking.ts",
-          "operation": "create",
-          "description": "Create a custom React hook that implements automatic visitor tracking. The hook should: generate or retrieve session_id from sessionStorage, detect device_type and browser from navigator.userAgent, capture current page URL and referrer from window.location, exclude admin routes (/admin/*) and known bot user agents, call backend trackVisitor() method with all collected data on mount. Use useEffect with pathname dependency to trigger on navigation."
-        },
-        {
-          "path": "frontend/src/layouts/PublicLayout.tsx",
+          "path": "frontend/src/components/admin/MediaUploadZone.tsx",
           "operation": "modify",
-          "description": "Import and invoke useVisitorTracking hook at the top level of the PublicLayout component to ensure automatic tracking executes on every public page render. This wires the tracking middleware into all public routes without requiring individual page modifications."
+          "description": "Update the component to integrate with the blob-storage component for large file uploads. Use ExternalBlob.fromBytes() to handle file content and withUploadProgress() to track upload progress. Call the backend uploadMediaAsset method with the blob reference (assetId from ExternalBlob), filename, mimeType, assetType ('image' or 'document'), and fileSize. Verify the blob-storage component's usage instructions before implementing. Display upload progress percentage in the UI using a progress bar or indicator. Show success toast with asset ID on completion, and error toast with descriptive messages for validation failures (file type, size limits, token expiration). Ensure file type validation (JPEG, PNG, GIF, WebP, PDF) and size constraints (5MB for images, 10MB for PDFs) are enforced before upload."
         },
         {
-          "path": "frontend/src/utils/visitorTracking.ts",
-          "operation": "create",
-          "description": "Create utility functions for visitor tracking: generateSessionId() to create unique session identifiers, getOrCreateSessionId() to manage sessionStorage persistence, detectDeviceType() to parse user agent for device classification, detectBrowser() to identify browser from user agent, isBot() to filter known bot user agents. Export these utilities for use by the tracking hook."
+          "path": "frontend/src/hooks/useMediaAssets.ts",
+          "operation": "modify",
+          "description": "Update the useUploadMediaAsset hook to integrate with the blob-storage component. Import ExternalBlob from the blob-storage module. Modify the upload mutation to first upload the file blob using ExternalBlob.fromBytes(fileContent).withUploadProgress(onProgress), retrieve the assetId/blobId from the uploaded blob, then call the backend uploadMediaAsset method with the blobId, filename, mimeType, assetType, and fileSize parameters. Handle authentication checks for valid delegation tokens before upload. Add proper error handling for blob upload failures and backend method failures. Return the asset ID on successful upload for use in success notifications."
         }
       ]
     },
     {
-      "id": "REQ-9",
-      "summary": "Update VisitorStatsPage to fetch and display realtime statistics with auto-refresh every 15 seconds",
+      "id": "REQ-7",
+      "summary": "Update MediaAssetGrid to display uploaded media assets from backend with thumbnails and functional actions",
       "acceptanceCriteria": [
-        "VisitorStatsPage displays all 8 statistic values from backend",
-        "Statistics auto-refresh every 15 seconds via React Query",
-        "No hardcoded dummy data displayed",
-        "Loading states shown during fetch"
+        "Grid fetches and displays all media assets from backend",
+        "Images display as thumbnails using blob data",
+        "PDF files show with document icon",
+        "Copy ID button copies asset ID to clipboard",
+        "Delete button removes asset from backend and refreshes grid"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/admin/VisitorStatsPage.tsx",
+          "path": "frontend/src/components/admin/MediaAssetGrid.tsx",
           "operation": "modify",
-          "description": "Update the VisitorStatsPage component to display all 8 statistics fields from the backend VisitorStats type: totalVisitors, todayVisitors, yesterdayVisitors, weeklyVisitors, monthlyVisitors, yearlyVisitors, onlineUsers, and pageViews (mapped from totalPageViews). Use the useVisitorStats hook with refetchInterval set to 15000ms for automatic refresh. Remove any hardcoded zero values and ensure all data comes from the backend response. Add loading skeleton states during data fetch."
-        }
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "summary": "Add line chart showing 30-day visitor trend and bar chart showing top 10 most visited pages to VisitorStatsPage",
-      "acceptanceCriteria": [
-        "Line chart renders 30-day visitor trend data",
-        "Bar chart renders top 10 pages by view count",
-        "Charts update on data refresh",
-        "Charts handle empty data gracefully"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useVisitorTrend.ts",
-          "operation": "create",
-          "description": "Create a React Query hook that calls backend getVisitorTrendLast30Days() method to fetch daily visitor counts for the last 30 days. Return the data as an array of tuples [timestamp, count]. Include error handling and loading states. Set refetchInterval to 15000ms to match the stats refresh rate."
+          "description": "Update the component to integrate with the blob-storage component for displaying media assets. For each MediaAsset from getAllMediaAssets(), use the blobId field to create an ExternalBlob instance via ExternalBlob.fromURL() or retrieve blob bytes. Use ExternalBlob.getDirectURL() to get cached HTTP URLs for displaying image thumbnails in <img> tags to leverage browser caching and streaming. For PDF assets (identified by mimeType starting with 'application/pdf'), display a document icon instead of attempting image preview. Verify the blob-storage component's usage instructions before implementing. Ensure the Copy ID button copies the asset's numeric ID (converted to string) to clipboard using navigator.clipboard.writeText(). Wire the Delete button to call the deleteMediaAsset backend method with proper authentication checks, show a confirmation dialog before deletion, and invalidate the 'mediaAssets' query key after successful deletion to refresh the grid. Display loading skeletons during initial fetch and show appropriate empty state when no assets exist."
         },
         {
-          "path": "frontend/src/hooks/usePageViews.ts",
-          "operation": "create",
-          "description": "Create a React Query hook that calls backend getPageViewsByUrl() method to fetch page view counts grouped by URL. Return the data as an array of tuples [url, count]. Include error handling and loading states. Set refetchInterval to 15000ms to match the stats refresh rate."
-        },
-        {
-          "path": "frontend/src/components/admin/VisitorTrendChart.tsx",
-          "operation": "create",
-          "description": "Create a line chart component that visualizes 30-day visitor trend data. Use a charting library (recharts recommended for React) to render the chart. Accept trend data as props in the format Array<[timestamp, count]>. Convert timestamps to readable dates for x-axis labels. Handle empty data gracefully with a placeholder message. Include loading state support."
-        },
-        {
-          "path": "frontend/src/components/admin/TopPagesChart.tsx",
-          "operation": "create",
-          "description": "Create a bar chart component that visualizes top 10 most visited pages. Use a charting library (recharts recommended) to render horizontal bars. Accept page view data as props in the format Array<[url, count]>. Slice to top 10 entries. Truncate long URLs for readability. Handle empty data gracefully with a placeholder message. Include loading state support."
-        },
-        {
-          "path": "frontend/src/pages/admin/VisitorStatsPage.tsx",
+          "path": "frontend/src/hooks/useMediaAssets.ts",
           "operation": "modify",
-          "description": "Import and integrate VisitorTrendChart and TopPagesChart components into the VisitorStatsPage layout. Use useVisitorTrend and usePageViews hooks to fetch data for the charts. Position charts below the statistics cards in a responsive grid layout. Pass fetched data and loading states to chart components."
-        }
-      ]
-    },
-    {
-      "id": "REQ-11",
-      "summary": "Update useVisitorStats hook to properly call backend getVisitorStats method without stubbed logic",
-      "acceptanceCriteria": [
-        "useVisitorStats hook calls backend getVisitorStats method",
-        "Hook returns actual backend data without modification",
-        "Error handling implemented for failed requests"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useVisitorStats.ts",
-          "operation": "modify",
-          "description": "Review and update the useVisitorStats hook to ensure it properly calls the backend actor's getVisitorStats() method and returns the actual VisitorStats data structure. Remove any placeholder or stubbed logic. Verify error handling for network failures and auth issues. The backend method already exists and returns the correct data type, so focus on ensuring the frontend hook correctly invokes it and processes the response."
+          "description": "Update the useGetAllMediaAssets hook to properly fetch media assets from the backend getAllMediaAssets method and transform the response for frontend consumption. Update the useGetMediaAssetById hook to fetch specific assets by ID using getMediaAssetById backend method and integrate with blob-storage to retrieve blob data via ExternalBlob if needed for preview purposes. Update the useDeleteMediaAsset hook to call the deleteMediaAsset backend method with authentication validation and proper error handling. Ensure all hooks return properly typed data matching the MediaAsset interface (id, filename, mimeType, blobId, size, uploadedAt, uploadedBy). Add network error classification and handle authentication errors (expired tokens) with descriptive error messages."
         }
       ]
     }

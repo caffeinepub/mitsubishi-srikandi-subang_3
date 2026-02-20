@@ -1,123 +1,74 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-20T12:18:49.668Z",
+  "generatedAt": "2026-02-20T14:21:35.586Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 12,
-    "implemented": 4,
+    "total": 7,
+    "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Create backend data structures for visitor tracking: visits table with fields (id, session_id, ip_address, user_agent, page_url, referrer, device_type, browser, visited_at) and visitor_sessions table with fields (session_id, ip_address, first_visit, last_activity, is_online). Ensure all timestamp fields use Int (nanoseconds since epoch) for compatibility with Internet Computer.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-10",
-        "summary": "Add line chart to VisitorStatsPage showing visitor trend for last 30 days by calling backend getVisitorTrendLast30Days() method and rendering with a charting library. Add bar chart showing top 10 most visited pages by calling backend getPageViewsByUrl() and displaying the top 10 results.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useVisitorTrend.ts",
-          "frontend/src/hooks/usePageViews.ts",
-          "frontend/src/components/admin/VisitorTrendChart.tsx",
-          "frontend/src/components/admin/TopPagesChart.tsx",
-          "frontend/src/pages/admin/VisitorStatsPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/admin/VisitorTrendChart.tsx",
-          "frontend/src/components/admin/TopPagesChart.tsx",
-          "frontend/src/pages/admin/VisitorStatsPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-11",
-        "summary": "Update useVisitorStats hook (frontend/src/hooks/useVisitorStats.ts) to remove any stubbed/placeholder logic and ensure it properly calls the backend actor's getVisitorStats method, returning the actual statistics data structure with all numeric fields.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useVisitorStats.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useVisitorStats.ts"
-        ]
-      },
-      {
-        "id": "REQ-12",
-        "summary": "Implement periodic cleanup job that calls cleanupExpiredSessions() every 5 minutes to maintain accurate online user counts by marking inactive sessions as offline.",
+        "summary": "Implement stable storage backend for media assets using Motoko's stable memory. Store uploaded images as blobs in a stable HashMap or StableBuffer to ensure data persists across canister upgrades.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "Implement trackVisitor() backend function that accepts session_id, ip_address, user_agent, page_url, referrer, device_type, and browser parameters. Function must insert a new visit record, create or update visitor_sessions entry, set last_activity to current timestamp, and mark is_online as true.",
+        "summary": "Implement the uploadMediaAsset backend method to accept image files (JPEG, PNG, GIF, WebP) and PDF documents, validate file types and sizes (max 5MB for images, 10MB for PDFs), store them in stable storage, and return a unique asset ID.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-3",
-        "summary": "Implement cleanupExpiredSessions() backend function that identifies visitor_sessions with last_activity older than 5 minutes and sets is_online to false for those sessions.",
+        "summary": "Implement the getAllMediaAssets backend method to retrieve all stored media assets with metadata (ID, filename, content type, upload timestamp, file size).",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-4",
-        "summary": "Implement statistics calculation backend functions: getTotalVisitors() counting distinct session_ids from visitor_sessions, getTodayVisitors() filtering by first_visit date equal to current date, getYesterdayVisitors() filtering by first_visit date equal to yesterday, getWeeklyVisitors() filtering by current week, getMonthlyVisitors() filtering by current month and year, getYearlyVisitors() filtering by current year. All functions must return accurate numeric Nat values.",
+        "summary": "Implement the getMediaAssetById backend method to retrieve a specific media asset's blob data and metadata by its unique ID.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-5",
-        "summary": "Implement getOnlineUsers() backend function that counts visitor_sessions with last_activity within the last 5 minutes and is_online set to true, returning the count as Nat.",
+        "summary": "Implement the deleteMediaAsset backend method to remove a media asset from stable storage by its ID, requiring authenticated access.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-6",
-        "summary": "Implement page view tracking functions: getTotalPageViews() returning total count of visits, getPageViewsByUrl() returning array of tuples with page_url and visit count sorted by count descending, and getVisitorTrendLast30Days() returning daily visitor counts for the last 30 days as an array of tuples (date, count).",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-7",
-        "summary": "Update getVisitorStats() backend method to return comprehensive statistics object with fields: totalVisitors, todayVisitors, yesterdayVisitors, weeklyVisitors, monthlyVisitors, yearlyVisitors, onlineUsers, and totalPageViews. Call the respective calculation functions to populate these fields with real data.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-8",
-        "summary": "Implement frontend tracking middleware that automatically executes on every public page load (excluding admin routes). Generate or retrieve session_id from sessionStorage, detect device_type and browser from user agent, capture current page URL and referrer, then call backend trackVisitor() with all collected data. Exclude known bot user agents from tracking.",
+        "summary": "Update the MediaUploadZone component to successfully upload images and PDFs through the implemented backend methods, displaying upload progress and success/error feedback.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useVisitorTracking.ts",
-          "frontend/src/layouts/PublicLayout.tsx",
-          "frontend/src/utils/visitorTracking.ts"
+          "frontend/src/components/admin/MediaUploadZone.tsx",
+          "frontend/src/hooks/useMediaAssets.ts"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useVisitorTracking.ts",
-          "frontend/src/layouts/PublicLayout.tsx",
-          "frontend/src/utils/visitorTracking.ts"
+          "frontend/src/components/admin/MediaUploadZone.tsx",
+          "frontend/src/hooks/useMediaAssets.ts"
         ]
       },
       {
-        "id": "REQ-9",
-        "summary": "Update frontend VisitorStatsPage (frontend/src/pages/admin/VisitorStatsPage.tsx) to fetch and display realtime statistics including Total Visitors, Today, Yesterday, Weekly, Monthly, Yearly, Online Users, and Total Page Views using the updated backend getVisitorStats() method. Implement auto-refresh every 15 seconds using React Query refetchInterval.",
+        "id": "REQ-7",
+        "summary": "Update the MediaAssetGrid component to display uploaded media assets from the backend, showing thumbnails for images and appropriate icons for PDFs, with copy ID and delete functionality working correctly.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/admin/VisitorStatsPage.tsx"
+          "frontend/src/components/admin/MediaAssetGrid.tsx",
+          "frontend/src/hooks/useMediaAssets.ts"
         ],
         "matchedFiles": [
-          "frontend/src/pages/admin/VisitorStatsPage.tsx"
+          "frontend/src/components/admin/MediaAssetGrid.tsx",
+          "frontend/src/hooks/useMediaAssets.ts"
         ]
       }
     ]
@@ -131,16 +82,15 @@
     "frontend-implementation-plan.json",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
-    "frontend/src/components/admin/TopPagesChart.tsx",
-    "frontend/src/components/admin/VisitorTrendChart.tsx",
-    "frontend/src/components/public/Footer.tsx",
+    "frontend/src/components/admin/BannerImagePicker.tsx",
+    "frontend/src/components/admin/MediaAssetGrid.tsx",
+    "frontend/src/components/admin/MediaUploadZone.tsx",
+    "frontend/src/components/public/CTABanner.tsx",
+    "frontend/src/components/public/MainBanner.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useVisitorStats.ts",
-    "frontend/src/hooks/useVisitorTracking.ts",
-    "frontend/src/layouts/PublicLayout.tsx",
-    "frontend/src/pages/admin/VisitorStatsPage.tsx",
-    "frontend/src/utils/visitorTracking.ts",
+    "frontend/src/hooks/useMediaAssets.ts",
+    "frontend/src/types/local.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

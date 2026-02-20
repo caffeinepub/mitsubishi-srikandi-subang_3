@@ -1,264 +1,139 @@
 {
   "kind": "build_request",
-  "title": "Implement Fully Functional Realtime Visitor Statistics System",
-  "projectName": "Visitor Statistics Module",
-  "priority": "high",
+  "title": "Implement stable persistence storage for media manager",
+  "projectName": "Mitsubishi Srikandi Subang",
+  "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Create backend data structures for visitor tracking: visits table with fields (id, session_id, ip_address, user_agent, page_url, referrer, device_type, browser, visited_at) and visitor_sessions table with fields (session_id, ip_address, first_visit, last_activity, is_online). Ensure all timestamp fields use Int (nanoseconds since epoch) for compatibility with Internet Computer.",
+      "text": "Implement stable storage backend for media assets using Motoko's stable memory. Store uploaded images as blobs in a stable HashMap or StableBuffer to ensure data persists across canister upgrades.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-latest"
+          "msg-user-latest"
         ],
         "quotes": [
-          "CREATE TABLE visits",
-          "CREATE TABLE visitor_sessions"
+          "kita perbaiki media manager dulu agar bisa menyimpan dan upload gambar ke stable persistence storage"
         ]
       },
       "acceptanceCriteria": [
-        "visits and visitor_sessions data structures defined in backend/main.mo",
-        "All timestamp fields use Int type representing nanoseconds",
-        "session_id is indexed/optimized for lookups"
+        "Images uploaded through MediaUploadZone persist across canister upgrades",
+        "Backend uses stable storage structures (e.g., stable HashMap) for blob data",
+        "Uploaded media can be retrieved by ID after upgrade"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Implement trackVisitor() backend function that accepts session_id, ip_address, user_agent, page_url, referrer, device_type, and browser parameters. Function must insert a new visit record, create or update visitor_sessions entry, set last_activity to current timestamp, and mark is_online as true.",
+      "text": "Implement the uploadMediaAsset backend method to accept image files (JPEG, PNG, GIF, WebP) and PDF documents, validate file types and sizes (max 5MB for images, 10MB for PDFs), store them in stable storage, and return a unique asset ID.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-latest"
+          "msg-user-latest"
         ],
         "quotes": [
-          "trackVisitor()"
+          "Backend method uploadMediaAsset not implemented yet"
         ]
       },
       "acceptanceCriteria": [
-        "trackVisitor() function implemented in backend/main.mo",
-        "Function creates new visit record with all provided parameters",
-        "Function updates or creates visitor_sessions with current timestamp",
-        "is_online flag set to true on activity"
+        "uploadMediaAsset method accepts blob data, filename, and content type",
+        "Method validates file size constraints (5MB images, 10MB PDFs)",
+        "Method stores media in stable storage and returns unique asset ID",
+        "Method requires valid Internet Identity delegation token"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Implement cleanupExpiredSessions() backend function that identifies visitor_sessions with last_activity older than 5 minutes and sets is_online to false for those sessions.",
+      "text": "Implement the getAllMediaAssets backend method to retrieve all stored media assets with metadata (ID, filename, content type, upload timestamp, file size).",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-latest"
-        ],
-        "quotes": [
-          "cleanupExpiredSessions()",
-          "Set is_online = false if last_activity older than 5 minutes"
+          "msg-user-latest"
         ]
       },
       "acceptanceCriteria": [
-        "cleanupExpiredSessions() function implemented",
-        "Function checks last_activity timestamps against current time minus 5 minutes",
-        "Sessions older than threshold have is_online set to false"
+        "getAllMediaAssets returns array of media asset records",
+        "Each record includes ID, filename, contentType, timestamp, and size",
+        "Method works with both authenticated and public access"
       ]
     },
     {
       "id": "REQ-4",
-      "text": "Implement statistics calculation backend functions: getTotalVisitors() counting distinct session_ids from visitor_sessions, getTodayVisitors() filtering by first_visit date equal to current date, getYesterdayVisitors() filtering by first_visit date equal to yesterday, getWeeklyVisitors() filtering by current week, getMonthlyVisitors() filtering by current month and year, getYearlyVisitors() filtering by current year. All functions must return accurate numeric Nat values.",
+      "text": "Implement the getMediaAssetById backend method to retrieve a specific media asset's blob data and metadata by its unique ID.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-latest"
-        ],
-        "quotes": [
-          "getTotalVisitors()",
-          "getTodayVisitors()",
-          "getYesterdayVisitors()",
-          "getWeeklyVisitors()",
-          "getMonthlyVisitors()",
-          "getYearlyVisitors()"
+          "msg-user-latest"
         ]
       },
       "acceptanceCriteria": [
-        "All six visitor count functions implemented in backend/main.mo",
-        "Functions use DISTINCT session_id counting logic",
-        "Date filtering correctly identifies today, yesterday, week, month, and year boundaries",
-        "All functions return Nat type"
+        "getMediaAssetById accepts asset ID parameter",
+        "Method returns blob data and metadata for the specified asset",
+        "Method returns null or error for non-existent IDs"
       ]
     },
     {
       "id": "REQ-5",
-      "text": "Implement getOnlineUsers() backend function that counts visitor_sessions with last_activity within the last 5 minutes and is_online set to true, returning the count as Nat.",
+      "text": "Implement the deleteMediaAsset backend method to remove a media asset from stable storage by its ID, requiring authenticated access.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-latest"
-        ],
-        "quotes": [
-          "getOnlineUsers()",
-          "WHERE last_activity >= NOW() - INTERVAL 5 MINUTE"
+          "msg-user-latest"
         ]
       },
       "acceptanceCriteria": [
-        "getOnlineUsers() function implemented",
-        "Function filters by last_activity within 5 minutes",
-        "Function filters by is_online = true",
-        "Returns Nat count"
+        "deleteMediaAsset removes asset from stable storage",
+        "Method requires valid Internet Identity delegation token",
+        "Method returns success confirmation or error message"
       ]
     },
     {
       "id": "REQ-6",
-      "text": "Implement page view tracking functions: getTotalPageViews() returning total count of visits, getPageViewsByUrl() returning array of tuples with page_url and visit count sorted by count descending, and getVisitorTrendLast30Days() returning daily visitor counts for the last 30 days as an array of tuples (date, count).",
-      "target": "backend",
+      "text": "Update the MediaUploadZone component to successfully upload images and PDFs through the implemented backend methods, displaying upload progress and success/error feedback.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-latest"
-        ],
-        "quotes": [
-          "getTotalPageViews()",
-          "getPageViewsByUrl()",
-          "getVisitorTrendLast30Days()"
+          "msg-user-latest"
         ]
       },
       "acceptanceCriteria": [
-        "getTotalPageViews() returns total visit count",
-        "getPageViewsByUrl() groups by page_url and returns sorted results",
-        "getVisitorTrendLast30Days() returns daily aggregated data for 30 days",
-        "All functions return appropriate data types"
+        "File upload triggers backend uploadMediaAsset call",
+        "Upload progress is displayed to user",
+        "Success toast shown on successful upload",
+        "Error toast shown with descriptive message on failure"
       ]
     },
     {
       "id": "REQ-7",
-      "text": "Update getVisitorStats() backend method to return comprehensive statistics object with fields: totalVisitors, todayVisitors, yesterdayVisitors, weeklyVisitors, monthlyVisitors, yearlyVisitors, onlineUsers, and totalPageViews. Call the respective calculation functions to populate these fields with real data.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-latest"
-        ],
-        "quotes": [
-          "GET /admin/stats/summary",
-          "All statistic cards must display real data"
-        ]
-      },
-      "acceptanceCriteria": [
-        "getVisitorStats() method updated to call all statistics functions",
-        "Method returns object with all required numeric fields",
-        "No hardcoded zero values; all values derived from actual data"
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "text": "Implement frontend tracking middleware that automatically executes on every public page load (excluding admin routes). Generate or retrieve session_id from sessionStorage, detect device_type and browser from user agent, capture current page URL and referrer, then call backend trackVisitor() with all collected data. Exclude known bot user agents from tracking.",
+      "text": "Update the MediaAssetGrid component to display uploaded media assets from the backend, showing thumbnails for images and appropriate icons for PDFs, with copy ID and delete functionality working correctly.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-latest"
-        ],
-        "quotes": [
-          "Implement global middleware",
-          "AUTO EXECUTE ON EVERY PAGE LOAD",
-          "Exclude: Admin routes, Known bots"
+          "msg-user-latest"
         ]
       },
       "acceptanceCriteria": [
-        "Tracking logic executes automatically on public page renders",
-        "session_id persisted in sessionStorage and reused across pages",
-        "device_type and browser detected from navigator.userAgent",
-        "Admin routes (/admin/*) excluded from tracking",
-        "Bot user agents filtered out before calling backend"
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "text": "Update frontend VisitorStatsPage (frontend/src/pages/admin/VisitorStatsPage.tsx) to fetch and display realtime statistics including Total Visitors, Today, Yesterday, Weekly, Monthly, Yearly, Online Users, and Total Page Views using the updated backend getVisitorStats() method. Implement auto-refresh every 15 seconds using React Query refetchInterval.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-latest"
-        ],
-        "quotes": [
-          "Display: Total Visitors, Today, Yesterday, Weekly, Monthly, Yearly, Online Users, Total Page Views",
-          "Dashboard must auto-refresh every 15 seconds"
-        ]
-      },
-      "acceptanceCriteria": [
-        "VisitorStatsPage displays all 8 statistic values from backend",
-        "Statistics auto-refresh every 15 seconds via React Query",
-        "No hardcoded dummy data displayed",
-        "Loading states shown during fetch"
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "text": "Add line chart to VisitorStatsPage showing visitor trend for last 30 days by calling backend getVisitorTrendLast30Days() method and rendering with a charting library. Add bar chart showing top 10 most visited pages by calling backend getPageViewsByUrl() and displaying the top 10 results.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-latest"
-        ],
-        "quotes": [
-          "Line chart (last 30 days visitors)",
-          "Bar chart (Top 10 pages)"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Line chart renders 30-day visitor trend data",
-        "Bar chart renders top 10 pages by view count",
-        "Charts update on data refresh",
-        "Charts handle empty data gracefully"
-      ]
-    },
-    {
-      "id": "REQ-11",
-      "text": "Update useVisitorStats hook (frontend/src/hooks/useVisitorStats.ts) to remove any stubbed/placeholder logic and ensure it properly calls the backend actor's getVisitorStats method, returning the actual statistics data structure with all numeric fields.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-latest"
-        ],
-        "quotes": [
-          "All endpoints must be protected by admin authentication middleware"
-        ]
-      },
-      "acceptanceCriteria": [
-        "useVisitorStats hook calls backend getVisitorStats method",
-        "Hook returns actual backend data without modification",
-        "Error handling implemented for failed requests"
-      ]
-    },
-    {
-      "id": "REQ-12",
-      "text": "Implement periodic cleanup job that calls cleanupExpiredSessions() every 5 minutes to maintain accurate online user counts by marking inactive sessions as offline.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-latest"
-        ],
-        "quotes": [
-          "Auto-clean expired sessions",
-          "Set is_online = false if last_activity older than 5 minutes"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Cleanup function called automatically every 5 minutes",
-        "Expired sessions marked as offline",
-        "Online user count remains accurate"
+        "Grid fetches and displays all media assets from backend",
+        "Images display as thumbnails using blob data",
+        "PDF files show with document icon",
+        "Copy ID button copies asset ID to clipboard",
+        "Delete button removes asset from backend and refreshes grid"
       ]
     }
   ],
   "constraints": [
-    "Use Internet Computer's Int type (nanoseconds since epoch) for all timestamp fields, not Unix seconds",
-    "Do not use external databases (PostgreSQL, MySQL, etc.); all data must persist in Motoko stable storage",
-    "Do not modify frontend/src/hooks/useInternetIdentity.ts or any files in frontend/src/components/ui",
-    "All admin statistics endpoints must verify admin authentication before returning data",
-    "Tracking must not create performance bottlenecks; optimize for high-frequency page load scenarios"
+    "Use Motoko stable storage structures (stable HashMap or StableBuffer) for persistence",
+    "Maintain single-actor architecture in backend/main.mo",
+    "Respect file size limits: 5MB for images, 10MB for PDFs",
+    "Require Internet Identity authentication for upload and delete operations",
+    "Support file types: JPEG, PNG, GIF, WebP, PDF only"
   ],
   "nonGoals": [
-    "Real-time WebSocket connections (use polling instead)",
-    "Advanced analytics like user journeys or conversion funnels",
-    "Geolocation or IP-based geographic tracking",
-    "Third-party analytics integrations (Google Analytics, Mixpanel, etc.)",
-    "User-level tracking across devices (session-based only)",
-    "GDPR compliance features like data export or right-to-be-forgotten"
+    "Image editing or transformation features",
+    "Batch upload functionality",
+    "Folder organization or categorization",
+    "External storage integration (AWS S3, Cloudinary, etc.)",
+    "Video file support",
+    "Advanced permissions or access control beyond authentication"
   ],
   "imageRequirements": {
     "required": [],

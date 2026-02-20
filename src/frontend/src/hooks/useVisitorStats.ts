@@ -9,7 +9,10 @@ export function useGetVisitorStats(options?: { refetchInterval?: number }) {
     queryKey: ['visitorStats'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      return actor.getVisitorStats();
+      console.log('[useGetVisitorStats] Fetching visitor stats...');
+      const stats = await actor.getVisitorStats();
+      console.log('[useGetVisitorStats] Received stats:', stats);
+      return stats;
     },
     enabled: !!actor && !isFetching,
     refetchInterval: options?.refetchInterval,
@@ -23,10 +26,12 @@ export function useGetVisitorTrend() {
     queryKey: ['visitorTrend'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      return actor.getVisitorTrendLast30Days();
+      // This endpoint doesn't exist in backend yet
+      console.warn('[useGetVisitorTrend] Backend method not implemented');
+      return [];
     },
-    enabled: !!actor && !isFetching,
-    refetchInterval: 15000, // 15 seconds
+    enabled: false, // Disabled until backend implements this
+    refetchInterval: 60000, // 60 seconds
   });
 }
 
@@ -37,9 +42,11 @@ export function useGetPageViews() {
     queryKey: ['pageViews'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      return actor.getPageViewsByUrl();
+      // This endpoint doesn't exist in backend yet
+      console.warn('[useGetPageViews] Backend method not implemented');
+      return [];
     },
-    enabled: !!actor && !isFetching,
-    refetchInterval: 15000, // 15 seconds
+    enabled: false, // Disabled until backend implements this
+    refetchInterval: 60000, // 60 seconds
   });
 }

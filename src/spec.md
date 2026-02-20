@@ -1,19 +1,15 @@
 # Specification
 
 ## Summary
-**Goal:** Implement a fully functional realtime visitor statistics system that tracks all public page visits and displays comprehensive analytics in the admin dashboard.
+**Goal:** Implement stable persistence storage for the media manager to enable reliable image and PDF uploads with data persistence across canister upgrades.
 
 **Planned changes:**
-- Create backend data structures (visits and visitor_sessions tables) using Motoko stable storage with Int timestamps
-- Implement trackVisitor() function to record visits and update session activity
-- Implement cleanupExpiredSessions() function to mark inactive sessions offline after 5 minutes
-- Implement statistics calculation functions: getTotalVisitors(), getTodayVisitors(), getYesterdayVisitors(), getWeeklyVisitors(), getMonthlyVisitors(), getYearlyVisitors(), getOnlineUsers()
-- Implement page tracking functions: getTotalPageViews(), getPageViewsByUrl(), getVisitorTrendLast30Days()
-- Update getVisitorStats() backend method to return comprehensive real statistics (no hardcoded values)
-- Implement frontend tracking middleware that automatically executes on every public page load (excluding admin routes and bots)
-- Update VisitorStatsPage to display all 8 realtime statistics with auto-refresh every 15 seconds
-- Add line chart showing 30-day visitor trend and bar chart showing top 10 most visited pages
-- Update useVisitorStats hook to properly call backend methods without placeholder logic
-- Implement periodic cleanup job running every 5 minutes to maintain accurate online user counts
+- Implement stable storage backend using Motoko's stable HashMap/StableBuffer for media asset blobs
+- Create uploadMediaAsset backend method with file validation (5MB images, 10MB PDFs)
+- Create getAllMediaAssets backend method to retrieve all stored media with metadata
+- Create getMediaAssetById backend method to retrieve specific media assets
+- Create deleteMediaAsset backend method with authentication requirement
+- Update MediaUploadZone component to successfully upload files through backend
+- Update MediaAssetGrid component to display uploaded media from backend with copy ID and delete functionality
 
-**User-visible outcome:** Admin can view a comprehensive, realtime visitor statistics dashboard showing total visitors, today/yesterday/weekly/monthly/yearly counts, current online users, total page views, 30-day visitor trends, and top 10 most visited pages. All public page visits are automatically tracked without requiring user action. Statistics auto-refresh every 15 seconds to show current data.
+**User-visible outcome:** Users can upload images (JPEG, PNG, GIF, WebP) and PDFs through the Media Manager interface, view their uploaded media library with thumbnails, copy asset IDs, delete assets, and all data persists across canister upgrades.

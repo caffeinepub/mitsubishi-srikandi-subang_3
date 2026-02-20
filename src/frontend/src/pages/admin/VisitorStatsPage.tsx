@@ -1,7 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users, Eye, Calendar, TrendingUp, Activity } from 'lucide-react';
-import { useGetVisitorStats, useGetVisitorTrend, useGetPageViews } from '../../hooks/useVisitorStats';
+import {
+  useGetVisitorStats,
+  useGetVisitorTrend,
+  useGetPageViews,
+} from '../../hooks/useVisitorStats';
 import VisitorTrendChart from '../../components/admin/VisitorTrendChart';
 import TopPagesChart from '../../components/admin/TopPagesChart';
 
@@ -17,53 +21,53 @@ export default function VisitorStatsPage() {
   };
 
   const stats = [
-    { 
-      title: 'Total', 
-      value: visitorStats?.totalVisitors || BigInt(0), 
+    {
+      title: 'Total Pengunjung',
+      value: visitorStats?.totalVisitors || BigInt(0),
       icon: Users,
-      color: 'text-blue-600'
+      color: 'text-blue-600',
     },
-    { 
-      title: 'Hari Ini', 
-      value: visitorStats?.todayVisitors || BigInt(0), 
+    {
+      title: 'Pengunjung Hari Ini',
+      value: visitorStats?.visitorsToday || BigInt(0),
       icon: Calendar,
-      color: 'text-green-600'
+      color: 'text-green-600',
     },
-    { 
-      title: 'Kemarin', 
-      value: visitorStats?.yesterdayVisitors || BigInt(0), 
+    {
+      title: 'Pengunjung Kemarin',
+      value: visitorStats?.visitorsYesterday || BigInt(0),
       icon: Calendar,
-      color: 'text-orange-600'
+      color: 'text-orange-600',
     },
-    { 
-      title: 'Mingguan', 
-      value: visitorStats?.weeklyVisitors || BigInt(0), 
+    {
+      title: 'Pengunjung Mingguan',
+      value: visitorStats?.visitorsThisWeek || BigInt(0),
       icon: TrendingUp,
-      color: 'text-purple-600'
+      color: 'text-purple-600',
     },
-    { 
-      title: 'Bulanan', 
-      value: visitorStats?.monthlyVisitors || BigInt(0), 
+    {
+      title: 'Pengunjung Bulanan',
+      value: visitorStats?.visitorsThisMonth || BigInt(0),
       icon: TrendingUp,
-      color: 'text-pink-600'
+      color: 'text-pink-600',
     },
-    { 
-      title: 'Tahunan', 
-      value: visitorStats?.yearlyVisitors || BigInt(0), 
+    {
+      title: 'Pengunjung Tahunan',
+      value: visitorStats?.visitorsThisYear || BigInt(0),
       icon: TrendingUp,
-      color: 'text-indigo-600'
+      color: 'text-indigo-600',
     },
-    { 
-      title: 'Online', 
-      value: visitorStats?.onlineUsers || BigInt(0), 
+    {
+      title: 'Online Sekarang',
+      value: visitorStats?.onlineNow || BigInt(0),
       icon: Activity,
-      color: 'text-emerald-600'
+      color: 'text-emerald-600',
     },
-    { 
-      title: 'Page Views', 
-      value: visitorStats?.pageViews || BigInt(0), 
+    {
+      title: 'Page Views Hari Ini',
+      value: visitorStats?.pageViewsToday || BigInt(0),
       icon: Eye,
-      color: 'text-cyan-600'
+      color: 'text-cyan-600',
     },
   ];
 
@@ -82,18 +86,14 @@ export default function VisitorStatsPage() {
           return (
             <Card key={stat.title}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {stat.title}
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
                 <Icon className={`h-4 w-4 ${stat.color}`} />
               </CardHeader>
               <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-8 w-20" />
                 ) : (
-                  <div className="text-2xl font-bold">
-                    {formatNumber(stat.value)}
-                  </div>
+                  <div className="text-2xl font-bold">{formatNumber(stat.value)}</div>
                 )}
               </CardContent>
             </Card>
