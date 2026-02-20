@@ -1,20 +1,17 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Media management application with admin authorization system",
-  "architectural_notes": [
-    "Admin users must be stored in persistent storage",
-    "Admin role must be saved and retrievable after deploy",
-    "deleteMediaAsset checks role from stored user data, not hardcoded principals",
-    "Authorization system verifies admin role before allowing delete operations"
+  "summary": "New project",
+  "architectural_notes": [],
+  "known_issues": [
+    "Admin authorization in deleteMediaAsset needs debugging - caller principal, user data, and role detection require logging"
   ],
-  "known_issues": [],
   "isFixRequest": true,
   "existing_features": [],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Implement persistent storage for admin users in the backend main actor, ensuring admin user data including principal and role are saved in stable variables that survive canister upgrades",
+      "summary": "Add debug logging to deleteMediaAsset function in backend/main.mo to log the current caller principal when the function is called",
       "reqIds": [
         "REQ-1"
       ],
@@ -22,7 +19,7 @@
     },
     {
       "id": "AR-2",
-      "summary": "Modify deleteMediaAsset function to check admin role from stored user data instead of using hardcoded principal comparison",
+      "summary": "Add debug logging to deleteMediaAsset function in backend/main.mo to log the retrieved user data from storage after looking up the caller",
       "reqIds": [
         "REQ-2"
       ],
@@ -30,7 +27,7 @@
     },
     {
       "id": "AR-3",
-      "summary": "Ensure the currently logged-in admin user has role 'admin' assigned in persistent storage and this role is verified before allowing delete operations",
+      "summary": "Add debug logging to deleteMediaAsset function in backend/main.mo to log the detected role value from the user data",
       "reqIds": [
         "REQ-3"
       ],
@@ -38,14 +35,14 @@
     },
     {
       "id": "AR-4",
-      "summary": "Preserve existing functionality for media listing and upload operations, ensuring they remain unaffected by authorization system changes",
+      "summary": "Modify the error message returned by deleteMediaAsset in backend/main.mo to include the detected role value when authorization fails",
       "reqIds": [
         "REQ-4"
       ],
       "status": "pending"
     }
   ],
-  "projectName": "Media Manager",
+  "projectName": "Mitsubishi Srikandi Subang",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

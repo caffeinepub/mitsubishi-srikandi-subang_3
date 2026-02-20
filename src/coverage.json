@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-20T21:34:36.352Z",
+  "generatedAt": "2026-02-20T21:46:56.895Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -12,28 +12,28 @@
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Implement persistent storage for admin users in the backend main actor, ensuring admin user data including principal and role are saved in stable variables that survive canister upgrades",
+        "summary": "Add debug logging to deleteMediaAsset function in backend/main.mo to log the current caller principal when the function is called",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "Modify deleteMediaAsset function to check admin role from stored user data instead of using hardcoded principal comparison",
+        "summary": "Add debug logging to deleteMediaAsset function in backend/main.mo to log the retrieved user data from storage after looking up the caller",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-3",
-        "summary": "Ensure the currently logged-in admin user has role 'admin' assigned in persistent storage and this role is verified before allowing delete operations",
+        "summary": "Add debug logging to deleteMediaAsset function in backend/main.mo to log the detected role value from the user data",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-4",
-        "summary": "Preserve existing functionality for media listing and upload operations, ensuring they remain unaffected by authorization system changes",
+        "summary": "Modify the error message returned by deleteMediaAsset in backend/main.mo to include the detected role value when authorization fails",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []

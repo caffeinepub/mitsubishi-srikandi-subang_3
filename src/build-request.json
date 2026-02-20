@@ -1,99 +1,88 @@
 {
   "kind": "build_request",
-  "title": "Rebuild admin authorization system with persistent role storage",
-  "projectName": "Media Manager",
-  "priority": "high",
+  "title": "Add debug logging to admin authorization in deleteMediaAsset",
+  "projectName": "Mitsubishi Srikandi Subang",
+  "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Implement persistent storage for admin users in the backend main actor, ensuring admin user data including principal and role are saved in stable variables that survive canister upgrades",
+      "text": "Add debug logging to deleteMediaAsset function in backend/main.mo to log the current caller principal when the function is called",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-user-debug-request"
         ],
         "quotes": [
-          "Ensure admin user is stored in persistent storage",
-          "Ensure admin role is saved and retrievable after deploy"
+          "Log current caller principal when deleteMediaAsset is called."
         ]
       },
       "acceptanceCriteria": [
-        "Admin user data is stored in stable variables",
-        "Admin role persists across canister deployments and upgrades",
-        "Admin principal and role mapping is retrievable after deploy"
+        "Caller principal is logged at the start of deleteMediaAsset function execution",
+        "Log output clearly identifies it as the caller principal"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Modify deleteMediaAsset function to check admin role from stored user data instead of using hardcoded principal comparison",
+      "text": "Add debug logging to deleteMediaAsset function in backend/main.mo to log the retrieved user data from storage after looking up the caller",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-user-debug-request"
         ],
         "quotes": [
-          "Ensure deleteMediaAsset checks role from stored user data",
-          "Do NOT use hardcoded principal comparison",
-          "Verify admin role before allowing delete"
+          "Log retrieved user data from storage."
         ]
       },
       "acceptanceCriteria": [
-        "deleteMediaAsset queries stored admin user data to verify role",
-        "No hardcoded principal comparisons exist in deleteMediaAsset",
-        "Authorization check validates that caller's principal has admin role in storage",
-        "Returns appropriate error if caller is not found in admin users or lacks admin role"
+        "User data retrieved from storage is logged after the lookup operation",
+        "Log output shows the complete user record or null if not found"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Ensure the currently logged-in admin user has role 'admin' assigned in persistent storage and this role is verified before allowing delete operations",
+      "text": "Add debug logging to deleteMediaAsset function in backend/main.mo to log the detected role value from the user data",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-user-debug-request"
         ],
         "quotes": [
-          "Ensure current logged-in admin user has role: 'admin'",
-          "Verify admin role before allowing delete"
+          "Log detected role."
         ]
       },
       "acceptanceCriteria": [
-        "Admin user record includes role field set to 'admin'",
-        "deleteMediaAsset verifies caller's role equals 'admin' before proceeding",
-        "Role check happens at runtime using stored data, not compile-time constants"
+        "Role value is logged after it is extracted from user data",
+        "Log output clearly identifies it as the detected role"
       ]
     },
     {
       "id": "REQ-4",
-      "text": "Preserve existing functionality for media listing and upload operations, ensuring they remain unaffected by authorization system changes",
+      "text": "Modify the error message returned by deleteMediaAsset in backend/main.mo to include the detected role value when authorization fails",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-user-debug-request"
         ],
         "quotes": [
-          "Do not affect media listing or upload"
+          "Return error message including detected role value."
         ]
       },
       "acceptanceCriteria": [
-        "getMediaAssets function continues to work with authenticated users",
-        "createMediaAsset function continues to work with authenticated users",
-        "Only deleteMediaAsset authorization logic is modified",
-        "Media listing and upload flows remain unchanged"
+        "Authorization error message includes the detected role value",
+        "Error message format clearly shows what role was detected for the caller"
       ]
     }
   ],
   "constraints": [
-    "Do not use hardcoded principal comparison for authorization",
-    "Do not modify media listing or upload functionality",
-    "Admin role must be stored in persistent backend storage",
-    "Authorization must check stored user data, not hardcoded values"
+    "Do not change the authorization logic or any business logic in deleteMediaAsset",
+    "Only add debug logging statements and enhance error message output",
+    "Preserve existing function signature and return types"
   ],
   "nonGoals": [
-    "Changing the frontend authorization UI",
-    "Modifying media asset data structure",
-    "Adding new admin user management features",
-    "Surface-level validation changes"
+    "Fixing or modifying the authorization logic itself",
+    "Changing how roles are assigned or stored",
+    "Modifying the deleteMediaAsset function behavior beyond debug output",
+    "Adding new authorization features or requirements"
   ],
   "imageRequirements": {
     "required": [],

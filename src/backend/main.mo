@@ -8,12 +8,14 @@ import Iter "mo:core/Iter";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Blob "mo:core/Blob";
+import Debug "mo:core/Debug";
+import Migration "migration";
 
 import MixinStorage "blob-storage/Mixin";
-import Migration "migration";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
+// Register migration function in the with clause of actor
 (with migration = Migration.run)
 actor {
   include MixinStorage();
@@ -649,17 +651,43 @@ actor {
   };
 
   public shared ({ caller }) func deleteMediaAsset(id : Nat) : async Bool {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can delete media assets");
-    };
+    Debug.print("deleteMediaAsset called with caller: " # debug_show (caller));
 
-    let existed = mediaAssets.containsKey(id);
-    if (not existed) {
-      return false;
-    };
+    let userRole = AccessControl.getUserRole(accessControlState, caller);
+    Debug.print("deleteMediaAsset - Retrieved user data from storage for caller: " # debug_show (caller));
+    Debug.print("deleteMediaAsset - Detected role value: " # debug_show (userRole));
 
-    mediaAssets.remove(id);
-    true;
+    switch (userRole) {
+      case (#admin) {
+        let existed = mediaAssets.containsKey(id);
+        if (not existed) {
+          return false;
+        };
+
+        mediaAssets.remove(id);
+        true;
+      };
+      case (#user) {
+        let existed = mediaAssets.containsKey(id);
+        if (not existed) {
+          return false;
+        };
+
+        switch (mediaAssets.get(id)) {
+          case (?asset) {
+            if (asset.uploadedBy != caller) {
+              Runtime.trap("Unauthorized: Only the uploader or an admin can delete this asset. Your role: " # debug_show (userRole));
+            };
+            mediaAssets.remove(id);
+            true;
+          };
+          case (null) { false };
+        };
+      };
+      case (#guest) {
+        Runtime.trap("Unauthorized: Only admin or uploader can delete assets. Your role: " # debug_show (userRole));
+      };
+    };
   };
 
   public query ({ caller }) func getAssetsByUploader(uploader : Principal) : async [MediaAsset] {

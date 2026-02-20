@@ -1,6 +1,6 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Frontend updates for admin authorization system rebuild",
+  "title": "Add debug logging to admin authorization in deleteMediaAsset",
   "requirements": []
 }

@@ -1,14 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Rebuild the admin authorization system to use persistent role storage instead of hardcoded principal comparisons.
+**Goal:** Add debug logging to the deleteMediaAsset function to troubleshoot admin authorization issues.
 
 **Planned changes:**
-- Implement persistent storage for admin users in the backend using stable variables that survive canister upgrades
-- Store admin principal and role mapping in backend stable storage
-- Modify deleteMediaAsset function to verify admin role from stored user data instead of hardcoded principal comparison
-- Ensure currently logged-in admin user has role 'admin' assigned in persistent storage
-- Verify admin role at runtime before allowing delete operations
-- Preserve existing media listing and upload functionality unchanged
+- Add logging for caller principal at function entry
+- Add logging for user data retrieved from storage
+- Add logging for detected role value
+- Include detected role in authorization error messages
 
-**User-visible outcome:** Admin users can delete media assets with proper role-based authorization that persists across deployments, while media listing and upload operations continue to work as before.
+**User-visible outcome:** When deleteMediaAsset fails due to authorization, the error message will show the detected role, helping administrators diagnose permission issues.
