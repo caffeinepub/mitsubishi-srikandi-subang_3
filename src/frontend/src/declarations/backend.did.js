@@ -51,6 +51,20 @@ export const Visit = IDL.Record({
   'userAgent' : IDL.Text,
   'ipAddress' : IDL.Text,
 });
+export const BannerImageType = IDL.Variant({
+  'mainBanner' : IDL.Null,
+  'ctaBanner' : IDL.Null,
+});
+export const BannerImage = IDL.Record({
+  'id' : IDL.Nat,
+  'bannerType' : BannerImageType,
+  'data' : IDL.Vec(IDL.Nat8),
+  'size' : IDL.Nat,
+  'mimeType' : IDL.Text,
+  'filename' : IDL.Text,
+  'uploadedAt' : IDL.Int,
+  'uploadedBy' : IDL.Principal,
+});
 export const UserProfile = IDL.Record({
   'name' : IDL.Text,
   'email' : IDL.Text,
@@ -65,6 +79,21 @@ export const VisitorStats = IDL.Record({
   'visitorsToday' : IDL.Nat,
   'pageViewsToday' : IDL.Nat,
   'visitorsThisMonth' : IDL.Nat,
+});
+export const WebsiteSettings = IDL.Record({
+  'mainBannerImageId' : IDL.Opt(IDL.Nat),
+  'dealerAddress' : IDL.Text,
+  'operationalHours' : IDL.Text,
+  'lastUpdated' : IDL.Int,
+  'instagramUrl' : IDL.Text,
+  'ctaBannerImageId' : IDL.Opt(IDL.Nat),
+  'siteName' : IDL.Text,
+  'contactEmail' : IDL.Text,
+  'contactWhatsapp' : IDL.Text,
+  'youtubeUrl' : IDL.Text,
+  'facebookUrl' : IDL.Text,
+  'contactPhone' : IDL.Text,
+  'tiktokUrl' : IDL.Text,
 });
 
 export const idlService = IDL.Service({
@@ -111,6 +140,7 @@ export const idlService = IDL.Service({
       [IDL.Vec(MediaAsset)],
       ['query'],
     ),
+  'getBannerImages' : IDL.Func([], [IDL.Vec(BannerImage)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getMediaAssetByBlobId' : IDL.Func(
@@ -130,6 +160,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getVisitorStats' : IDL.Func([], [VisitorStats], ['query']),
+  'getWebsiteSettings' : IDL.Func([], [WebsiteSettings], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'periodicCleanup' : IDL.Func([], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
@@ -141,6 +172,12 @@ export const idlService = IDL.Service({
   'updateMediaAsset' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Vec(IDL.Nat8), IDL.Nat],
       [],
+      [],
+    ),
+  'updateWebsiteSettings' : IDL.Func([WebsiteSettings], [], []),
+  'uploadBannerImage' : IDL.Func(
+      [IDL.Text, BannerImageType, IDL.Text, IDL.Vec(IDL.Nat8), IDL.Nat],
+      [IDL.Nat],
       [],
     ),
   'uploadMediaAsset' : IDL.Func(
@@ -196,6 +233,20 @@ export const idlFactory = ({ IDL }) => {
     'userAgent' : IDL.Text,
     'ipAddress' : IDL.Text,
   });
+  const BannerImageType = IDL.Variant({
+    'mainBanner' : IDL.Null,
+    'ctaBanner' : IDL.Null,
+  });
+  const BannerImage = IDL.Record({
+    'id' : IDL.Nat,
+    'bannerType' : BannerImageType,
+    'data' : IDL.Vec(IDL.Nat8),
+    'size' : IDL.Nat,
+    'mimeType' : IDL.Text,
+    'filename' : IDL.Text,
+    'uploadedAt' : IDL.Int,
+    'uploadedBy' : IDL.Principal,
+  });
   const UserProfile = IDL.Record({
     'name' : IDL.Text,
     'email' : IDL.Text,
@@ -210,6 +261,21 @@ export const idlFactory = ({ IDL }) => {
     'visitorsToday' : IDL.Nat,
     'pageViewsToday' : IDL.Nat,
     'visitorsThisMonth' : IDL.Nat,
+  });
+  const WebsiteSettings = IDL.Record({
+    'mainBannerImageId' : IDL.Opt(IDL.Nat),
+    'dealerAddress' : IDL.Text,
+    'operationalHours' : IDL.Text,
+    'lastUpdated' : IDL.Int,
+    'instagramUrl' : IDL.Text,
+    'ctaBannerImageId' : IDL.Opt(IDL.Nat),
+    'siteName' : IDL.Text,
+    'contactEmail' : IDL.Text,
+    'contactWhatsapp' : IDL.Text,
+    'youtubeUrl' : IDL.Text,
+    'facebookUrl' : IDL.Text,
+    'contactPhone' : IDL.Text,
+    'tiktokUrl' : IDL.Text,
   });
   
   return IDL.Service({
@@ -260,6 +326,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(MediaAsset)],
         ['query'],
       ),
+    'getBannerImages' : IDL.Func([], [IDL.Vec(BannerImage)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getMediaAssetByBlobId' : IDL.Func(
@@ -279,6 +346,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getVisitorStats' : IDL.Func([], [VisitorStats], ['query']),
+    'getWebsiteSettings' : IDL.Func([], [WebsiteSettings], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'periodicCleanup' : IDL.Func([], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
@@ -290,6 +358,12 @@ export const idlFactory = ({ IDL }) => {
     'updateMediaAsset' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Vec(IDL.Nat8), IDL.Nat],
         [],
+        [],
+      ),
+    'updateWebsiteSettings' : IDL.Func([WebsiteSettings], [], []),
+    'uploadBannerImage' : IDL.Func(
+        [IDL.Text, BannerImageType, IDL.Text, IDL.Vec(IDL.Nat8), IDL.Nat],
+        [IDL.Nat],
         [],
       ),
     'uploadMediaAsset' : IDL.Func(

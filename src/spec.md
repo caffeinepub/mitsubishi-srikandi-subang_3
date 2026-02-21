@@ -1,12 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Add debug logging to the deleteMediaAsset function to troubleshoot admin authorization issues.
+**Goal:** Refactor the Website Settings endpoint to use the standard validateSession function instead of manual session validation.
 
 **Planned changes:**
-- Add logging for caller principal at function entry
-- Add logging for user data retrieved from storage
-- Add logging for detected role value
-- Include detected role in authorization error messages
+- Remove all manual session validation logic (header checks, token parsing, session map lookups) from the Website Settings endpoint
+- Call validateSession(request) at the start of the endpoint, following the same pattern as the Media endpoint
+- Use the user Principal returned from validateSession for authorization checks
+- Return HTTP 401 only when validateSession fails
 
-**User-visible outcome:** When deleteMediaAsset fails due to authorization, the error message will show the detected role, helping administrators diagnose permission issues.
+**User-visible outcome:** No change to user experience; the Website Settings endpoint will continue to function identically but with standardized authentication implementation.

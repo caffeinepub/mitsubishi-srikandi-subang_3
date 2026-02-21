@@ -1,88 +1,91 @@
 {
   "kind": "build_request",
-  "title": "Add debug logging to admin authorization in deleteMediaAsset",
-  "projectName": "Mitsubishi Srikandi Subang",
+  "title": "Refactor Website Settings endpoint to use standard session validation",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Add debug logging to deleteMediaAsset function in backend/main.mo to log the current caller principal when the function is called",
+      "text": "In the Website Settings backend endpoint (backend/main.mo), remove all existing manual session validation logic including header checks and token parsing",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-user-debug-request"
+          "msg-4"
         ],
         "quotes": [
-          "Log current caller principal when deleteMediaAsset is called."
+          "Remove all existing session validation logic inside this endpoint",
+          "Do not manually check headers here",
+          "Do not parse token inside this endpoint"
         ]
       },
       "acceptanceCriteria": [
-        "Caller principal is logged at the start of deleteMediaAsset function execution",
-        "Log output clearly identifies it as the caller principal"
+        "No manual Authorization header parsing exists in the Website Settings endpoint",
+        "No manual token validation logic exists in the Website Settings endpoint",
+        "No direct session map lookups exist in the Website Settings endpoint"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Add debug logging to deleteMediaAsset function in backend/main.mo to log the retrieved user data from storage after looking up the caller",
+      "text": "Call validateSession(request) at the start of the Website Settings endpoint exactly as implemented in the Media endpoint",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-user-debug-request"
+          "msg-4"
         ],
         "quotes": [
-          "Log retrieved user data from storage."
+          "Call validateSession(request) exactly like Media endpoint"
         ]
       },
       "acceptanceCriteria": [
-        "User data retrieved from storage is logged after the lookup operation",
-        "Log output shows the complete user record or null if not found"
+        "validateSession(request) is called at the beginning of the Website Settings endpoint",
+        "The call pattern matches the Media endpoint's implementation"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Add debug logging to deleteMediaAsset function in backend/main.mo to log the detected role value from the user data",
+      "text": "Use the user Principal returned from validateSession for authorization checks in the Website Settings endpoint",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-user-debug-request"
+          "msg-4"
         ],
         "quotes": [
-          "Log detected role."
+          "Use returned user from validateSession for authorization"
         ]
       },
       "acceptanceCriteria": [
-        "Role value is logged after it is extracted from user data",
-        "Log output clearly identifies it as the detected role"
+        "The user Principal from validateSession is used for all authorization logic",
+        "No alternative authorization mechanisms are used"
       ]
     },
     {
       "id": "REQ-4",
-      "text": "Modify the error message returned by deleteMediaAsset in backend/main.mo to include the detected role value when authorization fails",
+      "text": "Return HTTP 401 Unauthorized from the Website Settings endpoint only if validateSession fails",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-user-debug-request"
+          "msg-4"
         ],
         "quotes": [
-          "Return error message including detected role value."
+          "Return 401 only if validateSession fails"
         ]
       },
       "acceptanceCriteria": [
-        "Authorization error message includes the detected role value",
-        "Error message format clearly shows what role was detected for the caller"
+        "A 401 status code is returned when validateSession returns an error",
+        "No other conditions trigger a 401 response",
+        "Successful validateSession allows the endpoint to proceed"
       ]
     }
   ],
   "constraints": [
-    "Do not change the authorization logic or any business logic in deleteMediaAsset",
-    "Only add debug logging statements and enhance error message output",
-    "Preserve existing function signature and return types"
+    "Do not modify the Media endpoint implementation",
+    "Preserve the existing validateSession function logic",
+    "Maintain the current Website Settings endpoint functionality beyond authentication"
   ],
   "nonGoals": [
-    "Fixing or modifying the authorization logic itself",
-    "Changing how roles are assigned or stored",
-    "Modifying the deleteMediaAsset function behavior beyond debug output",
-    "Adding new authorization features or requirements"
+    "Changing the validateSession function itself",
+    "Modifying authentication logic in other endpoints",
+    "Altering the Media endpoint",
+    "Adding new features to Website Settings"
   ],
   "imageRequirements": {
     "required": [],

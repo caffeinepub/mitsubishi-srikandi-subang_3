@@ -1,56 +1,42 @@
-import { useGetAllMediaAssets } from '@/hooks/useMediaAssets';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useEffect, useState } from 'react';
+import { useGetWebsiteSettings } from '@/hooks/useWebsiteSettings';
+import { useGetMediaAssetById } from '@/hooks/useMediaAssets';
 import { createBlobUrlFromData } from '@/utils/blobUrl';
+import { useEffect, useState } from 'react';
 
 export default function MainBanner() {
-  const { data: mediaAssets, isLoading } = useGetAllMediaAssets();
-  const [imageUrl, setImageUrl] = useState<string>('/assets/generated/main-banner.dim_1920x600.png');
-
-  // Find the Main Banner image by filename
-  const mainBannerAsset = mediaAssets?.find(
-    (asset) => asset.filename === 'Main Banner.png' || asset.filename.toLowerCase().includes('main banner')
-  );
+  const { data: settings } = useGetWebsiteSettings();
+  const { data: bannerAsset } = useGetMediaAssetById(settings?.mainBannerImageId);
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (mainBannerAsset && mainBannerAsset.data) {
-      // Create blob URL from persistent canister storage data
-      const blobUrl = createBlobUrlFromData(mainBannerAsset.data, mainBannerAsset.mimeType);
-      setImageUrl(blobUrl);
-
-      // Cleanup blob URL on unmount
-      return () => {
-        URL.revokeObjectURL(blobUrl);
-      };
+    if (bannerAsset?.data) {
+      const url = createBlobUrlFromData(bannerAsset.data, bannerAsset.mimeType);
+      setBannerUrl(url);
+      return () => URL.revokeObjectURL(url);
     } else {
-      // Fallback to generated static image
-      setImageUrl('/assets/generated/main-banner.dim_1920x600.png');
+      setBannerUrl(null);
     }
-  }, [mainBannerAsset]);
+  }, [bannerAsset]);
 
-  if (isLoading) {
-    return (
-      <section className="w-full">
-        <Skeleton className="w-full aspect-[1920/600]" />
-      </section>
-    );
-  }
+  // Use custom banner if available, otherwise fallback to static asset
+  const imageSrc = bannerUrl || '/assets/generated/main-banner.dim_1920x600.png';
 
   return (
-    <section className="w-full">
-      <div className="w-full aspect-[1920/600] relative overflow-hidden">
-        <img
-          src={imageUrl}
-          alt="Main Banner"
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            // Fallback to generated asset if the dynamic URL fails
-            const target = e.target as HTMLImageElement;
-            if (target.src !== '/assets/generated/main-banner.dim_1920x600.png') {
-              target.src = '/assets/generated/main-banner.dim_1920x600.png';
-            }
-          }}
-        />
+    <section className="relative w-full h-[400px] md:h-[600px] overflow-hidden">
+      <img
+        src={imageSrc}
+        alt="Main Banner"
+        className="w-full h-full object-cover"
+      />
+      <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+        <div className="text-center text-white px-4">
+          <h1 className="text-4xl md:text-6xl font-bold mb-4">
+            Mitsubishi Motors
+          </h1>
+          <p className="text-xl md:text-2xl">
+            Kendaraan Terpercaya untuk Keluarga dan Bisnis Anda
+          </p>
+        </div>
       </div>
     </section>
   );

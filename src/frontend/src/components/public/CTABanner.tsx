@@ -1,59 +1,49 @@
-import { useGetAllMediaAssets } from '@/hooks/useMediaAssets';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useEffect, useState } from 'react';
+import { useGetWebsiteSettings } from '@/hooks/useWebsiteSettings';
+import { useGetMediaAssetById } from '@/hooks/useMediaAssets';
 import { createBlobUrlFromData } from '@/utils/blobUrl';
+import { useEffect, useState } from 'react';
 
 export default function CTABanner() {
-  const { data: mediaAssets, isLoading } = useGetAllMediaAssets();
-  const [imageUrl, setImageUrl] = useState<string>('/assets/generated/cta-banner.dim_1920x400.png');
-
-  // Find the CTA Banner image by filename
-  const ctaBannerAsset = mediaAssets?.find(
-    (asset) => asset.filename === 'CTA Banner.png' || asset.filename.toLowerCase().includes('cta banner')
-  );
+  const { data: settings } = useGetWebsiteSettings();
+  const { data: bannerAsset } = useGetMediaAssetById(settings?.ctaBannerImageId);
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (ctaBannerAsset && ctaBannerAsset.data) {
-      // Create blob URL from persistent canister storage data
-      const blobUrl = createBlobUrlFromData(ctaBannerAsset.data, ctaBannerAsset.mimeType);
-      setImageUrl(blobUrl);
-
-      // Cleanup blob URL on unmount
-      return () => {
-        URL.revokeObjectURL(blobUrl);
-      };
+    if (bannerAsset?.data) {
+      const url = createBlobUrlFromData(bannerAsset.data, bannerAsset.mimeType);
+      setBannerUrl(url);
+      return () => URL.revokeObjectURL(url);
     } else {
-      // Fallback to generated static image
-      setImageUrl('/assets/generated/cta-banner.dim_1920x400.png');
+      setBannerUrl(null);
     }
-  }, [ctaBannerAsset]);
+  }, [bannerAsset]);
 
-  if (isLoading) {
-    return (
-      <section className="w-full bg-[#262729] py-8">
-        <div className="container mx-auto px-4">
-          <Skeleton className="w-full aspect-[1920/400]" />
-        </div>
-      </section>
-    );
-  }
+  // Use custom banner if available, otherwise fallback to static asset
+  const imageSrc = bannerUrl || '/assets/generated/cta-banner.dim_1920x400.png';
 
   return (
-    <section className="w-full bg-[#262729] py-8">
-      <div className="container mx-auto px-4">
-        <div className="w-full aspect-[1920/400] relative overflow-hidden rounded-lg">
-          <img
-            src={imageUrl}
-            alt="CTA Banner"
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              // Fallback to generated asset if the dynamic URL fails
-              const target = e.target as HTMLImageElement;
-              if (target.src !== '/assets/generated/cta-banner.dim_1920x400.png') {
-                target.src = '/assets/generated/cta-banner.dim_1920x400.png';
-              }
-            }}
-          />
+    <section className="relative w-full h-[300px] md:h-[400px] overflow-hidden my-12">
+      <img
+        src={imageSrc}
+        alt="CTA Banner"
+        className="w-full h-full object-cover"
+      />
+      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+        <div className="text-center text-white px-4">
+          <h2 className="text-3xl md:text-5xl font-bold mb-4">
+            Dapatkan Penawaran Terbaik
+          </h2>
+          <p className="text-lg md:text-xl mb-6">
+            Hubungi kami sekarang untuk promo spesial
+          </p>
+          <a
+            href="https://wa.me/6281234567890"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold px-8 py-3 rounded-full transition-colors"
+          >
+            Hubungi via WhatsApp
+          </a>
         </div>
       </div>
     </section>

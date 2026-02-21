@@ -1,24 +1,20 @@
 import Time "mo:core/Time";
 import Array "mo:core/Array";
 import Int "mo:core/Int";
-import Nat "mo:core/Nat";
 import Map "mo:core/Map";
+import Nat "mo:core/Nat";
 import Text "mo:core/Text";
-import Iter "mo:core/Iter";
-import Principal "mo:core/Principal";
-import Runtime "mo:core/Runtime";
 import Blob "mo:core/Blob";
-import Debug "mo:core/Debug";
-import Migration "migration";
-
+import Iter "mo:core/Iter";
+import Runtime "mo:core/Runtime";
 import MixinStorage "blob-storage/Mixin";
-import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
+import MixinAuthorization "authorization/MixinAuthorization";
+import Principal "mo:core/Principal";
 
-// Register migration function in the with clause of actor
-(with migration = Migration.run)
 actor {
   include MixinStorage();
+
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
@@ -46,20 +42,6 @@ actor {
     deviceType : Text;
     browser : Text;
     visitedAt : Int;
-  };
-
-  public type GoogleTokens = {
-    idToken : Text;
-    accessToken : Text;
-    refreshToken : Text;
-    expiresAt : Int;
-  };
-
-  public type SessionStorage = {
-    principal : Principal;
-    tokens : GoogleTokens;
-    createdAt : Int;
-    lastSyncAt : Int;
   };
 
   public type Variant = {
@@ -233,17 +215,17 @@ actor {
   };
 
   public type BannerImage = {
+    id : Nat;
     filename : Text;
     bannerType : BannerImageType;
     mimeType : Text;
     size : Nat;
     uploadedBy : Principal;
     uploadedAt : Int;
-    blobData : Blob;
+    data : Blob;
   };
 
   public type WebsiteSettings = {
-    id : Nat;
     siteName : Text;
     contactPhone : Text;
     contactWhatsapp : Text;
@@ -254,8 +236,8 @@ actor {
     instagramUrl : Text;
     tiktokUrl : Text;
     youtubeUrl : Text;
-    mainBanner : ?BannerImage;
-    ctaBanner : ?BannerImage;
+    mainBannerImageId : ?Nat;
+    ctaBannerImageId : ?Nat;
     lastUpdated : Int;
   };
 
@@ -290,8 +272,24 @@ actor {
   let adminUsers = Map.empty<Principal, AdminUser>();
   let vehicles = Map.empty<Nat, Vehicle>();
   let creditSimulations = Map.empty<Nat, CreditSimulation>();
+  let bannerImages = Map.empty<Nat, BannerImage>();
   let userProfiles = Map.empty<Principal, UserProfile>();
-  let websiteSettingsMap = Map.empty<Nat, WebsiteSettings>();
+  var websiteSettings : WebsiteSettings = {
+    siteName = "";
+    contactPhone = "";
+    contactWhatsapp = "";
+    contactEmail = "";
+    dealerAddress = "";
+    operationalHours = "";
+    facebookUrl = "";
+    instagramUrl = "";
+    tiktokUrl = "";
+    youtubeUrl = "";
+    mainBannerImageId = null;
+    ctaBannerImageId = null;
+    lastUpdated = -1;
+  };
+
   let productLikes = Map.empty<Nat, ProductLike>();
   let productShares = Map.empty<Nat, ProductShare>();
   let articleComments = Map.empty<Nat, ArticleComment>();
@@ -313,6 +311,7 @@ actor {
   var commercialCategoryIdCounter = 1;
   var vehicleIdCounter = 1;
   var creditSimCounter = 1;
+  var bannerImageIdCounter = 1;
   var likeCounter = 1;
   var shareCounter = 1;
   var commentCounter = 1;
@@ -359,7 +358,7 @@ actor {
 
   func cleanupExpiredSessionsInternal() {
     let currentTime = Time.now();
-    let timeout = 5 * 60 * 1_000_000_000; // 5 minutes in nanoseconds
+    let timeout = 5 * 60 * 1_000_000_000;
 
     for ((sessionId, session) in visitorSessions.entries()) {
       if (currentTime - session.lastActivity > timeout and session.isOnline) {
@@ -390,8 +389,6 @@ actor {
     userProfiles.add(caller, profile);
   };
 
-  // Visitor Tracking - Public access for anonymous visitors (NO AUTHORIZATION CHECK)
-  // This must be accessible to all users including anonymous guests for tracking to work
   public shared func trackVisitor(
     sessionId : Text,
     ipAddress : Text,
@@ -401,11 +398,8 @@ actor {
     deviceType : Text,
     browser : Text,
   ) : async () {
-    // NO AUTHORIZATION CHECK - Must be accessible to anonymous visitors
-    // as per implementation plan: "without requiring authentication"
     let currentTime = Time.now();
 
-    // Create a new visit record
     let visit : Visit = {
       id = visitIdCounter.toText();
       sessionId;
@@ -420,7 +414,6 @@ actor {
     visits.add(visit.id, visit);
     visitIdCounter += 1;
 
-    // Update or create visitor session
     let updatedSession = switch (visitorSessions.get(sessionId)) {
       case (?existingSession) {
         {
@@ -441,13 +434,9 @@ actor {
     };
     visitorSessions.add(sessionId, updatedSession);
 
-    // Cleanup expired sessions inline (as per implementation plan)
     cleanupExpiredSessionsInternal();
-
-    // Update daily stats
     updateDailyStats(currentTime);
 
-    // Update visitor statistics with correct daily values
     visitorStats := await recalculateStats();
   };
 
@@ -602,19 +591,53 @@ actor {
     mediaAssetIdCounter += 1;
   };
 
-  public query func getAllMediaAssets() : async [MediaAsset] {
-    // No authorization check - media listing is public
+  public shared ({ caller }) func uploadBannerImage(
+    filename : Text,
+    bannerType : BannerImageType,
+    mimeType : Text,
+    data : Blob,
+    fileSize : Nat,
+  ) : async Nat {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admin can upload banner images");
+    };
+
+    let uploadedAt = Time.now();
+    let bannerImage : BannerImage = {
+      id = bannerImageIdCounter;
+      filename;
+      bannerType;
+      mimeType;
+      size = fileSize;
+      data;
+      uploadedBy = caller;
+      uploadedAt;
+    };
+
+    bannerImages.add(bannerImageIdCounter, bannerImage);
+    let returnId = bannerImageIdCounter;
+    bannerImageIdCounter += 1;
+    returnId;
+  };
+
+  public query ({ caller }) func getAllMediaAssets() : async [MediaAsset] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view media assets");
+    };
     mediaAssets.values().toArray();
   };
 
-  public query func getMediaAssetById(id : Nat) : async ?MediaAsset {
-    // No authorization check - media viewing is public
+  public query ({ caller }) func getMediaAssetById(id : Nat) : async ?MediaAsset {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view media assets");
+    };
     mediaAssets.get(id);
   };
 
-  // Keeping this method for compatibility (filtering by id)
-  public query func getMediaAssetByBlobId(blobId : Text) : async ?MediaAsset {
-    // No authorization check - media viewing is public
+  public query ({ caller }) func getMediaAssetByBlobId(blobId : Text) : async ?MediaAsset {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view media assets");
+    };
     let assets = mediaAssets.values().toArray();
     switch (assets.find(func(asset) { asset.id.toText() == blobId })) {
       case (?asset) { ?asset };
@@ -651,42 +674,22 @@ actor {
   };
 
   public shared ({ caller }) func deleteMediaAsset(id : Nat) : async Bool {
-    Debug.print("deleteMediaAsset called with caller: " # debug_show (caller));
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can delete media assets");
+    };
 
-    let userRole = AccessControl.getUserRole(accessControlState, caller);
-    Debug.print("deleteMediaAsset - Retrieved user data from storage for caller: " # debug_show (caller));
-    Debug.print("deleteMediaAsset - Detected role value: " # debug_show (userRole));
-
-    switch (userRole) {
-      case (#admin) {
-        let existed = mediaAssets.containsKey(id);
-        if (not existed) {
-          return false;
-        };
-
-        mediaAssets.remove(id);
-        true;
+    let asset = switch (mediaAssets.get(id)) {
+      case (null) {
+        Runtime.trap("Asset not found. Cannot delete non-existent asset.");
       };
-      case (#user) {
-        let existed = mediaAssets.containsKey(id);
-        if (not existed) {
-          return false;
-        };
+      case (?asset) { asset };
+    };
 
-        switch (mediaAssets.get(id)) {
-          case (?asset) {
-            if (asset.uploadedBy != caller) {
-              Runtime.trap("Unauthorized: Only the uploader or an admin can delete this asset. Your role: " # debug_show (userRole));
-            };
-            mediaAssets.remove(id);
-            true;
-          };
-          case (null) { false };
-        };
-      };
-      case (#guest) {
-        Runtime.trap("Unauthorized: Only admin or uploader can delete assets. Your role: " # debug_show (userRole));
-      };
+    if (caller == asset.uploadedBy or AccessControl.isAdmin(accessControlState, caller)) {
+      mediaAssets.remove(id);
+      true;
+    } else {
+      Runtime.trap("Unauthorized: Only the uploader or an admin can delete this asset.");
     };
   };
 
@@ -708,8 +711,26 @@ actor {
     );
   };
 
-  public query func getMediaAssets() : async [MediaAsset] {
-    // No authorization check - media listing is public
+  public query ({ caller }) func getMediaAssets() : async [MediaAsset] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view media assets");
+    };
     mediaAssets.values().toArray();
+  };
+
+  public query func getBannerImages() : async [BannerImage] {
+    bannerImages.values().toArray();
+  };
+
+  public shared ({ caller }) func updateWebsiteSettings(newSettings : WebsiteSettings) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can update website settings");
+    };
+
+    websiteSettings := { newSettings with lastUpdated = Time.now() };
+  };
+
+  public query func getWebsiteSettings() : async WebsiteSettings {
+    websiteSettings;
   };
 };

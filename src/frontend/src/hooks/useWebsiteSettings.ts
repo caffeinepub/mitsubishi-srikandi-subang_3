@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
+import { useInternetIdentity } from './useInternetIdentity';
 import type { WebsiteSettings } from '../types/local';
 import { toast } from 'sonner';
 
@@ -48,8 +49,9 @@ export function useGetWebsiteSettings() {
     queryKey: ['websiteSettings'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      // Stub: return null until backend implements getWebsiteSettings
-      return null;
+      const settings = await actor.getWebsiteSettings();
+      console.log('[useGetWebsiteSettings] Fetched settings:', settings);
+      return settings;
     },
     enabled: !!actor && !isFetching,
   });
@@ -57,21 +59,54 @@ export function useGetWebsiteSettings() {
 
 export function useUpdateWebsiteSettings() {
   const { actor } = useActor();
+  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (settings: WebsiteSettings) => {
-      if (!actor) throw new Error('Actor not available');
-      console.log('[useUpdateWebsiteSettings] Updating website settings');
-      // Stub: do nothing until backend implements updateWebsiteSettings
+      if (!actor) {
+        console.error('[useUpdateWebsiteSettings] Actor not available');
+        throw new Error('Actor not available');
+      }
+      
+      if (!identity) {
+        console.error('[useUpdateWebsiteSettings] Identity not available');
+        throw new Error('Authentication required. Please login again.');
+      }
+
+      const principal = identity.getPrincipal();
+      if (principal.isAnonymous()) {
+        console.error('[useUpdateWebsiteSettings] Anonymous principal detected');
+        throw new Error('Authentication required. Please login again.');
+      }
+      
+      console.log('[useUpdateWebsiteSettings] Authenticated principal:', principal.toString());
+      console.log('[useUpdateWebsiteSettings] Updating website settings:', settings);
+      console.log('[useUpdateWebsiteSettings] mainBannerImageId type:', typeof settings.mainBannerImageId, settings.mainBannerImageId);
+      console.log('[useUpdateWebsiteSettings] ctaBannerImageId type:', typeof settings.ctaBannerImageId, settings.ctaBannerImageId);
+      
+      // Ensure optional bigint fields are properly formatted
+      const formattedSettings: WebsiteSettings = {
+        ...settings,
+        mainBannerImageId: settings.mainBannerImageId !== undefined ? settings.mainBannerImageId : undefined,
+        ctaBannerImageId: settings.ctaBannerImageId !== undefined ? settings.ctaBannerImageId : undefined,
+      };
+      
+      console.log('[useUpdateWebsiteSettings] Formatted settings:', formattedSettings);
+      console.log('[useUpdateWebsiteSettings] Calling actor.updateWebsiteSettings...');
+      
+      await actor.updateWebsiteSettings(formattedSettings);
+      
+      console.log('[useUpdateWebsiteSettings] Update successful');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['websiteSettings'] });
       toast.success('Pengaturan website berhasil diperbarui');
-      console.log('[useUpdateWebsiteSettings] Success');
+      console.log('[useUpdateWebsiteSettings] Success - invalidating queries');
     },
     onError: (error: any) => {
       console.error('[useUpdateWebsiteSettings] Error:', error);
+      console.error('[useUpdateWebsiteSettings] Error stack:', error.stack);
       
       if (isNetworkError(error)) {
         toast.error('Koneksi gagal. Periksa internet Anda dan coba lagi.');

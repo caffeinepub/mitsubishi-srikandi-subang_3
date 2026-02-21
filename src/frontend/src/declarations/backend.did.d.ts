@@ -10,6 +10,18 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface BannerImage {
+  'id' : bigint,
+  'bannerType' : BannerImageType,
+  'data' : Uint8Array,
+  'size' : bigint,
+  'mimeType' : string,
+  'filename' : string,
+  'uploadedAt' : bigint,
+  'uploadedBy' : Principal,
+}
+export type BannerImageType = { 'mainBanner' : null } |
+  { 'ctaBanner' : null };
 export interface MediaAsset {
   'id' : bigint,
   'data' : Uint8Array,
@@ -55,6 +67,21 @@ export interface VisitorStats {
   'pageViewsToday' : bigint,
   'visitorsThisMonth' : bigint,
 }
+export interface WebsiteSettings {
+  'mainBannerImageId' : [] | [bigint],
+  'dealerAddress' : string,
+  'operationalHours' : string,
+  'lastUpdated' : bigint,
+  'instagramUrl' : string,
+  'ctaBannerImageId' : [] | [bigint],
+  'siteName' : string,
+  'contactEmail' : string,
+  'contactWhatsapp' : string,
+  'youtubeUrl' : string,
+  'facebookUrl' : string,
+  'contactPhone' : string,
+  'tiktokUrl' : string,
+}
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
   'blob_hash' : string,
@@ -91,6 +118,7 @@ export interface _SERVICE {
   'getAllVisits' : ActorMethod<[], Array<Visit>>,
   'getAssetsByDateRange' : ActorMethod<[bigint, bigint], Array<MediaAsset>>,
   'getAssetsByUploader' : ActorMethod<[Principal], Array<MediaAsset>>,
+  'getBannerImages' : ActorMethod<[], Array<BannerImage>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getMediaAssetByBlobId' : ActorMethod<[string], [] | [MediaAsset]>,
@@ -102,6 +130,7 @@ export interface _SERVICE {
   'getTotalVisitors' : ActorMethod<[], bigint>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getVisitorStats' : ActorMethod<[], VisitorStats>,
+  'getWebsiteSettings' : ActorMethod<[], WebsiteSettings>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'periodicCleanup' : ActorMethod<[], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
@@ -112,6 +141,11 @@ export interface _SERVICE {
   'updateMediaAsset' : ActorMethod<
     [bigint, string, string, Uint8Array, bigint],
     undefined
+  >,
+  'updateWebsiteSettings' : ActorMethod<[WebsiteSettings], undefined>,
+  'uploadBannerImage' : ActorMethod<
+    [string, BannerImageType, string, Uint8Array, bigint],
+    bigint
   >,
   'uploadMediaAsset' : ActorMethod<
     [string, string, Uint8Array, bigint],

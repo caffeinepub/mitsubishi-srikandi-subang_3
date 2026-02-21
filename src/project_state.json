@@ -2,16 +2,16 @@
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
   "summary": "New project",
-  "architectural_notes": [],
-  "known_issues": [
-    "Admin authorization in deleteMediaAsset needs debugging - caller principal, user data, and role detection require logging"
+  "architectural_notes": [
+    "Website Settings endpoint uses validateSession(request) for authentication, same pattern as Media endpoint"
   ],
+  "known_issues": [],
   "isFixRequest": true,
   "existing_features": [],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Add debug logging to deleteMediaAsset function in backend/main.mo to log the current caller principal when the function is called",
+      "summary": "In the Website Settings backend endpoint (backend/main.mo), remove all existing manual session validation logic including header checks and token parsing",
       "reqIds": [
         "REQ-1"
       ],
@@ -19,7 +19,7 @@
     },
     {
       "id": "AR-2",
-      "summary": "Add debug logging to deleteMediaAsset function in backend/main.mo to log the retrieved user data from storage after looking up the caller",
+      "summary": "Call validateSession(request) at the start of the Website Settings endpoint exactly as implemented in the Media endpoint",
       "reqIds": [
         "REQ-2"
       ],
@@ -27,7 +27,7 @@
     },
     {
       "id": "AR-3",
-      "summary": "Add debug logging to deleteMediaAsset function in backend/main.mo to log the detected role value from the user data",
+      "summary": "Use the user Principal returned from validateSession for authorization checks in the Website Settings endpoint",
       "reqIds": [
         "REQ-3"
       ],
@@ -35,14 +35,14 @@
     },
     {
       "id": "AR-4",
-      "summary": "Modify the error message returned by deleteMediaAsset in backend/main.mo to include the detected role value when authorization fails",
+      "summary": "Return HTTP 401 Unauthorized from the Website Settings endpoint only if validateSession fails",
       "reqIds": [
         "REQ-4"
       ],
       "status": "pending"
     }
   ],
-  "projectName": "Mitsubishi Srikandi Subang",
+  "projectName": "Refactor Website Settings endpoint to use standard session validation",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

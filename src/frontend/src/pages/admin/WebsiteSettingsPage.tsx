@@ -4,15 +4,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useGetWebsiteSettings, useUpdateWebsiteSettings } from '@/hooks/useWebsiteSettings';
+import { useGetMediaAssetById } from '@/hooks/useMediaAssets';
 import type { WebsiteSettings } from '@/types/local';
 import BannerImagePicker from '@/components/admin/BannerImagePicker';
 import { Skeleton } from '@/components/ui/skeleton';
+import { createBlobUrlFromData } from '@/utils/blobUrl';
+import { validateDelegationIdentity } from '@/utils/validation';
+import { useInternetIdentity } from '@/hooks/useInternetIdentity';
+import { toast } from 'sonner';
 
 export default function WebsiteSettingsPage() {
-  const { data: settings, isLoading, refetch } = useGetWebsiteSettings();
+  const { identity } = useInternetIdentity();
+  const { data: settings, isLoading, isFetched } = useGetWebsiteSettings();
   const updateSettings = useUpdateWebsiteSettings();
   const [mainBannerPickerOpen, setMainBannerPickerOpen] = useState(false);
   const [ctaBannerPickerOpen, setCtaBannerPickerOpen] = useState(false);
+
+  const [mainBannerImageId, setMainBannerImageId] = useState<bigint | undefined>(undefined);
+  const [ctaBannerImageId, setCtaBannerImageId] = useState<bigint | undefined>(undefined);
 
   const [formData, setFormData] = useState({
     siteName: '',
@@ -25,12 +34,40 @@ export default function WebsiteSettingsPage() {
     instagramUrl: '',
     tiktokUrl: '',
     youtubeUrl: '',
-    mainBannerImageId: '',
-    ctaBannerImageId: '',
   });
 
+  // Fetch banner images
+  const { data: mainBannerAsset, isLoading: mainBannerLoading } = useGetMediaAssetById(mainBannerImageId);
+  const { data: ctaBannerAsset, isLoading: ctaBannerLoading } = useGetMediaAssetById(ctaBannerImageId);
+
+  // Create blob URLs for preview
+  const [mainBannerUrl, setMainBannerUrl] = useState<string | null>(null);
+  const [ctaBannerUrl, setCtaBannerUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (mainBannerAsset?.data) {
+      const url = createBlobUrlFromData(mainBannerAsset.data, mainBannerAsset.mimeType);
+      setMainBannerUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setMainBannerUrl(null);
+    }
+  }, [mainBannerAsset]);
+
+  useEffect(() => {
+    if (ctaBannerAsset?.data) {
+      const url = createBlobUrlFromData(ctaBannerAsset.data, ctaBannerAsset.mimeType);
+      setCtaBannerUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setCtaBannerUrl(null);
+    }
+  }, [ctaBannerAsset]);
+
+  // Populate form when settings load
   useEffect(() => {
     if (settings) {
+      console.log('[WebsiteSettingsPage] Loading settings:', settings);
       setFormData({
         siteName: settings.siteName || '',
         contactPhone: settings.contactPhone || '',
@@ -42,17 +79,28 @@ export default function WebsiteSettingsPage() {
         instagramUrl: settings.instagramUrl || '',
         tiktokUrl: settings.tiktokUrl || '',
         youtubeUrl: settings.youtubeUrl || '',
-        mainBannerImageId: settings.mainBannerImageId || '',
-        ctaBannerImageId: settings.ctaBannerImageId || '',
       });
+      setMainBannerImageId(settings.mainBannerImageId);
+      setCtaBannerImageId(settings.ctaBannerImageId);
     }
   }, [settings]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log('[WebsiteSettingsPage] Form submitted');
+    console.log('[WebsiteSettingsPage] mainBannerImageId:', mainBannerImageId);
+    console.log('[WebsiteSettingsPage] ctaBannerImageId:', ctaBannerImageId);
+
+    // Validate delegation identity
+    const validationError = validateDelegationIdentity(identity);
+    if (validationError) {
+      console.error('[WebsiteSettingsPage] Validation error:', validationError);
+      toast.error(validationError);
+      return;
+    }
+
     const settingsData: WebsiteSettings = {
-      id: settings?.id || BigInt(1),
       siteName: formData.siteName,
       contactPhone: formData.contactPhone,
       contactWhatsapp: formData.contactWhatsapp,
@@ -63,16 +111,23 @@ export default function WebsiteSettingsPage() {
       instagramUrl: formData.instagramUrl,
       tiktokUrl: formData.tiktokUrl,
       youtubeUrl: formData.youtubeUrl,
-      mainBannerImageId: formData.mainBannerImageId || undefined,
-      ctaBannerImageId: formData.ctaBannerImageId || undefined,
+      mainBannerImageId: mainBannerImageId,
+      ctaBannerImageId: ctaBannerImageId,
       lastUpdated: BigInt(Date.now() * 1000000),
     };
 
-    updateSettings.mutate(settingsData, {
-      onSuccess: () => {
-        refetch();
-      },
-    });
+    console.log('[WebsiteSettingsPage] Submitting settings:', settingsData);
+    
+    try {
+      await updateSettings.mutateAsync(settingsData);
+      console.log('[WebsiteSettingsPage] Settings saved successfully');
+    } catch (error) {
+      console.error('[WebsiteSettingsPage] Error saving settings:', error);
+    }
+  };
+
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   if (isLoading) {
@@ -94,10 +149,12 @@ export default function WebsiteSettingsPage() {
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>Main Banner (1920x600px)</Label>
-              {formData.mainBannerImageId ? (
+              {mainBannerLoading ? (
+                <Skeleton className="w-full h-32" />
+              ) : mainBannerUrl ? (
                 <div className="border rounded-lg overflow-hidden">
                   <img
-                    src={`/api/media/${formData.mainBannerImageId}`}
+                    src={mainBannerUrl}
                     alt="Main Banner Preview"
                     className="w-full h-32 object-cover"
                   />
@@ -114,14 +171,19 @@ export default function WebsiteSettingsPage() {
               >
                 Pilih Banner
               </Button>
+              {mainBannerImageId && (
+                <p className="text-xs text-gray-500">ID: {mainBannerImageId.toString()}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label>CTA Banner (1920x400px)</Label>
-              {formData.ctaBannerImageId ? (
+              {ctaBannerLoading ? (
+                <Skeleton className="w-full h-32" />
+              ) : ctaBannerUrl ? (
                 <div className="border rounded-lg overflow-hidden">
                   <img
-                    src={`/api/media/${formData.ctaBannerImageId}`}
+                    src={ctaBannerUrl}
                     alt="CTA Banner Preview"
                     className="w-full h-32 object-cover"
                   />
@@ -138,6 +200,9 @@ export default function WebsiteSettingsPage() {
               >
                 Pilih Banner
               </Button>
+              {ctaBannerImageId && (
+                <p className="text-xs text-gray-500">ID: {ctaBannerImageId.toString()}</p>
+              )}
             </div>
           </div>
         </div>
@@ -149,9 +214,7 @@ export default function WebsiteSettingsPage() {
               <Input
                 id="siteName"
                 value={formData.siteName}
-                onChange={(e) =>
-                  setFormData({ ...formData, siteName: e.target.value })
-                }
+                onChange={(e) => handleInputChange('siteName', e.target.value)}
                 disabled={updateSettings.isPending}
               />
             </div>
@@ -160,9 +223,7 @@ export default function WebsiteSettingsPage() {
               <Input
                 id="contactPhone"
                 value={formData.contactPhone}
-                onChange={(e) =>
-                  setFormData({ ...formData, contactPhone: e.target.value })
-                }
+                onChange={(e) => handleInputChange('contactPhone', e.target.value)}
                 disabled={updateSettings.isPending}
               />
             </div>
@@ -174,9 +235,7 @@ export default function WebsiteSettingsPage() {
               <Input
                 id="contactWhatsapp"
                 value={formData.contactWhatsapp}
-                onChange={(e) =>
-                  setFormData({ ...formData, contactWhatsapp: e.target.value })
-                }
+                onChange={(e) => handleInputChange('contactWhatsapp', e.target.value)}
                 disabled={updateSettings.isPending}
               />
             </div>
@@ -186,9 +245,7 @@ export default function WebsiteSettingsPage() {
                 id="contactEmail"
                 type="email"
                 value={formData.contactEmail}
-                onChange={(e) =>
-                  setFormData({ ...formData, contactEmail: e.target.value })
-                }
+                onChange={(e) => handleInputChange('contactEmail', e.target.value)}
                 disabled={updateSettings.isPending}
               />
             </div>
@@ -199,9 +256,7 @@ export default function WebsiteSettingsPage() {
             <Textarea
               id="dealerAddress"
               value={formData.dealerAddress}
-              onChange={(e) =>
-                setFormData({ ...formData, dealerAddress: e.target.value })
-              }
+              onChange={(e) => handleInputChange('dealerAddress', e.target.value)}
               rows={3}
               disabled={updateSettings.isPending}
             />
@@ -212,9 +267,7 @@ export default function WebsiteSettingsPage() {
             <Input
               id="operationalHours"
               value={formData.operationalHours}
-              onChange={(e) =>
-                setFormData({ ...formData, operationalHours: e.target.value })
-              }
+              onChange={(e) => handleInputChange('operationalHours', e.target.value)}
               disabled={updateSettings.isPending}
             />
           </div>
@@ -225,9 +278,7 @@ export default function WebsiteSettingsPage() {
               <Input
                 id="facebookUrl"
                 value={formData.facebookUrl}
-                onChange={(e) =>
-                  setFormData({ ...formData, facebookUrl: e.target.value })
-                }
+                onChange={(e) => handleInputChange('facebookUrl', e.target.value)}
                 disabled={updateSettings.isPending}
               />
             </div>
@@ -236,9 +287,7 @@ export default function WebsiteSettingsPage() {
               <Input
                 id="instagramUrl"
                 value={formData.instagramUrl}
-                onChange={(e) =>
-                  setFormData({ ...formData, instagramUrl: e.target.value })
-                }
+                onChange={(e) => handleInputChange('instagramUrl', e.target.value)}
                 disabled={updateSettings.isPending}
               />
             </div>
@@ -250,9 +299,7 @@ export default function WebsiteSettingsPage() {
               <Input
                 id="tiktokUrl"
                 value={formData.tiktokUrl}
-                onChange={(e) =>
-                  setFormData({ ...formData, tiktokUrl: e.target.value })
-                }
+                onChange={(e) => handleInputChange('tiktokUrl', e.target.value)}
                 disabled={updateSettings.isPending}
               />
             </div>
@@ -261,9 +308,7 @@ export default function WebsiteSettingsPage() {
               <Input
                 id="youtubeUrl"
                 value={formData.youtubeUrl}
-                onChange={(e) =>
-                  setFormData({ ...formData, youtubeUrl: e.target.value })
-                }
+                onChange={(e) => handleInputChange('youtubeUrl', e.target.value)}
                 disabled={updateSettings.isPending}
               />
             </div>
@@ -280,20 +325,24 @@ export default function WebsiteSettingsPage() {
       <BannerImagePicker
         open={mainBannerPickerOpen}
         onOpenChange={setMainBannerPickerOpen}
-        onSelect={(imageId) =>
-          setFormData({ ...formData, mainBannerImageId: imageId })
-        }
-        currentImageId={formData.mainBannerImageId}
+        onSelect={(imageId) => {
+          console.log('[WebsiteSettingsPage] Main banner selected:', imageId);
+          setMainBannerImageId(imageId);
+          setMainBannerPickerOpen(false);
+        }}
+        value={mainBannerImageId}
         bannerType="main"
       />
 
       <BannerImagePicker
         open={ctaBannerPickerOpen}
         onOpenChange={setCtaBannerPickerOpen}
-        onSelect={(imageId) =>
-          setFormData({ ...formData, ctaBannerImageId: imageId })
-        }
-        currentImageId={formData.ctaBannerImageId}
+        onSelect={(imageId) => {
+          console.log('[WebsiteSettingsPage] CTA banner selected:', imageId);
+          setCtaBannerImageId(imageId);
+          setCtaBannerPickerOpen(false);
+        }}
+        value={ctaBannerImageId}
         bannerType="cta"
       />
     </div>

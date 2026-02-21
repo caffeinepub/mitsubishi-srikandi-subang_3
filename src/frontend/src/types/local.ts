@@ -104,7 +104,6 @@ export interface MediaAsset {
 }
 
 export interface WebsiteSettings {
-  id: bigint;
   siteName: string;
   contactPhone: string;
   contactWhatsapp: string;
@@ -115,8 +114,8 @@ export interface WebsiteSettings {
   instagramUrl: string;
   tiktokUrl: string;
   youtubeUrl: string;
-  mainBannerImageId?: string;
-  ctaBannerImageId?: string;
+  mainBannerImageId?: bigint;
+  ctaBannerImageId?: bigint;
   lastUpdated: bigint;
 }
 

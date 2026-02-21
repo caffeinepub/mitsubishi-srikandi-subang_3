@@ -6,12 +6,13 @@ import type { MediaAsset } from '@/types/local';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { createBlobUrlFromData } from '@/utils/blobUrl';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface BannerImagePickerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelect: (imageId: string) => void;
-  currentImageId?: string;
+  onSelect: (imageId: bigint) => void;
+  value?: bigint;
   bannerType: 'main' | 'cta';
 }
 
@@ -19,46 +20,40 @@ export default function BannerImagePicker({
   open,
   onOpenChange,
   onSelect,
-  currentImageId,
+  value,
   bannerType,
 }: BannerImagePickerProps) {
-  const { data: allAssets } = useGetAllMediaAssets();
-  const [selectedId, setSelectedId] = useState<string>(currentImageId || '');
-  const [blobUrls, setBlobUrls] = useState<Map<string, string>>(new Map());
+  const { data: allAssets, isLoading } = useGetAllMediaAssets();
+  const [selectedId, setSelectedId] = useState<string>(value?.toString() || '');
 
-  // Filter assets that are images and contain "banner" in filename
-  const bannerAssets = (allAssets as MediaAsset[] || []).filter(
-    (asset) =>
-      asset.mimeType.startsWith('image/') &&
-      asset.filename.toLowerCase().includes('banner')
-  );
-
-  // Create blob URLs from persistent canister storage data
+  // Update selected ID when value prop changes
   useEffect(() => {
-    if (!bannerAssets || bannerAssets.length === 0) return;
+    console.log('[BannerImagePicker] Value prop changed:', value);
+    setSelectedId(value?.toString() || '');
+  }, [value]);
 
-    const newBlobUrls = new Map<string, string>();
-    
-    bannerAssets.forEach((asset) => {
-      if (asset.data) {
-        const blobUrl = createBlobUrlFromData(asset.data, asset.mimeType);
-        newBlobUrls.set(asset.id.toString(), blobUrl);
-      }
-    });
+  // Filter images (only show image types)
+  const imageAssets = allAssets?.filter((asset) =>
+    asset.mimeType.startsWith('image/')
+  ) || [];
 
-    setBlobUrls(newBlobUrls);
+  console.log('[BannerImagePicker] Rendering with:', {
+    bannerType,
+    value: value?.toString(),
+    selectedId,
+    imageCount: imageAssets.length,
+  });
 
-    // Cleanup function to revoke old blob URLs
-    return () => {
-      blobUrls.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [bannerAssets]);
-
-  const handleConfirm = () => {
+  const handleSelect = () => {
     if (selectedId) {
-      onSelect(selectedId);
-      onOpenChange(false);
+      console.log('[BannerImagePicker] Selecting image:', selectedId);
+      onSelect(BigInt(selectedId));
     }
+  };
+
+  const handleValueChange = (newValue: string) => {
+    console.log('[BannerImagePicker] Radio selection changed:', newValue);
+    setSelectedId(newValue);
   };
 
   return (
@@ -66,51 +61,61 @@ export default function BannerImagePicker({
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            Pilih Gambar {bannerType === 'main' ? 'Main Banner' : 'CTA Banner'}
+            Pilih {bannerType === 'main' ? 'Main Banner' : 'CTA Banner'}
           </DialogTitle>
         </DialogHeader>
 
-        {bannerAssets.length === 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Skeleton key={i} className="h-32 w-full" />
+            ))}
+          </div>
+        ) : imageAssets.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            Belum ada gambar banner. Upload gambar dengan nama yang mengandung "banner".
+            Belum ada gambar yang tersedia. Silakan upload gambar terlebih dahulu di Media Manager.
           </div>
         ) : (
           <div className="space-y-4">
-            <RadioGroup value={selectedId} onValueChange={setSelectedId}>
-              <div className="grid grid-cols-2 gap-4">
-                {bannerAssets.map((asset) => {
-                  const assetIdStr = asset.id.toString();
-                  const imageUrl = blobUrls.get(assetIdStr);
+            <RadioGroup value={selectedId} onValueChange={handleValueChange}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {imageAssets.map((asset) => {
+                  const imageUrl = createBlobUrlFromData(asset.data, asset.mimeType);
+                  const assetIdString = asset.id.toString();
 
                   return (
                     <div
-                      key={assetIdStr}
-                      className={`border rounded-lg p-2 cursor-pointer transition-colors ${
-                        selectedId === assetIdStr
-                          ? 'border-primary bg-primary/5'
+                      key={assetIdString}
+                      className={`border rounded-lg p-3 cursor-pointer transition-all ${
+                        selectedId === assetIdString
+                          ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
-                      onClick={() => setSelectedId(assetIdStr)}
+                      onClick={() => handleValueChange(assetIdString)}
                     >
-                      <div className="flex items-start gap-2">
-                        <RadioGroupItem value={assetIdStr} id={assetIdStr} />
-                        <Label htmlFor={assetIdStr} className="flex-1 cursor-pointer">
-                          <div className="space-y-2">
-                            {imageUrl && (
-                              <div className="aspect-video bg-gray-100 rounded overflow-hidden">
-                                <img
-                                  src={imageUrl}
-                                  alt={asset.filename}
-                                  className="w-full h-full object-cover"
-                                />
+                      <div className="flex items-start gap-3">
+                        <RadioGroupItem value={assetIdString} id={`asset-${assetIdString}`} />
+                        <div className="flex-1">
+                          <Label
+                            htmlFor={`asset-${assetIdString}`}
+                            className="cursor-pointer"
+                          >
+                            <div className="space-y-2">
+                              <img
+                                src={imageUrl}
+                                alt={asset.filename}
+                                className="w-full h-32 object-cover rounded"
+                                onLoad={() => URL.revokeObjectURL(imageUrl)}
+                              />
+                              <div className="text-sm">
+                                <p className="font-medium truncate">{asset.filename}</p>
+                                <p className="text-xs text-gray-500">
+                                  ID: {assetIdString} • {(Number(asset.size) / 1024).toFixed(1)} KB
+                                </p>
                               </div>
-                            )}
-                            <p className="text-sm font-medium">{asset.filename}</p>
-                            <p className="text-xs text-gray-500">
-                              ID: {assetIdStr}
-                            </p>
-                          </div>
-                        </Label>
+                            </div>
+                          </Label>
+                        </div>
                       </div>
                     </div>
                   );
@@ -122,7 +127,7 @@ export default function BannerImagePicker({
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Batal
               </Button>
-              <Button onClick={handleConfirm} disabled={!selectedId}>
+              <Button onClick={handleSelect} disabled={!selectedId}>
                 Pilih Gambar
               </Button>
             </div>

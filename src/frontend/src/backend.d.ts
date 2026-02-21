@@ -7,8 +7,23 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
+export interface UserProfile {
+    name: string;
+    email: string;
+    phone: string;
+}
 export interface MediaAsset {
     id: bigint;
+    data: Uint8Array;
+    size: bigint;
+    mimeType: string;
+    filename: string;
+    uploadedAt: bigint;
+    uploadedBy: Principal;
+}
+export interface BannerImage {
+    id: bigint;
+    bannerType: BannerImageType;
     data: Uint8Array;
     size: bigint;
     mimeType: string;
@@ -44,10 +59,24 @@ export interface Visit {
     userAgent: string;
     ipAddress: string;
 }
-export interface UserProfile {
-    name: string;
-    email: string;
-    phone: string;
+export interface WebsiteSettings {
+    mainBannerImageId?: bigint;
+    dealerAddress: string;
+    operationalHours: string;
+    lastUpdated: bigint;
+    instagramUrl: string;
+    ctaBannerImageId?: bigint;
+    siteName: string;
+    contactEmail: string;
+    contactWhatsapp: string;
+    youtubeUrl: string;
+    facebookUrl: string;
+    contactPhone: string;
+    tiktokUrl: string;
+}
+export enum BannerImageType {
+    mainBanner = "mainBanner",
+    ctaBanner = "ctaBanner"
 }
 export enum UserRole {
     admin = "admin",
@@ -63,6 +92,7 @@ export interface backendInterface {
     getAllVisits(): Promise<Array<Visit>>;
     getAssetsByDateRange(startDate: bigint, endDate: bigint): Promise<Array<MediaAsset>>;
     getAssetsByUploader(uploader: Principal): Promise<Array<MediaAsset>>;
+    getBannerImages(): Promise<Array<BannerImage>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getMediaAssetByBlobId(blobId: string): Promise<MediaAsset | null>;
@@ -74,10 +104,13 @@ export interface backendInterface {
     getTotalVisitors(): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getVisitorStats(): Promise<VisitorStats>;
+    getWebsiteSettings(): Promise<WebsiteSettings>;
     isCallerAdmin(): Promise<boolean>;
     periodicCleanup(): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     trackVisitor(sessionId: string, ipAddress: string, userAgent: string, pageUrl: string, referrer: string, deviceType: string, browser: string): Promise<void>;
     updateMediaAsset(id: bigint, newFilename: string, newMimeType: string, newData: Uint8Array, newSize: bigint): Promise<void>;
+    updateWebsiteSettings(newSettings: WebsiteSettings): Promise<void>;
+    uploadBannerImage(filename: string, bannerType: BannerImageType, mimeType: string, data: Uint8Array, fileSize: bigint): Promise<bigint>;
     uploadMediaAsset(filename: string, mimeType: string, data: Uint8Array, fileSize: bigint): Promise<void>;
 }
