@@ -42,7 +42,7 @@ export default function PassengerVehicleList({ onEdit }: PassengerVehicleListPro
 
   const handleDeleteConfirm = () => {
     if (vehicleToDelete) {
-      deleteVehicle.mutate(vehicleToDelete.id, {
+      deleteVehicle.mutate(Number(vehicleToDelete.id), {
         onSuccess: () => {
           setDeleteDialogOpen(false);
           setVehicleToDelete(null);
@@ -52,7 +52,7 @@ export default function PassengerVehicleList({ onEdit }: PassengerVehicleListPro
   };
 
   const handleTogglePublish = (vehicleId: bigint) => {
-    togglePublishStatus.mutate(vehicleId);
+    togglePublishStatus.mutate(Number(vehicleId));
   };
 
   if (isLoading) {

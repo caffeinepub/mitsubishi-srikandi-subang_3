@@ -1,129 +1,81 @@
 {
   "kind": "build_request",
-  "title": "Refactor createAdminUser function with msg.caller-based authentication",
-  "projectName": "Mitsubishi Srikandi Subang",
+  "title": "Fix: Authorization Header Not Attached on CRUD Requests",
   "priority": "high",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Remove all usage of Principal.fromText(\"aaaaa-aa\") from the createAdminUser function in backend/main.mo",
-      "target": "backend",
+      "id": "REQ-7",
+      "text": "Store the authentication token in localStorage (persistent storage) after successful login, so that it survives page refreshes and is not lost when held only in memory.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-20"
+          "msg-latest"
         ],
         "quotes": [
-          "Hapus penggunaan Principal.fromText(\"aaaaa-aa\")"
+          "Store token in persistent storage (localStorage or equivalent).",
+          "Do NOT store token in memory only."
         ]
       },
       "acceptanceCriteria": [
-        "No hardcoded Principal.fromText(\"aaaaa-aa\") remains in createAdminUser implementation",
-        "Function compiles without errors after removal"
+        "After a successful login, the token is written to localStorage under a consistent key.",
+        "After a page refresh, the token is still retrievable from localStorage.",
+        "The token is not solely kept in React state or a module-level variable."
       ]
     },
     {
-      "id": "REQ-2",
-      "text": "Use msg.caller as the admin user ID when creating new admin users in the createAdminUser function",
-      "target": "backend",
+      "id": "REQ-8",
+      "text": "Create a global HTTP request interceptor (or a shared API client utility) that automatically reads the token from localStorage and attaches the 'Authorization: Bearer <token>' header to every POST, PUT, and DELETE request made to protected backend routes.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-20"
+          "msg-latest"
         ],
         "quotes": [
-          "Gunakan msg.caller sebagai id admin"
+          "Create a global request interceptor: Automatically attach Authorization: Bearer <token>",
+          "Apply to all protected routes (POST, PUT, DELETE).",
+          "Token is read from storage on every request."
         ]
       },
       "acceptanceCriteria": [
-        "AdminUser.id field is populated with msg.caller principal",
-        "Each admin is uniquely identified by their calling principal"
+        "A centralized request utility or interceptor is created (e.g., frontend/src/utils/apiClient.ts).",
+        "All POST, PUT, and DELETE calls made from hooks (useAdminUsers, useVehicles, usePromotions, useTestimonials, useBlogPosts, useMediaAssets, useCreditSimulations, useContacts, useWebsiteSettings) use this interceptor.",
+        "Each outgoing protected request includes the 'Authorization: Bearer <token>' header.",
+        "The token value is read from localStorage at the time each request is made (not cached in memory).",
+        "No 401 Unauthorized responses occur during normal authenticated usage.",
+        "The 'Session expired' error is no longer shown when saving data."
       ]
     },
     {
-      "id": "REQ-3",
-      "text": "Implement first-admin logic: when adminIdCounter equals 0, automatically assign the #super_admin role and bypass all authorization checks",
-      "target": "backend",
+      "id": "REQ-9",
+      "text": "Ensure that on logout or token expiry, the token is removed from localStorage so that subsequent requests do not send a stale or invalid token.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-20"
+          "msg-latest"
         ],
         "quotes": [
-          "Jika adminIdCounter == 0, maka admin pertama otomatis menjadi #super_admin dan bypass authorization"
+          "Token remains valid during session.",
+          "No 401 during normal usage."
         ]
       },
       "acceptanceCriteria": [
-        "When adminIdCounter is 0, the new admin receives #super_admin role",
-        "First admin creation bypasses session validation and role checks",
-        "adminIdCounter increments after successful first admin creation"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "After the first admin is created, enforce that only users with #super_admin role can create new admin users",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-20"
-        ],
-        "quotes": [
-          "Setelah admin pertama, hanya #super_admin yang boleh membuat admin baru"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Non-super_admin users receive authorization error when attempting to create admin users",
-        "Authorization check verifies caller has #super_admin role before proceeding",
-        "Error message clearly indicates super_admin privilege is required"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Prevent duplicate admin registration by checking if msg.caller principal already exists in adminUsers storage before creating a new admin",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-20"
-        ],
-        "quotes": [
-          "Cegah satu principal membuat lebih dari satu admin"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Function checks adminUsers map for existing entry with msg.caller as key",
-        "If principal already has admin account, return error without creating duplicate",
-        "Error message indicates the principal already has an admin account"
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Display the complete final implementation of the refactored createAdminUser function after all changes are applied",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-20"
-        ],
-        "quotes": [
-          "Tampilkan full final code createAdminUser setelah diganti"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Full function source code is visible in build output",
-        "Implementation includes all required changes (REQ-1 through REQ-5)",
-        "Code is properly formatted and syntactically correct"
+        "When the user logs out, the token is cleared from localStorage.",
+        "If the token is expired or invalid, the user is redirected to login rather than silently failing with 401."
       ]
     }
   ],
   "constraints": [
-    "Do not modify the AdminUser type structure",
-    "Do not modify stable storage declarations or HashMap configuration beyond what is necessary for this function",
-    "Do not create a new draft project; modify the existing Mitsubishi Srikandi Subang Version 61 project",
-    "All changes must be isolated to the createAdminUser function implementation in backend/main.mo"
+    "Do NOT modify any UI components or visual layout.",
+    "Do NOT modify the backend database schema, stable storage, or any Motoko backend logic.",
+    "Focus exclusively on frontend authentication token storage and request header attachment.",
+    "Do not modify files listed in frontend.immutablePaths: useInternetIdentity.ts, useActor.ts, main.tsx, and components/ui."
   ],
   "nonGoals": [
-    "Modifying other admin-related functions (updateAdminUser, deleteAdminUser, getAllAdminUsers)",
-    "Changing the AdminUser data structure or adding new fields",
-    "Implementing new authorization middleware or guards outside createAdminUser",
-    "Refactoring the overall authentication system architecture",
-    "Adding new admin roles beyond #super_admin and #regular_admin",
-    "Implementing session management changes"
+    "Backend changes of any kind.",
+    "UI or visual redesign.",
+    "Adding new features or modules.",
+    "Changing the authentication provider (Internet Identity remains the sole auth provider).",
+    "Implementing token refresh logic beyond reading from localStorage."
   ],
   "imageRequirements": {
     "required": [],

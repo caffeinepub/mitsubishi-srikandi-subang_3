@@ -38,15 +38,15 @@ export default function Footer() {
             <h3 className="text-lg font-bold mb-4">Hubungi Kami</h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-start space-x-3">
-                <Phone size={18} className="mt-0.5 flex-shrink-0 text-[#C90010]" />
+                <Phone size={18} className="mt-0.5 shrink-0 text-[#C90010]" />
                 <span>0852-1234-0778</span>
               </div>
               <div className="flex items-start space-x-3">
-                <Mail size={18} className="mt-0.5 flex-shrink-0 text-[#C90010]" />
+                <Mail size={18} className="mt-0.5 shrink-0 text-[#C90010]" />
                 <span>fuadmitsubishi2025@gmail.com</span>
               </div>
               <div className="flex items-start space-x-3">
-                <MapPin size={18} className="mt-0.5 flex-shrink-0 text-[#C90010]" />
+                <MapPin size={18} className="mt-0.5 shrink-0 text-[#C90010]" />
                 <span>Jl. Otto Iskandardinata No.314, Subang, Jawa Barat 41211</span>
               </div>
             </div>

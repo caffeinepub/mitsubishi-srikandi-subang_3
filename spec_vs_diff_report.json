@@ -1,48 +1,73 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-23T14:16:07.019Z",
-  "summary": "The diff shows a comprehensive refactoring of the createAdminUser function with msg.caller-based authentication. All 6 requirements appear to be implemented: removal of hardcoded principals, use of msg.caller as admin ID, first-admin logic with super_admin role assignment, authorization checks for subsequent admins, duplicate prevention, and frontend updates to support the new backend behavior. However, REQ-6 cannot be fully verified as the complete final implementation is not visible due to file truncation.",
+  "generatedAt": "2026-02-24T22:56:31.894Z",
+  "summary": "The diff implements a token storage utility (tokenStorage.ts) and a centralized API client (apiClient.ts) that wraps canister calls with authorization checks. It stores the principal ID in localStorage after login via AuthGuard syncing, clears it on logout/expiry, and all listed hooks use protectedCall for mutation operations. However, the implementation stores a principal ID rather than a Bearer token, so the REQ-8 AC about attaching 'Authorization: Bearer <token>' HTTP headers is not literally fulfilled. REQ-8 also lists useWebsiteSettings as a required hook but it is not visible in the diff.",
   "missing_requirements": [
     {
-      "id": "REQ-6",
-      "requirement": "Display the complete final implementation of the refactored createAdminUser function after all changes are applied",
-      "reason": "The diff summary shows backend/main.mo is truncated at 4000 chars. The complete final implementation of createAdminUser is not visible in the provided diff output.",
+      "id": "REQ-8",
+      "requirement": "All POST, PUT, and DELETE calls made from hooks including useWebsiteSettings use the interceptor/protectedCall.",
+      "reason": "The diff does not include a modified useWebsiteSettings.ts hook. While other hooks are visibly updated, useWebsiteSettings is absent from the modified files list.",
+      "evidence": []
+    },
+    {
+      "id": "REQ-8",
+      "requirement": "Each outgoing protected request includes the 'Authorization: Bearer <token>' header.",
+      "reason": "The implementation validates principal ID from localStorage before making canister calls but attaches no HTTP 'Authorization: Bearer' header. The literal AC of attaching an Authorization header is not implemented.",
       "evidence": [
-        "backend/main.mo"
+        "frontend/src/utils/apiClient.ts",
+        "frontend/src/utils/tokenStorage.ts"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Creation of migration.mo module with comprehensive type definitions and data migration logic",
-      "reason": "The BuildRequest explicitly states 'Do not create a new draft project; modify the existing Mitsubishi Srikandi Subang Version 61 project' and 'All changes must be isolated to the createAdminUser function implementation in backend/main.mo'. A new migration module was not requested.",
+      "description": "AuthGuard component with delegation expiry check and navigation to /login",
+      "reason": "The build request does not explicitly request creating an AuthGuard component. This is a new component added beyond the stated requirements of token storage and header attachment.",
       "evidence": [
-        "backend/migration.mo"
+        "frontend/src/components/AuthGuard.tsx"
       ]
     },
     {
-      "description": "Enhanced error classification and network error handling in useAdminUsers.ts",
-      "reason": "The BuildRequest non-goals explicitly state 'Modifying other admin-related functions' and the requirements only concern backend createAdminUser changes. Frontend hook enhancements for error classification (isAuthError, isNetworkError functions) were not requested.",
+      "description": "Session expiry metadata stored in localStorage with 30-day default TTL using auth_session_active and auth_session_expiry keys",
+      "reason": "The build request only requires storing the token and clearing it on logout/expiry. Storing a session active flag and expiry timestamp with a 30-day default TTL is additional logic not specified in the requirements.",
       "evidence": [
-        "frontend/src/hooks/useAdminUsers.ts"
-      ]
-    },
-    {
-      "description": "UI updates to AdminUserDialog showing automatic principal ID behavior and role assignment messaging",
-      "reason": "While frontend updates may be necessary to support backend changes, the BuildRequest scope is 'All changes must be isolated to the createAdminUser function implementation in backend/main.mo'. Frontend UI messaging and form changes exceed this scope.",
-      "evidence": [
-        "frontend/src/components/admin/AdminUserDialog.tsx"
+        "frontend/src/utils/tokenStorage.ts"
       ]
     }
   ],
-  "confidence": 0.75,
+  "confidence": 0.72,
   "changed_files": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "frontend-file-summaries.txt",
+    "frontend/src/components/AuthGuard.tsx",
     "frontend/src/components/admin/AdminUserDialog.tsx",
+    "frontend/src/components/admin/BlogPostList.tsx",
+    "frontend/src/components/admin/MediaUploadZone.tsx",
+    "frontend/src/components/admin/PassengerVehicleList.tsx",
+    "frontend/src/components/admin/PromoList.tsx",
+    "frontend/src/components/public/CTABanner.tsx",
+    "frontend/src/components/public/Footer.tsx",
+    "frontend/src/components/public/MainBanner.tsx",
+    "frontend/src/components/public/Navbar.tsx",
     "frontend/src/hooks/useAdminUsers.ts",
+    "frontend/src/hooks/useBlogPosts.ts",
+    "frontend/src/hooks/useContactForm.ts",
+    "frontend/src/hooks/useContacts.ts",
+    "frontend/src/hooks/useCreditSimulationForm.ts",
+    "frontend/src/hooks/useCreditSimulations.ts",
+    "frontend/src/hooks/useMediaAssets.ts",
+    "frontend/src/hooks/usePromotions.ts",
+    "frontend/src/hooks/useTestimonials.ts",
+    "frontend/src/hooks/useVehicles.ts",
+    "frontend/src/hooks/useWebsiteSettings.ts",
+    "frontend/src/layouts/AdminLayout.tsx",
+    "frontend/src/pages/LoginPage.tsx",
+    "frontend/src/pages/admin/AdminUsersPage.tsx",
+    "frontend/src/pages/admin/TestimonialsPage.tsx",
+    "frontend/src/pages/admin/WebsiteSettingsPage.tsx",
+    "frontend/src/types/local.ts",
+    "frontend/src/utils/apiClient.ts",
+    "frontend/src/utils/tokenStorage.ts",
     "project_state.json"
   ]
 }

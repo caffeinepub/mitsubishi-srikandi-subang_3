@@ -40,7 +40,7 @@ export default function TestimonialsPage() {
 
   const handleDeleteConfirm = () => {
     if (testimonialToDelete) {
-      deleteTestimonial.mutate(testimonialToDelete.id, {
+      deleteTestimonial.mutate(Number(testimonialToDelete.id), {
         onSuccess: () => {
           setDeleteDialogOpen(false);
           setTestimonialToDelete(null);

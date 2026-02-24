@@ -4,8 +4,10 @@ import { createBlobUrlFromData } from '@/utils/blobUrl';
 import { useEffect, useState } from 'react';
 
 export default function CTABanner() {
-  const { data: settings, isError: settingsError } = useGetWebsiteSettings();
-  const { data: bannerAsset, isError: assetError } = useGetMediaAssetById(settings?.ctaBannerImageId);
+  const { data: settings } = useGetWebsiteSettings();
+  // Convert undefined to null so useGetMediaAssetById accepts it
+  const bannerImageId = settings?.ctaBannerImageId ?? null;
+  const { data: bannerAsset } = useGetMediaAssetById(bannerImageId);
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -23,8 +25,6 @@ export default function CTABanner() {
     }
   }, [bannerAsset]);
 
-  // Use custom banner if available, otherwise fallback to static asset
-  // Fallback also triggers if there's an error fetching settings or asset
   const imageSrc = bannerUrl || '/assets/generated/cta-banner.dim_1920x400.png';
 
   return (

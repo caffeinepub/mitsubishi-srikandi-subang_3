@@ -1,14 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Refactor the createAdminUser function to use msg.caller-based authentication with first-admin bootstrapping and super_admin authorization.
+**Goal:** Fix authentication token not being attached to CRUD requests by storing the token in localStorage and using a global HTTP interceptor to send it with every protected request.
 
 **Planned changes:**
-- Remove hardcoded Principal.fromText("aaaaa-aa") from createAdminUser function
-- Use msg.caller as the admin user ID instead of hardcoded principal
-- Implement first-admin logic: when adminIdCounter is 0, automatically assign #super_admin role and bypass authorization checks
-- Enforce that only #super_admin users can create new admins after the first admin exists
-- Prevent duplicate admin registration by checking if msg.caller already has an admin account
-- Display the complete final implementation of the refactored function
+- Store the authentication token in `localStorage` after successful login instead of keeping it only in memory
+- Create a centralized API client utility (e.g., `apiClient.ts`) that reads the token from `localStorage` and attaches the `Authorization: Bearer <token>` header to all POST, PUT, and DELETE requests
+- Update all data hooks (`useAdminUsers`, `useVehicles`, `usePromotions`, `useTestimonials`, `useBlogPosts`, `useMediaAssets`, `useCreditSimulations`, `useContacts`, `useWebsiteSettings`) to use this shared API client
+- On logout or token expiry, clear the token from `localStorage` and redirect the user to the login page
 
-**User-visible outcome:** The first user to call createAdminUser becomes a super admin automatically. After that, only super admins can create new admin accounts. Each admin is uniquely identified by their Internet Identity principal, and duplicate registrations are prevented.
+**User-visible outcome:** Authenticated users can perform save/update/delete actions without encountering "Session expired" or 401 Unauthorized errors, and their session persists across page refreshes.

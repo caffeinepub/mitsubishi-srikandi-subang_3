@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 
 export default function WebsiteSettingsPage() {
   const { identity } = useInternetIdentity();
-  const { data: settings, isLoading, isFetched } = useGetWebsiteSettings();
+  const { data: settings, isLoading } = useGetWebsiteSettings();
   const updateSettings = useUpdateWebsiteSettings();
   const [mainBannerPickerOpen, setMainBannerPickerOpen] = useState(false);
   const [ctaBannerPickerOpen, setCtaBannerPickerOpen] = useState(false);
@@ -36,11 +36,13 @@ export default function WebsiteSettingsPage() {
     youtubeUrl: '',
   });
 
-  // Fetch banner images
-  const { data: mainBannerAsset, isLoading: mainBannerLoading } = useGetMediaAssetById(mainBannerImageId);
-  const { data: ctaBannerAsset, isLoading: ctaBannerLoading } = useGetMediaAssetById(ctaBannerImageId);
+  // Convert undefined to null for useGetMediaAssetById
+  const mainBannerIdForQuery = mainBannerImageId ?? null;
+  const ctaBannerIdForQuery = ctaBannerImageId ?? null;
 
-  // Create blob URLs for preview
+  const { data: mainBannerAsset, isLoading: mainBannerLoading } = useGetMediaAssetById(mainBannerIdForQuery);
+  const { data: ctaBannerAsset, isLoading: ctaBannerLoading } = useGetMediaAssetById(ctaBannerIdForQuery);
+
   const [mainBannerUrl, setMainBannerUrl] = useState<string | null>(null);
   const [ctaBannerUrl, setCtaBannerUrl] = useState<string | null>(null);
 
@@ -64,10 +66,8 @@ export default function WebsiteSettingsPage() {
     }
   }, [ctaBannerAsset]);
 
-  // Populate form when settings load
   useEffect(() => {
     if (settings) {
-      console.log('[WebsiteSettingsPage] Loading settings:', settings);
       setFormData({
         siteName: settings.siteName || '',
         contactPhone: settings.contactPhone || '',
@@ -88,14 +88,8 @@ export default function WebsiteSettingsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log('[WebsiteSettingsPage] Form submitted');
-    console.log('[WebsiteSettingsPage] mainBannerImageId:', mainBannerImageId);
-    console.log('[WebsiteSettingsPage] ctaBannerImageId:', ctaBannerImageId);
-
-    // Validate delegation identity
     const validationError = validateDelegationIdentity(identity);
     if (validationError) {
-      console.error('[WebsiteSettingsPage] Validation error:', validationError);
       toast.error(validationError);
       return;
     }
@@ -116,12 +110,9 @@ export default function WebsiteSettingsPage() {
       lastUpdated: BigInt(Date.now() * 1000000),
     };
 
-    console.log('[WebsiteSettingsPage] Submitting settings:', settingsData);
-    
     try {
       await updateSettings.mutateAsync(settingsData);
-      console.log('[WebsiteSettingsPage] Settings saved successfully');
-    } catch (error) {
+    } catch (error: any) {
       console.error('[WebsiteSettingsPage] Error saving settings:', error);
     }
   };
@@ -326,7 +317,6 @@ export default function WebsiteSettingsPage() {
         open={mainBannerPickerOpen}
         onOpenChange={setMainBannerPickerOpen}
         onSelect={(imageId) => {
-          console.log('[WebsiteSettingsPage] Main banner selected:', imageId);
           setMainBannerImageId(imageId);
           setMainBannerPickerOpen(false);
         }}
@@ -338,7 +328,6 @@ export default function WebsiteSettingsPage() {
         open={ctaBannerPickerOpen}
         onOpenChange={setCtaBannerPickerOpen}
         onSelect={(imageId) => {
-          console.log('[WebsiteSettingsPage] CTA banner selected:', imageId);
           setCtaBannerImageId(imageId);
           setCtaBannerPickerOpen(false);
         }}

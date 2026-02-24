@@ -1,20 +1,48 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
-  "summary": "Admin management system for Mitsubishi Srikandi Subang with authentication and authorization",
+  "projectStateVersion": 5,
+  "summary": "Admin management system for Mitsubishi Srikandi Subang with full stable storage persistence for all admin panel modules and authentication/authorization fixes",
   "architectural_notes": [
     "Admin authentication system with role-based access control",
     "First admin (adminIdCounter == 0) automatically becomes super_admin",
     "Only super_admin can create additional admin users",
     "One Principal can only create one admin account (prevent duplicates)",
     "Uses msg.caller as admin Principal ID instead of hardcoded values",
-    "Stable storage for admin persistence across canister upgrades"
+    "Stable storage for admin persistence across canister upgrades",
+    "Token must be stored in localStorage (not memory) and attached via global interceptor to all protected POST/PUT/DELETE requests",
+    "All admin panel modules use stable storage with full CRUD; data must survive redeploy and canister restart"
   ],
   "known_issues": [
-    "Admin users may not persist after reload - storage mechanism needs verification"
+    "Admin users may not persist after reload - storage mechanism needs verification",
+    "Authorization token not attached to CRUD requests causing 401 Unauthorized on POST/PUT/DELETE"
   ],
-  "isFixRequest": false,
-  "existing_features": [],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-store-the-authentication-token-in-localstorage-persistent-storage-after-successful-login-so-that-it-survives-page-refreshes-and-is-not-lost-when-held-only-in-memory",
+      "title": "Store the authentication token in localStorage (persistent storage) after successful login, so that it survives page refreshes and is not lost when held only in memory.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-global-http-request-interceptor-or-a-shared-api-client-utility-that-automatically-reads-the-token-from-localstorage-and-attaches-the-authorization-bearer-token-header-to-every-post-put-and-delete-request-made-to-protected-backend-routes",
+      "title": "Create a global HTTP request interceptor (or a shared API client utility) that automatically reads the token from localStorage and attaches the 'Authorization: Bearer <token>' header to every POST, PUT, and DELETE request made to protected backend routes.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-that-on-logout-or-token-expiry-the-token-is-removed-from-localstorage-so-that-subsequent-requests-do-not-send-a-stale-or-invalid-token",
+      "title": "Ensure that on logout or token expiry, the token is removed from localStorage so that subsequent requests do not send a stale or invalid token.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    }
+  ],
   "new_feature_requests": [
     {
       "id": "AR-1",
@@ -68,6 +96,18 @@
       "reqIds": [
         "REQ-6"
       ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Implement full stable persistent storage for all admin panel modules (Mobil Keluarga, Mobil Niaga, Promo, Testimoni, Blog, Media Manager, Leads/Kontak Masuk, Simulasi Kredit, Statistik Pengunjung, Pengaturan Website, Admin Users) with full CRUD, logging, and auth validation",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Fix authorization header not attached on CRUD requests: store token in localStorage, create global request interceptor to attach Authorization: Bearer <token> to all POST/PUT/DELETE requests, read token from storage on every request",
+      "reqIds": [],
       "status": "pending"
     }
   ],

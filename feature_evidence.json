@@ -1,4 +1,80 @@
 {
   "kind": "feature_evidence_report",
-  "features": []
+  "features": [
+    {
+      "featureId": "feature-store-the-authentication-token-in-localstorage-persistent-storage-after-successful-login-so-that-it-survives-page-refreshes-and-is-not-lost-when-held-only-in-memory",
+      "featureTitle": "Store the authentication token in localStorage (persistent storage) after successful login, so that it survives page refreshes and is not lost when held only in memory.",
+      "files": [
+        "frontend/src/utils/tokenStorage.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-7"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-a-global-http-request-interceptor-or-a-shared-api-client-utility-that-automatically-reads-the-token-from-localstorage-and-attaches-the-authorization-bearer-token-header-to-every-post-put-and-delete-request-made-to-protected-backend-routes",
+      "featureTitle": "Create a global HTTP request interceptor (or a shared API client utility) that automatically reads the token from localStorage and attaches the 'Authorization: Bearer <token>' header to every POST, PUT, and DELETE request made to protected backend routes.",
+      "files": [
+        "frontend/src/hooks/useAdminUsers.ts",
+        "frontend/src/hooks/useBlogPosts.ts",
+        "frontend/src/hooks/useContactForm.ts",
+        "frontend/src/hooks/useContacts.ts",
+        "frontend/src/hooks/useCreditSimulationForm.ts",
+        "frontend/src/hooks/useCreditSimulations.ts",
+        "frontend/src/hooks/useMediaAssets.ts",
+        "frontend/src/hooks/usePromotions.ts",
+        "frontend/src/hooks/useTestimonials.ts",
+        "frontend/src/hooks/useVehicles.ts",
+        "frontend/src/hooks/useWebsiteSettings.ts",
+        "frontend/src/utils/apiClient.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-that-on-logout-or-token-expiry-the-token-is-removed-from-localstorage-so-that-subsequent-requests-do-not-send-a-stale-or-invalid-token",
+      "featureTitle": "Ensure that on logout or token expiry, the token is removed from localStorage so that subsequent requests do not send a stale or invalid token.",
+      "files": [
+        "frontend/src/components/AuthGuard.tsx",
+        "frontend/src/utils/apiClient.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-9"
+      ],
+      "confidence": "high"
+    }
+  ]
 }

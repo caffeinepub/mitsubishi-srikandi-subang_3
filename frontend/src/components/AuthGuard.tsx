@@ -1,64 +1,77 @@
-import { ReactNode, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { DelegationIdentity, isDelegationValid } from '@icp-sdk/core/identity';
-import { Loader2 } from 'lucide-react';
+import { tokenStorage } from '../utils/tokenStorage';
+import { syncAuthToken, clearAuthToken } from '../utils/apiClient';
 
 interface AuthGuardProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
+/**
+ * AuthGuard validates Internet Identity delegation before rendering admin pages.
+ * - Redirects to /login if identity is missing or anonymous
+ * - Syncs principal to localStorage for persistent session tracking
+ * - Clears stale tokens on logout/expiry
+ */
 export default function AuthGuard({ children }: AuthGuardProps) {
+  const { identity, isInitializing } = useInternetIdentity();
   const navigate = useNavigate();
-  const { identity, loginStatus, isInitializing } = useInternetIdentity();
+
+  const principalId = identity?.getPrincipal().toString();
+  const isAnonymous = !principalId || principalId === '2vxsx-fae';
 
   useEffect(() => {
-    // Wait for initialization to complete
-    if (isInitializing || loginStatus === 'logging-in') {
-      return;
-    }
+    if (isInitializing) return;
 
-    // Check if user has valid identity
-    if (!identity) {
+    if (!identity || isAnonymous) {
+      // Clear any stale token from storage
+      clearAuthToken();
       navigate({ to: '/login' });
       return;
     }
 
-    // Check if principal is anonymous
-    if (identity.getPrincipal().isAnonymous()) {
-      navigate({ to: '/login' });
-      return;
-    }
-
-    // Check delegation validity for DelegationIdentity
-    if (identity instanceof DelegationIdentity) {
-      const delegation = identity.getDelegation();
-      if (!isDelegationValid(delegation)) {
-        navigate({ to: '/login' });
-        return;
+    // Check delegation expiry
+    try {
+      const delegation = (identity as any)._delegation;
+      if (delegation?.delegations?.length > 0) {
+        const expiry = delegation.delegations[0].delegation.expiration;
+        if (expiry) {
+          // expiry is in nanoseconds (BigInt)
+          const expiryMs = Number(expiry / BigInt(1_000_000));
+          if (Date.now() > expiryMs) {
+            clearAuthToken();
+            navigate({ to: '/login' });
+            return;
+          }
+          // Sync token with expiry
+          syncAuthToken(principalId);
+        } else {
+          syncAuthToken(principalId);
+        }
+      } else {
+        syncAuthToken(principalId);
       }
+    } catch {
+      // If we can't check delegation, still sync if identity exists
+      syncAuthToken(principalId);
     }
-  }, [identity, loginStatus, isInitializing, navigate]);
+  }, [identity, isAnonymous, isInitializing, navigate, principalId]);
 
-  // Show loading state during initialization
-  if (isInitializing || loginStatus === 'logging-in') {
+  // Show loading while identity is initializing
+  if (isInitializing) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-          <p className="text-muted-foreground">Memuat...</p>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground text-sm">Memuat sesi...</p>
         </div>
       </div>
     );
   }
 
-  // Only render children if we have a valid identity
-  if (!identity || identity.getPrincipal().isAnonymous()) {
-    return null;
-  }
-
-  // Additional check for delegation validity
-  if (identity instanceof DelegationIdentity && !isDelegationValid(identity.getDelegation())) {
+  // Don't render children if not authenticated
+  if (!identity || isAnonymous) {
     return null;
   }
 

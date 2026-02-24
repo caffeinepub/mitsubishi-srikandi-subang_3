@@ -1,72 +1,112 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-23T14:16:07.022Z",
+  "generatedAt": "2026-02-24T22:56:31.900Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 6,
-    "implemented": 0,
+    "total": 3,
+    "implemented": 3,
     "items": [
       {
-        "id": "REQ-1",
-        "summary": "Remove all usage of Principal.fromText(\"aaaaa-aa\") from the createAdminUser function in backend/main.mo",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
+        "id": "REQ-7",
+        "summary": "Store the authentication token in localStorage (persistent storage) after successful login, so that it survives page refreshes and is not lost when held only in memory.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/tokenStorage.ts",
+          "frontend/src/hooks/useInternetIdentity.ts",
+          "frontend/src/hooks/useInternetIdentity.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/tokenStorage.ts"
+        ]
       },
       {
-        "id": "REQ-2",
-        "summary": "Use msg.caller as the admin user ID when creating new admin users in the createAdminUser function",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
+        "id": "REQ-8",
+        "summary": "Create a global HTTP request interceptor (or a shared API client utility) that automatically reads the token from localStorage and attaches the 'Authorization: Bearer <token>' header to every POST, PUT, and DELETE request made to protected backend routes.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/apiClient.ts",
+          "frontend/src/hooks/useAdminUsers.ts",
+          "frontend/src/hooks/useVehicles.ts",
+          "frontend/src/hooks/usePromotions.ts",
+          "frontend/src/hooks/useTestimonials.ts",
+          "frontend/src/hooks/useBlogPosts.ts",
+          "frontend/src/hooks/useMediaAssets.ts",
+          "frontend/src/hooks/useCreditSimulations.ts",
+          "frontend/src/hooks/useContacts.ts",
+          "frontend/src/hooks/useWebsiteSettings.ts",
+          "frontend/src/hooks/useCreditSimulationForm.ts",
+          "frontend/src/hooks/useContactForm.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/apiClient.ts",
+          "frontend/src/hooks/useAdminUsers.ts",
+          "frontend/src/hooks/useVehicles.ts",
+          "frontend/src/hooks/usePromotions.ts",
+          "frontend/src/hooks/useTestimonials.ts",
+          "frontend/src/hooks/useBlogPosts.ts",
+          "frontend/src/hooks/useMediaAssets.ts",
+          "frontend/src/hooks/useCreditSimulations.ts",
+          "frontend/src/hooks/useContacts.ts",
+          "frontend/src/hooks/useWebsiteSettings.ts",
+          "frontend/src/hooks/useCreditSimulationForm.ts",
+          "frontend/src/hooks/useContactForm.ts"
+        ]
       },
       {
-        "id": "REQ-3",
-        "summary": "Implement first-admin logic: when adminIdCounter equals 0, automatically assign the #super_admin role and bypass all authorization checks",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-4",
-        "summary": "After the first admin is created, enforce that only users with #super_admin role can create new admin users",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-5",
-        "summary": "Prevent duplicate admin registration by checking if msg.caller principal already exists in adminUsers storage before creating a new admin",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-6",
-        "summary": "Display the complete final implementation of the refactored createAdminUser function after all changes are applied",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
+        "id": "REQ-9",
+        "summary": "Ensure that on logout or token expiry, the token is removed from localStorage so that subsequent requests do not send a stale or invalid token.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/apiClient.ts",
+          "frontend/src/components/AuthGuard.tsx",
+          "frontend/src/hooks/useInternetIdentity.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/apiClient.ts",
+          "frontend/src/components/AuthGuard.tsx"
+        ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
+    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
+    "frontend/src/components/AuthGuard.tsx",
     "frontend/src/components/admin/AdminUserDialog.tsx",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
+    "frontend/src/components/admin/BlogPostList.tsx",
+    "frontend/src/components/admin/MediaUploadZone.tsx",
+    "frontend/src/components/admin/PassengerVehicleList.tsx",
+    "frontend/src/components/admin/PromoList.tsx",
+    "frontend/src/components/public/CTABanner.tsx",
+    "frontend/src/components/public/Footer.tsx",
+    "frontend/src/components/public/MainBanner.tsx",
+    "frontend/src/components/public/Navbar.tsx",
     "frontend/src/hooks/useAdminUsers.ts",
+    "frontend/src/hooks/useBlogPosts.ts",
+    "frontend/src/hooks/useContactForm.ts",
+    "frontend/src/hooks/useContacts.ts",
+    "frontend/src/hooks/useCreditSimulationForm.ts",
+    "frontend/src/hooks/useCreditSimulations.ts",
+    "frontend/src/hooks/useMediaAssets.ts",
+    "frontend/src/hooks/usePromotions.ts",
+    "frontend/src/hooks/useTestimonials.ts",
+    "frontend/src/hooks/useVehicles.ts",
+    "frontend/src/hooks/useWebsiteSettings.ts",
+    "frontend/src/layouts/AdminLayout.tsx",
+    "frontend/src/pages/LoginPage.tsx",
+    "frontend/src/pages/admin/AdminUsersPage.tsx",
+    "frontend/src/pages/admin/TestimonialsPage.tsx",
+    "frontend/src/pages/admin/WebsiteSettingsPage.tsx",
+    "frontend/src/types/local.ts",
+    "frontend/src/utils/apiClient.ts",
+    "frontend/src/utils/tokenStorage.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

@@ -42,7 +42,7 @@ export default function BlogPostList({ onEdit }: BlogPostListProps) {
 
   const handleDeleteConfirm = () => {
     if (postToDelete) {
-      deleteBlogPost.mutate(postToDelete.id, {
+      deleteBlogPost.mutate(Number(postToDelete.id), {
         onSuccess: () => {
           setDeleteDialogOpen(false);
           setPostToDelete(null);
@@ -52,7 +52,7 @@ export default function BlogPostList({ onEdit }: BlogPostListProps) {
   };
 
   const handleTogglePublish = (postId: bigint, currentPublished: boolean) => {
-    togglePublishStatus.mutate({ blogPostId: postId, publish: !currentPublished });
+    togglePublishStatus.mutate({ blogPostId: Number(postId), publish: !currentPublished });
   };
 
   if (isLoading) {

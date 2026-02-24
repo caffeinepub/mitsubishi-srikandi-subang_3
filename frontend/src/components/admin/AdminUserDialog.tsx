@@ -44,14 +44,7 @@ export default function AdminUserDialog({ open, onClose, user }: AdminUserDialog
 
     try {
       if (isEdit) {
-        const userData: AdminUser = {
-          principal: user.principal,
-          name: formData.name,
-          email: formData.email,
-          role: user.role,
-          createdAt: user.createdAt,
-        };
-        await updateUser.mutateAsync(userData);
+        await updateUser.mutateAsync(user);
         toast.success('Admin user berhasil diperbarui');
       } else {
         // Backend now uses msg.caller as principal automatically
@@ -63,9 +56,9 @@ export default function AdminUserDialog({ open, onClose, user }: AdminUserDialog
         toast.success('Admin user berhasil ditambahkan');
       }
       onClose();
-    } catch (error) {
-      // Error handling is done in the mutation hooks
+    } catch (error: any) {
       console.error('Form submission error:', error);
+      toast.error(error?.message || 'Terjadi kesalahan');
     }
   };
 

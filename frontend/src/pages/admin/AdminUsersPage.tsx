@@ -6,7 +6,6 @@ import AdminUserList from '../../components/admin/AdminUserList';
 import AdminUserDialog from '../../components/admin/AdminUserDialog';
 import { toast } from 'sonner';
 import type { AdminUser } from '../../types/local';
-import { Principal } from '@dfinity/principal';
 
 export default function AdminUsersPage() {
   const { data: users, isLoading, refetch } = useGetAllAdminUsers();
@@ -23,10 +22,10 @@ export default function AdminUsersPage() {
     if (!confirm('Apakah Anda yakin ingin menghapus admin user ini?')) return;
 
     try {
-      await deleteUser.mutateAsync(Principal.fromText(principalId));
+      await deleteUser.mutateAsync(principalId);
       toast.success('Admin user berhasil dihapus');
-    } catch (error) {
-      toast.error('Gagal menghapus admin user');
+    } catch (error: any) {
+      toast.error(error?.message || 'Gagal menghapus admin user');
     }
   };
 

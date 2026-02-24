@@ -1,6 +1,132 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Refactor createAdminUser function with msg.caller-based authentication (Frontend)",
-  "requirements": []
+  "title": "Fix: Authorization Header Not Attached on CRUD Requests",
+  "requirements": [
+    {
+      "id": "REQ-7",
+      "summary": "Store authentication token in localStorage after successful login for persistence across page refreshes",
+      "acceptanceCriteria": [
+        "After a successful login, the token is written to localStorage under a consistent key.",
+        "After a page refresh, the token is still retrievable from localStorage.",
+        "The token is not solely kept in React state or a module-level variable."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/tokenStorage.ts",
+          "operation": "create",
+          "description": "Create a utility module to manage authentication token storage in localStorage. Provide functions to save, retrieve, and clear tokens with a consistent storage key (e.g., 'auth_token'). Include type safety and error handling for storage operations."
+        },
+        {
+          "path": "frontend/src/hooks/useInternetIdentity.ts",
+          "operation": "modify",
+          "description": "Modify the login flow to extract the delegation identity token after successful Internet Identity authentication and save it to localStorage using the tokenStorage utility. Ensure the token is persisted immediately after login completes."
+        },
+        {
+          "path": "frontend/src/hooks/useInternetIdentity.ts",
+          "operation": "modify",
+          "description": "Modify the clear/logout function to remove the token from localStorage using the tokenStorage utility when the user logs out. Ensure all authentication state is cleared consistently."
+        }
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "summary": "Create global HTTP request interceptor that automatically attaches Authorization Bearer token to all protected requests",
+      "acceptanceCriteria": [
+        "A centralized request utility or interceptor is created (e.g., frontend/src/utils/apiClient.ts).",
+        "All POST, PUT, and DELETE calls made from hooks (useAdminUsers, useVehicles, usePromotions, useTestimonials, useBlogPosts, useMediaAssets, useCreditSimulations, useContacts, useWebsiteSettings) use this interceptor.",
+        "Each outgoing protected request includes the 'Authorization: Bearer <token>' header.",
+        "The token value is read from localStorage at the time each request is made (not cached in memory).",
+        "No 401 Unauthorized responses occur during normal authenticated usage.",
+        "The 'Session expired' error is no longer shown when saving data."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/apiClient.ts",
+          "operation": "create",
+          "description": "Create a centralized API client utility that wraps backend actor calls with automatic authorization header attachment. Read the token from localStorage using tokenStorage utility on every request. Provide methods for authenticated POST, PUT, and DELETE operations that automatically include 'Authorization: Bearer <token>' header. Include error handling for missing tokens and 401 responses."
+        },
+        {
+          "path": "frontend/src/hooks/useAdminUsers.ts",
+          "operation": "modify",
+          "description": "Refactor all mutation operations (create, update, delete admin users) to use the new apiClient utility instead of direct actor calls. Ensure the Authorization header is attached to all POST, PUT, and DELETE requests through the centralized client."
+        },
+        {
+          "path": "frontend/src/hooks/useVehicles.ts",
+          "operation": "modify",
+          "description": "Refactor all mutation operations (create, update, delete vehicles) to use the new apiClient utility instead of direct actor calls. Ensure the Authorization header is attached to all POST, PUT, and DELETE requests through the centralized client."
+        },
+        {
+          "path": "frontend/src/hooks/usePromotions.ts",
+          "operation": "modify",
+          "description": "Refactor all mutation operations (create, update, delete promotions) to use the new apiClient utility instead of direct actor calls. Ensure the Authorization header is attached to all POST, PUT, and DELETE requests through the centralized client."
+        },
+        {
+          "path": "frontend/src/hooks/useTestimonials.ts",
+          "operation": "modify",
+          "description": "Refactor all mutation operations (create, update, delete testimonials) to use the new apiClient utility instead of direct actor calls. Ensure the Authorization header is attached to all POST, PUT, and DELETE requests through the centralized client."
+        },
+        {
+          "path": "frontend/src/hooks/useBlogPosts.ts",
+          "operation": "modify",
+          "description": "Refactor all mutation operations (create, update, delete blog posts) to use the new apiClient utility instead of direct actor calls. Ensure the Authorization header is attached to all POST, PUT, and DELETE requests through the centralized client."
+        },
+        {
+          "path": "frontend/src/hooks/useMediaAssets.ts",
+          "operation": "modify",
+          "description": "Refactor all mutation operations (upload, update, delete media assets) to use the new apiClient utility instead of direct actor calls. Ensure the Authorization header is attached to all POST, PUT, and DELETE requests through the centralized client."
+        },
+        {
+          "path": "frontend/src/hooks/useCreditSimulations.ts",
+          "operation": "modify",
+          "description": "Refactor mutation operations (if any exist for credit simulations) to use the new apiClient utility instead of direct actor calls. Ensure the Authorization header is attached to all POST, PUT, and DELETE requests through the centralized client."
+        },
+        {
+          "path": "frontend/src/hooks/useContacts.ts",
+          "operation": "modify",
+          "description": "Refactor mutation operations (if any exist for contacts) to use the new apiClient utility instead of direct actor calls. Ensure the Authorization header is attached to all POST, PUT, and DELETE requests through the centralized client."
+        },
+        {
+          "path": "frontend/src/hooks/useWebsiteSettings.ts",
+          "operation": "modify",
+          "description": "Refactor the updateWebsiteSettings mutation to use the new apiClient utility instead of direct actor calls. Ensure the Authorization header is attached to the PUT/POST request through the centralized client."
+        },
+        {
+          "path": "frontend/src/hooks/useCreditSimulationForm.ts",
+          "operation": "modify",
+          "description": "Refactor the credit simulation form submission mutation to use the new apiClient utility for POST requests. Ensure the Authorization header is attached through the centralized client."
+        },
+        {
+          "path": "frontend/src/hooks/useContactForm.ts",
+          "operation": "modify",
+          "description": "Refactor the contact form submission mutation to use the new apiClient utility for POST requests. Ensure the Authorization header is attached through the centralized client."
+        }
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "summary": "Ensure token is removed from localStorage on logout or token expiry to prevent stale token usage",
+      "acceptanceCriteria": [
+        "When the user logs out, the token is cleared from localStorage.",
+        "If the token is expired or invalid, the user is redirected to login rather than silently failing with 401."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/apiClient.ts",
+          "operation": "modify",
+          "description": "Add 401 Unauthorized response handling to the apiClient. When a 401 is detected, clear the token from localStorage using tokenStorage utility and trigger a redirect to the login page or show an appropriate session expiry message."
+        },
+        {
+          "path": "frontend/src/components/AuthGuard.tsx",
+          "operation": "modify",
+          "description": "Enhance the AuthGuard component to check for token validity on mount and route changes. If the token is expired or missing, clear it from localStorage and redirect to the login page. This prevents users from accessing protected routes with stale tokens."
+        },
+        {
+          "path": "frontend/src/hooks/useInternetIdentity.ts",
+          "operation": "modify",
+          "description": "Ensure the logout/clear function properly removes the token from localStorage and clears all authentication state. Add token expiry checking logic that proactively clears expired tokens before they cause 401 errors."
+        }
+      ]
+    }
+  ]
 }

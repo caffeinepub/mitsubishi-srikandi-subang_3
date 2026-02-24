@@ -4,8 +4,10 @@ import { createBlobUrlFromData } from '@/utils/blobUrl';
 import { useEffect, useState } from 'react';
 
 export default function MainBanner() {
-  const { data: settings, isError: settingsError } = useGetWebsiteSettings();
-  const { data: bannerAsset, isError: assetError } = useGetMediaAssetById(settings?.mainBannerImageId);
+  const { data: settings } = useGetWebsiteSettings();
+  // Convert undefined to null so useGetMediaAssetById accepts it
+  const bannerImageId = settings?.mainBannerImageId ?? null;
+  const { data: bannerAsset } = useGetMediaAssetById(bannerImageId);
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -23,8 +25,6 @@ export default function MainBanner() {
     }
   }, [bannerAsset]);
 
-  // Use custom banner if available, otherwise fallback to static asset
-  // Fallback also triggers if there's an error fetching settings or asset
   const imageSrc = bannerUrl || '/assets/generated/main-banner.dim_1920x600.png';
 
   return (
@@ -36,11 +36,11 @@ export default function MainBanner() {
       />
       <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
         <div className="text-center text-white px-4">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4">
-            Mitsubishi Motors
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 drop-shadow-lg">
+            Mitsubishi Srikandi Subang
           </h1>
-          <p className="text-xl md:text-2xl">
-            Kendaraan Terpercaya untuk Keluarga dan Bisnis Anda
+          <p className="text-lg md:text-2xl drop-shadow-md">
+            Dealer Resmi Mitsubishi di Subang
           </p>
         </div>
       </div>

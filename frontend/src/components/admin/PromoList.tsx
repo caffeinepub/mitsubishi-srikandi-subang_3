@@ -42,7 +42,7 @@ export default function PromoList({ onEdit }: PromoListProps) {
 
   const handleDeleteConfirm = () => {
     if (promoToDelete) {
-      deletePromotion.mutate(promoToDelete.id, {
+      deletePromotion.mutate(Number(promoToDelete.id), {
         onSuccess: () => {
           setDeleteDialogOpen(false);
           setPromoToDelete(null);
@@ -52,7 +52,7 @@ export default function PromoList({ onEdit }: PromoListProps) {
   };
 
   const handleToggleActive = (promoId: bigint, currentActive: boolean) => {
-    toggleActiveStatus.mutate({ promoId, active: !currentActive });
+    toggleActiveStatus.mutate({ promoId: Number(promoId), active: !currentActive });
   };
 
   if (isLoading) {

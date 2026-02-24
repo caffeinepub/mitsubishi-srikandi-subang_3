@@ -37,7 +37,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo and Site Title */}
-          <Link to="/" className="flex items-center gap-3 flex-shrink-0">
+          <Link to="/" className="flex items-center gap-3 shrink-0">
             <img
               src="/assets/logomitsubishi-1.png"
               alt="Mitsubishi Srikandi Subang Logo"
@@ -73,7 +73,7 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div 
+        <div
           ref={menuRef}
           className="md:hidden bg-[#262729] border-t border-gray-700 animate-in slide-in-from-top absolute left-0 right-0 shadow-lg"
         >

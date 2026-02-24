@@ -124,9 +124,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             {isCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />}
           </button>
         </div>
-        
+
         <Separator className="bg-white/10" />
-        
+
         <ScrollArea className="h-[calc(100vh-180px)]">
           <nav className="p-2 space-y-1">
             {menuItems.map((item) => {
@@ -146,7 +146,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     minWidth: '44px',
                   }}
                 >
-                  <Icon className="h-5 w-5 flex-shrink-0" />
+                  <Icon className="h-5 w-5 shrink-0" />
                   {!isCollapsed && (
                     <span className="whitespace-nowrap overflow-hidden transition-opacity duration-200">
                       {item.label}
@@ -157,7 +157,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             })}
           </nav>
         </ScrollArea>
-        
+
         <div
           className={`absolute bottom-0 p-3 border-t transition-all duration-300 ${
             isCollapsed ? 'w-16' : 'w-64'

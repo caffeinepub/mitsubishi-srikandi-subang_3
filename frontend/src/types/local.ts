@@ -2,6 +2,7 @@
 // These should match the backend types but are defined here for frontend use
 
 import { Principal } from '@dfinity/principal';
+import { UserRole } from '../backend';
 
 export interface Vehicle {
   id: bigint;
@@ -123,7 +124,7 @@ export interface AdminUser {
   principal: Principal;
   name: string;
   email: string;
-  role: 'admin' | 'user' | 'guest';
+  role: UserRole;
   createdAt: bigint;
 }
 
