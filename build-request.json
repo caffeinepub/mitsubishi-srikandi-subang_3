@@ -1,0 +1,132 @@
+{
+  "kind": "build_request",
+  "title": "Refactor createAdminUser function with msg.caller-based authentication",
+  "projectName": "Mitsubishi Srikandi Subang",
+  "priority": "high",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Remove all usage of Principal.fromText(\"aaaaa-aa\") from the createAdminUser function in backend/main.mo",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-20"
+        ],
+        "quotes": [
+          "Hapus penggunaan Principal.fromText(\"aaaaa-aa\")"
+        ]
+      },
+      "acceptanceCriteria": [
+        "No hardcoded Principal.fromText(\"aaaaa-aa\") remains in createAdminUser implementation",
+        "Function compiles without errors after removal"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Use msg.caller as the admin user ID when creating new admin users in the createAdminUser function",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-20"
+        ],
+        "quotes": [
+          "Gunakan msg.caller sebagai id admin"
+        ]
+      },
+      "acceptanceCriteria": [
+        "AdminUser.id field is populated with msg.caller principal",
+        "Each admin is uniquely identified by their calling principal"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Implement first-admin logic: when adminIdCounter equals 0, automatically assign the #super_admin role and bypass all authorization checks",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-20"
+        ],
+        "quotes": [
+          "Jika adminIdCounter == 0, maka admin pertama otomatis menjadi #super_admin dan bypass authorization"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When adminIdCounter is 0, the new admin receives #super_admin role",
+        "First admin creation bypasses session validation and role checks",
+        "adminIdCounter increments after successful first admin creation"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "After the first admin is created, enforce that only users with #super_admin role can create new admin users",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-20"
+        ],
+        "quotes": [
+          "Setelah admin pertama, hanya #super_admin yang boleh membuat admin baru"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Non-super_admin users receive authorization error when attempting to create admin users",
+        "Authorization check verifies caller has #super_admin role before proceeding",
+        "Error message clearly indicates super_admin privilege is required"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Prevent duplicate admin registration by checking if msg.caller principal already exists in adminUsers storage before creating a new admin",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-20"
+        ],
+        "quotes": [
+          "Cegah satu principal membuat lebih dari satu admin"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Function checks adminUsers map for existing entry with msg.caller as key",
+        "If principal already has admin account, return error without creating duplicate",
+        "Error message indicates the principal already has an admin account"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Display the complete final implementation of the refactored createAdminUser function after all changes are applied",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-20"
+        ],
+        "quotes": [
+          "Tampilkan full final code createAdminUser setelah diganti"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Full function source code is visible in build output",
+        "Implementation includes all required changes (REQ-1 through REQ-5)",
+        "Code is properly formatted and syntactically correct"
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not modify the AdminUser type structure",
+    "Do not modify stable storage declarations or HashMap configuration beyond what is necessary for this function",
+    "Do not create a new draft project; modify the existing Mitsubishi Srikandi Subang Version 61 project",
+    "All changes must be isolated to the createAdminUser function implementation in backend/main.mo"
+  ],
+  "nonGoals": [
+    "Modifying other admin-related functions (updateAdminUser, deleteAdminUser, getAllAdminUsers)",
+    "Changing the AdminUser data structure or adding new fields",
+    "Implementing new authorization middleware or guards outside createAdminUser",
+    "Refactoring the overall authentication system architecture",
+    "Adding new admin roles beyond #super_admin and #regular_admin",
+    "Implementing session management changes"
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

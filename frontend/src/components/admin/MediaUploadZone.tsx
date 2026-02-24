@@ -1,0 +1,180 @@
+import { useCallback, useState } from 'react';
+import { Upload } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { useUploadMediaAsset } from '@/hooks/useMediaAssets';
+import { useActor } from '@/hooks/useActor';
+import { useInternetIdentity } from '@/hooks/useInternetIdentity';
+import { validateDelegationIdentity } from '@/utils/validation';
+import { toast } from 'sonner';
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const ALLOWED_DOCUMENT_TYPES = ['application/pdf'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024; // 10MB
+
+interface MediaUploadZoneProps {
+  onUploadSuccess?: () => void;
+}
+
+export default function MediaUploadZone({ onUploadSuccess }: MediaUploadZoneProps) {
+  const { actor, isFetching: actorFetching } = useActor();
+  const { identity } = useInternetIdentity();
+  const uploadAsset = useUploadMediaAsset();
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+
+  const validateFile = (file: File): string | null => {
+    const isImage = ALLOWED_IMAGE_TYPES.includes(file.type);
+    const isDocument = ALLOWED_DOCUMENT_TYPES.includes(file.type);
+
+    if (!isImage && !isDocument) {
+      return 'Format file tidak didukung. Gunakan JPEG, PNG, GIF, WebP, atau PDF.';
+    }
+
+    const maxSize = isImage ? MAX_IMAGE_SIZE : MAX_DOCUMENT_SIZE;
+    if (file.size > maxSize) {
+      const maxSizeMB = maxSize / (1024 * 1024);
+      return `Ukuran file terlalu besar. Maksimal ${maxSizeMB}MB untuk ${isImage ? 'gambar' : 'dokumen'}.`;
+    }
+
+    return null;
+  };
+
+  const handleFileUpload = useCallback(
+    async (files: FileList | null) => {
+      console.log('[MediaUpload] Upload initiated at', new Date().toISOString());
+      
+      if (!files || files.length === 0) return;
+
+      // Check if actor is ready
+      if (!actor) {
+        toast.error('Sistem belum siap. Silakan tunggu sebentar dan coba lagi.');
+        return;
+      }
+
+      // Validate delegation identity
+      const validationError = validateDelegationIdentity(identity);
+      if (validationError) {
+        console.log('[MediaUpload] Delegation validation failed:', validationError);
+        toast.error(validationError);
+        return;
+      }
+
+      const file = files[0];
+      console.log('[MediaUpload] File selected:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+
+      const fileValidationError = validateFile(file);
+      if (fileValidationError) {
+        console.log('[MediaUpload] File validation failed:', fileValidationError);
+        toast.error(fileValidationError);
+        return;
+      }
+
+      setUploadProgress(0);
+      console.log('[MediaUpload] Starting file read');
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const arrayBuffer = e.target?.result as ArrayBuffer;
+        const bytes = new Uint8Array(arrayBuffer);
+
+        console.log('[MediaUpload] File read complete, starting upload');
+
+        try {
+          await uploadAsset.mutateAsync({
+            fileContent: bytes,
+            filename: file.name,
+            mimeType: file.type,
+            fileSize: file.size,
+            onProgress: (percentage) => {
+              setUploadProgress(percentage);
+            }
+          });
+          
+          console.log('[MediaUpload] Upload successful');
+          setUploadProgress(null);
+          
+          // Trigger cache invalidation callback
+          if (onUploadSuccess) {
+            console.log('[MediaUpload] Triggering cache invalidation');
+            onUploadSuccess();
+          }
+        } catch (error) {
+          console.error('[MediaUpload] Upload failed:', error);
+          setUploadProgress(null);
+        }
+      };
+
+      reader.onerror = () => {
+        console.error('[MediaUpload] File read error');
+        toast.error('Gagal membaca file');
+        setUploadProgress(null);
+      };
+
+      reader.readAsArrayBuffer(file);
+    },
+    [actor, identity, uploadAsset, onUploadSuccess]
+  );
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFileUpload(e.dataTransfer.files);
+  };
+
+  const isActorReady = !!actor && !actorFetching;
+
+  return (
+    <div
+      className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+        isDragging ? 'border-primary bg-primary/5' : 'border-gray-300'
+      }`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+      <p className="text-lg font-medium mb-2">Upload Media</p>
+      <p className="text-sm text-gray-500 mb-4">
+        Drag & drop file atau klik tombol di bawah
+      </p>
+      <p className="text-xs text-gray-400 mb-4">
+        Format: JPEG, PNG, GIF, WebP (max 5MB), PDF (max 10MB)
+      </p>
+      <input
+        type="file"
+        id="file-upload"
+        className="hidden"
+        accept={[...ALLOWED_IMAGE_TYPES, ...ALLOWED_DOCUMENT_TYPES].join(',')}
+        onChange={(e) => handleFileUpload(e.target.files)}
+        disabled={!isActorReady || uploadAsset.isPending}
+      />
+      <Button
+        onClick={() => document.getElementById('file-upload')?.click()}
+        disabled={!isActorReady || uploadAsset.isPending}
+      >
+        {uploadAsset.isPending ? 'Mengunggah...' : isActorReady ? 'Pilih File' : 'Memuat...'}
+      </Button>
+      {uploadProgress !== null && (
+        <div className="mt-4">
+          <Progress value={uploadProgress} className="w-full" />
+          <p className="text-sm text-gray-600 mt-2">{uploadProgress}%</p>
+        </div>
+      )}
+    </div>
+  );
+}

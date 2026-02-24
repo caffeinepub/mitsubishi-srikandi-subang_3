@@ -1,0 +1,77 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "Admin management system for Mitsubishi Srikandi Subang with authentication and authorization",
+  "architectural_notes": [
+    "Admin authentication system with role-based access control",
+    "First admin (adminIdCounter == 0) automatically becomes super_admin",
+    "Only super_admin can create additional admin users",
+    "One Principal can only create one admin account (prevent duplicates)",
+    "Uses msg.caller as admin Principal ID instead of hardcoded values",
+    "Stable storage for admin persistence across canister upgrades"
+  ],
+  "known_issues": [
+    "Admin users may not persist after reload - storage mechanism needs verification"
+  ],
+  "isFixRequest": false,
+  "existing_features": [],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Refactor createAdminUser function: use msg.caller as admin id, first admin becomes super_admin automatically, prevent duplicate principal registration, remove hardcoded Principal.fromText",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Remove all usage of Principal.fromText(\"aaaaa-aa\") from the createAdminUser function in backend/main.mo",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Use msg.caller as the admin user ID when creating new admin users in the createAdminUser function",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Implement first-admin logic: when adminIdCounter equals 0, automatically assign the #super_admin role and bypass all authorization checks",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "After the first admin is created, enforce that only users with #super_admin role can create new admin users",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Prevent duplicate admin registration by checking if msg.caller principal already exists in adminUsers storage before creating a new admin",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Display the complete final implementation of the refactored createAdminUser function after all changes are applied",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "status": "pending"
+    }
+  ],
+  "projectName": "Mitsubishi Srikandi Subang",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

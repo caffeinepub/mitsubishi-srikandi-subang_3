@@ -1,0 +1,34 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+
+export default function CommercialVehiclesPage() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Mobil Niaga</h1>
+          <p className="text-muted-foreground">
+            Kelola kendaraan komersial
+          </p>
+        </div>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Tambah Kendaraan Niaga
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Daftar Kendaraan Niaga</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Gunakan menu Mobil Keluarga untuk mengelola semua kendaraan. 
+            Fitur kategori kendaraan niaga akan segera tersedia.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
