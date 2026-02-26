@@ -1,112 +1,50 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T22:56:31.900Z",
+  "generatedAt": "2026-02-26T12:49:11.154Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
     "total": 3,
-    "implemented": 3,
+    "implemented": 0,
     "items": [
       {
-        "id": "REQ-7",
-        "summary": "Store the authentication token in localStorage (persistent storage) after successful login, so that it survives page refreshes and is not lost when held only in memory.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/utils/tokenStorage.ts",
-          "frontend/src/hooks/useInternetIdentity.ts",
-          "frontend/src/hooks/useInternetIdentity.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/utils/tokenStorage.ts"
-        ]
+        "id": "REQ-1",
+        "summary": "Fix the bootstrap logic in the backend so that when the Admin table is empty and a Principal logs in for the first time, that Principal is assigned the role 'super_admin' instead of 'admin'.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       },
       {
-        "id": "REQ-8",
-        "summary": "Create a global HTTP request interceptor (or a shared API client utility) that automatically reads the token from localStorage and attaches the 'Authorization: Bearer <token>' header to every POST, PUT, and DELETE request made to protected backend routes.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/utils/apiClient.ts",
-          "frontend/src/hooks/useAdminUsers.ts",
-          "frontend/src/hooks/useVehicles.ts",
-          "frontend/src/hooks/usePromotions.ts",
-          "frontend/src/hooks/useTestimonials.ts",
-          "frontend/src/hooks/useBlogPosts.ts",
-          "frontend/src/hooks/useMediaAssets.ts",
-          "frontend/src/hooks/useCreditSimulations.ts",
-          "frontend/src/hooks/useContacts.ts",
-          "frontend/src/hooks/useWebsiteSettings.ts",
-          "frontend/src/hooks/useCreditSimulationForm.ts",
-          "frontend/src/hooks/useContactForm.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/utils/apiClient.ts",
-          "frontend/src/hooks/useAdminUsers.ts",
-          "frontend/src/hooks/useVehicles.ts",
-          "frontend/src/hooks/usePromotions.ts",
-          "frontend/src/hooks/useTestimonials.ts",
-          "frontend/src/hooks/useBlogPosts.ts",
-          "frontend/src/hooks/useMediaAssets.ts",
-          "frontend/src/hooks/useCreditSimulations.ts",
-          "frontend/src/hooks/useContacts.ts",
-          "frontend/src/hooks/useWebsiteSettings.ts",
-          "frontend/src/hooks/useCreditSimulationForm.ts",
-          "frontend/src/hooks/useContactForm.ts"
-        ]
+        "id": "REQ-2",
+        "summary": "Add automatic recovery logic inside authenticated update calls that require admin privileges: if super_admin_count == 0, automatically promote the calling Principal's role to 'super_admin' (replace existing 'admin' role). This must not be a separate dedicated function — it must run inline within existing privileged update calls.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       },
       {
-        "id": "REQ-9",
-        "summary": "Ensure that on logout or token expiry, the token is removed from localStorage so that subsequent requests do not send a stale or invalid token.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/utils/apiClient.ts",
-          "frontend/src/components/AuthGuard.tsx",
-          "frontend/src/hooks/useInternetIdentity.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/utils/apiClient.ts",
-          "frontend/src/components/AuthGuard.tsx"
-        ]
+        "id": "REQ-3",
+        "summary": "Update the migration module (backend/migration.mo) to ensure that when migrating legacy admin records, if no record carries role 'super_admin' after migration, the first migrated record is promoted to 'super_admin' rather than leaving all records as 'admin'.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
+    "build-template/README.md",
     "caffeine.lock.json",
     "feature_evidence.json",
-    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/AuthGuard.tsx",
-    "frontend/src/components/admin/AdminUserDialog.tsx",
-    "frontend/src/components/admin/BlogPostList.tsx",
-    "frontend/src/components/admin/MediaUploadZone.tsx",
-    "frontend/src/components/admin/PassengerVehicleList.tsx",
-    "frontend/src/components/admin/PromoList.tsx",
-    "frontend/src/components/public/CTABanner.tsx",
-    "frontend/src/components/public/Footer.tsx",
-    "frontend/src/components/public/MainBanner.tsx",
-    "frontend/src/components/public/Navbar.tsx",
-    "frontend/src/hooks/useAdminUsers.ts",
-    "frontend/src/hooks/useBlogPosts.ts",
-    "frontend/src/hooks/useContactForm.ts",
-    "frontend/src/hooks/useContacts.ts",
-    "frontend/src/hooks/useCreditSimulationForm.ts",
-    "frontend/src/hooks/useCreditSimulations.ts",
-    "frontend/src/hooks/useMediaAssets.ts",
-    "frontend/src/hooks/usePromotions.ts",
-    "frontend/src/hooks/useTestimonials.ts",
-    "frontend/src/hooks/useVehicles.ts",
-    "frontend/src/hooks/useWebsiteSettings.ts",
-    "frontend/src/layouts/AdminLayout.tsx",
-    "frontend/src/pages/LoginPage.tsx",
-    "frontend/src/pages/admin/AdminUsersPage.tsx",
-    "frontend/src/pages/admin/TestimonialsPage.tsx",
-    "frontend/src/pages/admin/WebsiteSettingsPage.tsx",
-    "frontend/src/types/local.ts",
-    "frontend/src/utils/apiClient.ts",
-    "frontend/src/utils/tokenStorage.ts",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

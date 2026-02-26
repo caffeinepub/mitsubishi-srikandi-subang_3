@@ -7,65 +7,6 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
-export interface UserProfile {
-    name: string;
-    email: string;
-    phone: string;
-}
-export interface AdminUser {
-    principal: Principal;
-    name: string;
-    createdAt: bigint;
-    role: UserRole;
-    email: string;
-}
-export interface MediaAsset {
-    id: bigint;
-    data: Uint8Array;
-    size: bigint;
-    mimeType: string;
-    filename: string;
-    uploadedAt: bigint;
-    uploadedBy: Principal;
-}
-export interface BannerImage {
-    id: bigint;
-    bannerType: BannerImageType;
-    data: Uint8Array;
-    size: bigint;
-    mimeType: string;
-    filename: string;
-    uploadedAt: bigint;
-    uploadedBy: Principal;
-}
-export interface VisitorSession {
-    lastActivity: bigint;
-    isOnline: boolean;
-    firstVisit: bigint;
-    sessionId: string;
-    ipAddress: string;
-}
-export interface VisitorStats {
-    visitorsThisWeek: bigint;
-    visitorsYesterday: bigint;
-    visitorsThisYear: bigint;
-    onlineNow: bigint;
-    totalVisitors: bigint;
-    visitorsToday: bigint;
-    pageViewsToday: bigint;
-    visitorsThisMonth: bigint;
-}
-export interface Visit {
-    id: string;
-    referrer: string;
-    visitedAt: bigint;
-    pageUrl: string;
-    deviceType: string;
-    browser: string;
-    sessionId: string;
-    userAgent: string;
-    ipAddress: string;
-}
 export interface WebsiteSettings {
     mainBannerImageId?: bigint;
     dealerAddress: string;
@@ -81,21 +22,84 @@ export interface WebsiteSettings {
     contactPhone: string;
     tiktokUrl: string;
 }
+export interface MediaAsset {
+    id: bigint;
+    data: Uint8Array;
+    size: bigint;
+    mimeType: string;
+    filename: string;
+    uploadedAt: bigint;
+    uploadedBy: Principal;
+}
+export interface VisitorStats {
+    visitorsThisWeek: bigint;
+    visitorsYesterday: bigint;
+    visitorsThisYear: bigint;
+    onlineNow: bigint;
+    totalVisitors: bigint;
+    visitorsToday: bigint;
+    pageViewsToday: bigint;
+    visitorsThisMonth: bigint;
+}
+export interface BannerImage {
+    id: bigint;
+    bannerType: BannerImageType;
+    data: Uint8Array;
+    size: bigint;
+    mimeType: string;
+    filename: string;
+    uploadedAt: bigint;
+    uploadedBy: Principal;
+}
+export interface AdminRecord {
+    principal: Principal;
+    createdAt: bigint;
+    role: UserRole;
+    updatedAt: bigint;
+}
+export interface VisitorSession {
+    lastActivity: bigint;
+    isOnline: boolean;
+    firstVisit: bigint;
+    sessionId: string;
+    ipAddress: string;
+}
+export interface Visit {
+    id: string;
+    referrer: string;
+    visitedAt: bigint;
+    pageUrl: string;
+    deviceType: string;
+    browser: string;
+    sessionId: string;
+    userAgent: string;
+    ipAddress: string;
+}
+export interface UserProfile {
+    name: string;
+    email: string;
+    phone: string;
+}
 export enum BannerImageType {
     mainBanner = "mainBanner",
     ctaBanner = "ctaBanner"
 }
 export enum UserRole {
     admin = "admin",
+    super_admin = "super_admin"
+}
+export enum UserRole__1 {
+    admin = "admin",
     user = "user",
     guest = "guest"
 }
 export interface backendInterface {
-    assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    addAdmin(principal: Principal, role: UserRole): Promise<void>;
+    assignCallerUserRole(user: Principal, role: UserRole__1): Promise<void>;
     cleanupExpiredSessions(): Promise<void>;
-    createAdminUser(name: string, email: string, role: UserRole): Promise<AdminUser>;
+    deleteAdmin(principal: Principal): Promise<void>;
     deleteMediaAsset(id: bigint): Promise<boolean>;
-    getAllAdminUsers(): Promise<Array<AdminUser>>;
+    getAdmins(): Promise<Array<AdminRecord>>;
     getAllMediaAssets(): Promise<Array<MediaAsset>>;
     getAllVisitorSessions(): Promise<Array<VisitorSession>>;
     getAllVisits(): Promise<Array<Visit>>;
@@ -103,10 +107,11 @@ export interface backendInterface {
     getAssetsByUploader(uploader: Principal): Promise<Array<MediaAsset>>;
     getBannerImages(): Promise<Array<BannerImage>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
-    getCallerUserRole(): Promise<UserRole>;
+    getCallerUserRole(): Promise<UserRole__1>;
     getMediaAssetByBlobId(blobId: string): Promise<MediaAsset | null>;
     getMediaAssetById(id: bigint): Promise<MediaAsset | null>;
     getMediaAssets(): Promise<Array<MediaAsset>>;
+    getMyRole(): Promise<UserRole | null>;
     getOnlineUsers(): Promise<bigint>;
     getStableVisitorStats(): Promise<VisitorStats>;
     getTotalPageViews(): Promise<bigint>;
@@ -118,6 +123,7 @@ export interface backendInterface {
     periodicCleanup(): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     trackVisitor(sessionId: string, ipAddress: string, userAgent: string, pageUrl: string, referrer: string, deviceType: string, browser: string): Promise<void>;
+    updateAdmin(principal: Principal, newRole: UserRole): Promise<void>;
     updateMediaAsset(id: bigint, newFilename: string, newMimeType: string, newData: Uint8Array, newSize: bigint): Promise<void>;
     updateWebsiteSettings(newSettings: WebsiteSettings): Promise<void>;
     uploadBannerImage(filename: string, bannerType: BannerImageType, mimeType: string, data: Uint8Array, fileSize: bigint): Promise<bigint>;

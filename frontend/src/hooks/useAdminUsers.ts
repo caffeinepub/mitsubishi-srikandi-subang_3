@@ -1,17 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import { useInternetIdentity } from './useInternetIdentity';
-import { AdminUser, UserRole } from '../backend';
+import { AdminRecord, UserRole } from '../backend';
+import { Principal } from '@dfinity/principal';
 import { protectedCall } from '../utils/apiClient';
 
 export function useGetAllAdminUsers() {
   const { actor, isFetching } = useActor();
 
-  return useQuery<AdminUser[]>({
+  return useQuery<AdminRecord[]>({
     queryKey: ['adminUsers'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllAdminUsers();
+      return actor.getAdmins();
     },
     enabled: !!actor && !isFetching,
   });
@@ -24,18 +25,16 @@ export function useCreateAdminUser() {
 
   return useMutation({
     mutationFn: async ({
-      name,
-      email,
+      principal,
       role,
     }: {
-      name: string;
-      email: string;
+      principal: Principal;
       role: UserRole;
     }) => {
       if (!actor) throw new Error('Actor not initialized');
-      const principalId = identity?.getPrincipal().toString();
-      return protectedCall(principalId, () =>
-        actor.createAdminUser(name, email, role)
+      const callerPrincipalId = identity?.getPrincipal().toString();
+      return protectedCall(callerPrincipalId, () =>
+        actor.addAdmin(principal, role)
       );
     },
     onSuccess: () => {
@@ -50,13 +49,18 @@ export function useUpdateAdminUser() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (user: AdminUser) => {
+    mutationFn: async ({
+      principal,
+      role,
+    }: {
+      principal: Principal;
+      role: UserRole;
+    }) => {
       if (!actor) throw new Error('Actor not initialized');
-      const principalId = identity?.getPrincipal().toString();
-      // Note: backend doesn't have updateAdminUser yet, stub for future
-      return protectedCall(principalId, async () => {
-        throw new Error('updateAdminUser not yet implemented in backend');
-      });
+      const callerPrincipalId = identity?.getPrincipal().toString();
+      return protectedCall(callerPrincipalId, () =>
+        actor.updateAdmin(principal, role)
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
@@ -73,10 +77,10 @@ export function useDeleteAdminUser() {
     mutationFn: async (principalId: string) => {
       if (!actor) throw new Error('Actor not initialized');
       const callerPrincipalId = identity?.getPrincipal().toString();
-      // Note: backend doesn't have deleteAdminUser yet, stub for future
-      return protectedCall(callerPrincipalId, async () => {
-        throw new Error('deleteAdminUser not yet implemented in backend');
-      });
+      const targetPrincipal = Principal.fromText(principalId);
+      return protectedCall(callerPrincipalId, () =>
+        actor.deleteAdmin(targetPrincipal)
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] });

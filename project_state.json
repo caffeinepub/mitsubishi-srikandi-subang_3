@@ -1,116 +1,45 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 5,
-  "summary": "Admin management system for Mitsubishi Srikandi Subang with full stable storage persistence for all admin panel modules and authentication/authorization fixes",
+  "projectStateVersion": 3,
+  "summary": "Backend fix for super_admin bootstrap/recovery logic in an admin management system using Principal-based authentication. The system has a role model with 'super_admin' and 'admin' as mutually exclusive single-field roles.",
   "architectural_notes": [
-    "Admin authentication system with role-based access control",
-    "First admin (adminIdCounter == 0) automatically becomes super_admin",
-    "Only super_admin can create additional admin users",
-    "One Principal can only create one admin account (prevent duplicates)",
-    "Uses msg.caller as admin Principal ID instead of hardcoded values",
-    "Stable storage for admin persistence across canister upgrades",
-    "Token must be stored in localStorage (not memory) and attached via global interceptor to all protected POST/PUT/DELETE requests",
-    "All admin panel modules use stable storage with full CRUD; data must survive redeploy and canister restart"
+    "Role model: single role field with mutually exclusive values 'super_admin' or 'admin'. No flags or multi-role arrays.",
+    "Bootstrap logic: if Admin table is empty, first logged-in Principal must be assigned role = super_admin.",
+    "Recovery logic: inside authenticated update calls requiring admin privileges, if super_admin_count == 0, automatically promote caller to super_admin (no separate recovery function).",
+    "Role promotion is replacement (overwrite), not additive."
   ],
   "known_issues": [
-    "Admin users may not persist after reload - storage mechanism needs verification",
-    "Authorization token not attached to CRUD requests causing 401 Unauthorized on POST/PUT/DELETE"
+    "Bootstrap logic did not assign super_admin correctly — all existing users have role 'admin', no super_admin exists, system locked. Fix: recovery logic to auto-promote caller when super_admin_count == 0."
   ],
   "isFixRequest": true,
-  "existing_features": [
-    {
-      "id": "feature-store-the-authentication-token-in-localstorage-persistent-storage-after-successful-login-so-that-it-survives-page-refreshes-and-is-not-lost-when-held-only-in-memory",
-      "title": "Store the authentication token in localStorage (persistent storage) after successful login, so that it survives page refreshes and is not lost when held only in memory.",
-      "reqIds": [
-        "REQ-7"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-create-a-global-http-request-interceptor-or-a-shared-api-client-utility-that-automatically-reads-the-token-from-localstorage-and-attaches-the-authorization-bearer-token-header-to-every-post-put-and-delete-request-made-to-protected-backend-routes",
-      "title": "Create a global HTTP request interceptor (or a shared API client utility) that automatically reads the token from localStorage and attaches the 'Authorization: Bearer <token>' header to every POST, PUT, and DELETE request made to protected backend routes.",
-      "reqIds": [
-        "REQ-8"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-ensure-that-on-logout-or-token-expiry-the-token-is-removed-from-localstorage-so-that-subsequent-requests-do-not-send-a-stale-or-invalid-token",
-      "title": "Ensure that on logout or token expiry, the token is removed from localStorage so that subsequent requests do not send a stale or invalid token.",
-      "reqIds": [
-        "REQ-9"
-      ],
-      "version": 1
-    }
-  ],
+  "existing_features": [],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Refactor createAdminUser function: use msg.caller as admin id, first admin becomes super_admin automatically, prevent duplicate principal registration, remove hardcoded Principal.fromText",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Remove all usage of Principal.fromText(\"aaaaa-aa\") from the createAdminUser function in backend/main.mo",
+      "summary": "Fix the bootstrap logic in the backend so that when the Admin table is empty and a Principal logs in for the first time, that Principal is assigned the role 'super_admin' instead of 'admin'.",
       "reqIds": [
         "REQ-1"
       ],
       "status": "pending"
     },
     {
-      "id": "AR-3",
-      "summary": "Use msg.caller as the admin user ID when creating new admin users in the createAdminUser function",
+      "id": "AR-2",
+      "summary": "Add automatic recovery logic inside authenticated update calls that require admin privileges: if super_admin_count == 0, automatically promote the calling Principal's role to 'super_admin' (replace existing 'admin' role). This must not be a separate dedicated function — it must run inline within existing privileged update calls.",
       "reqIds": [
         "REQ-2"
       ],
       "status": "pending"
     },
     {
-      "id": "AR-4",
-      "summary": "Implement first-admin logic: when adminIdCounter equals 0, automatically assign the #super_admin role and bypass all authorization checks",
+      "id": "AR-3",
+      "summary": "Update the migration module (backend/migration.mo) to ensure that when migrating legacy admin records, if no record carries role 'super_admin' after migration, the first migrated record is promoted to 'super_admin' rather than leaving all records as 'admin'.",
       "reqIds": [
         "REQ-3"
       ],
       "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "After the first admin is created, enforce that only users with #super_admin role can create new admin users",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Prevent duplicate admin registration by checking if msg.caller principal already exists in adminUsers storage before creating a new admin",
-      "reqIds": [
-        "REQ-5"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Display the complete final implementation of the refactored createAdminUser function after all changes are applied",
-      "reqIds": [
-        "REQ-6"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-8",
-      "summary": "Implement full stable persistent storage for all admin panel modules (Mobil Keluarga, Mobil Niaga, Promo, Testimoni, Blog, Media Manager, Leads/Kontak Masuk, Simulasi Kredit, Statistik Pengunjung, Pengaturan Website, Admin Users) with full CRUD, logging, and auth validation",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Fix authorization header not attached on CRUD requests: store token in localStorage, create global request interceptor to attach Authorization: Bearer <token> to all POST/PUT/DELETE requests, read token from storage on every request",
-      "reqIds": [],
-      "status": "pending"
     }
   ],
+  "gameProjectType": "none",
   "projectName": "Mitsubishi Srikandi Subang",
   "clarification_mode": "instant",
   "clarification_rounds": 0

@@ -10,12 +10,11 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
-export interface AdminUser {
+export interface AdminRecord {
   'principal' : Principal,
-  'name' : string,
   'createdAt' : bigint,
   'role' : UserRole,
-  'email' : string,
+  'updatedAt' : bigint,
 }
 export interface BannerImage {
   'id' : bigint,
@@ -44,6 +43,8 @@ export interface UserProfile {
   'phone' : string,
 }
 export type UserRole = { 'admin' : null } |
+  { 'super_admin' : null };
+export type UserRole__1 = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
 export interface Visit {
@@ -117,11 +118,12 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
-  'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'addAdmin' : ActorMethod<[Principal, UserRole], undefined>,
+  'assignCallerUserRole' : ActorMethod<[Principal, UserRole__1], undefined>,
   'cleanupExpiredSessions' : ActorMethod<[], undefined>,
-  'createAdminUser' : ActorMethod<[string, string, UserRole], AdminUser>,
+  'deleteAdmin' : ActorMethod<[Principal], undefined>,
   'deleteMediaAsset' : ActorMethod<[bigint], boolean>,
-  'getAllAdminUsers' : ActorMethod<[], Array<AdminUser>>,
+  'getAdmins' : ActorMethod<[], Array<AdminRecord>>,
   'getAllMediaAssets' : ActorMethod<[], Array<MediaAsset>>,
   'getAllVisitorSessions' : ActorMethod<[], Array<VisitorSession>>,
   'getAllVisits' : ActorMethod<[], Array<Visit>>,
@@ -129,10 +131,11 @@ export interface _SERVICE {
   'getAssetsByUploader' : ActorMethod<[Principal], Array<MediaAsset>>,
   'getBannerImages' : ActorMethod<[], Array<BannerImage>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
-  'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getCallerUserRole' : ActorMethod<[], UserRole__1>,
   'getMediaAssetByBlobId' : ActorMethod<[string], [] | [MediaAsset]>,
   'getMediaAssetById' : ActorMethod<[bigint], [] | [MediaAsset]>,
   'getMediaAssets' : ActorMethod<[], Array<MediaAsset>>,
+  'getMyRole' : ActorMethod<[], [] | [UserRole]>,
   'getOnlineUsers' : ActorMethod<[], bigint>,
   'getStableVisitorStats' : ActorMethod<[], VisitorStats>,
   'getTotalPageViews' : ActorMethod<[], bigint>,
@@ -147,6 +150,7 @@ export interface _SERVICE {
     [string, string, string, string, string, string, string],
     undefined
   >,
+  'updateAdmin' : ActorMethod<[Principal, UserRole], undefined>,
   'updateMediaAsset' : ActorMethod<
     [bigint, string, string, Uint8Array, bigint],
     undefined

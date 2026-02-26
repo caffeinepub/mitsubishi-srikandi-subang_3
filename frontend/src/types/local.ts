@@ -120,12 +120,13 @@ export interface WebsiteSettings {
   lastUpdated: bigint;
 }
 
+// Updated to match the new Principal-based AdminRecord from the backend.
+// Fields: principal, role, createdAt, updatedAt — no name, email, or password.
 export interface AdminUser {
   principal: Principal;
-  name: string;
-  email: string;
   role: UserRole;
   createdAt: bigint;
+  updatedAt: bigint;
 }
 
 export interface ContactSubmission {

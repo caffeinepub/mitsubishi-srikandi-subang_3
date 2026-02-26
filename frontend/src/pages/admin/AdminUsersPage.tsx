@@ -5,15 +5,15 @@ import { useGetAllAdminUsers, useDeleteAdminUser } from '../../hooks/useAdminUse
 import AdminUserList from '../../components/admin/AdminUserList';
 import AdminUserDialog from '../../components/admin/AdminUserDialog';
 import { toast } from 'sonner';
-import type { AdminUser } from '../../types/local';
+import { AdminRecord } from '../../backend';
 
 export default function AdminUsersPage() {
   const { data: users, isLoading, refetch } = useGetAllAdminUsers();
   const deleteUser = useDeleteAdminUser();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminRecord | null>(null);
 
-  const handleEdit = (user: AdminUser) => {
+  const handleEdit = (user: AdminRecord) => {
     setSelectedUser(user);
     setDialogOpen(true);
   };
@@ -32,7 +32,6 @@ export default function AdminUsersPage() {
   const handleCloseDialog = () => {
     setDialogOpen(false);
     setSelectedUser(null);
-    // Refetch admin users after dialog closes to ensure fresh data
     refetch();
   };
 

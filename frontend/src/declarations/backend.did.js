@@ -21,15 +21,18 @@ export const _CaffeineStorageRefillResult = IDL.Record({
 });
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
+  'super_admin' : IDL.Null,
+});
+export const UserRole__1 = IDL.Variant({
+  'admin' : IDL.Null,
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
-export const AdminUser = IDL.Record({
+export const AdminRecord = IDL.Record({
   'principal' : IDL.Principal,
-  'name' : IDL.Text,
   'createdAt' : IDL.Int,
   'role' : UserRole,
-  'email' : IDL.Text,
+  'updatedAt' : IDL.Int,
 });
 export const MediaAsset = IDL.Record({
   'id' : IDL.Nat,
@@ -131,11 +134,12 @@ export const idlService = IDL.Service({
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-  'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'addAdmin' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
   'cleanupExpiredSessions' : IDL.Func([], [], []),
-  'createAdminUser' : IDL.Func([IDL.Text, IDL.Text, UserRole], [AdminUser], []),
+  'deleteAdmin' : IDL.Func([IDL.Principal], [], []),
   'deleteMediaAsset' : IDL.Func([IDL.Nat], [IDL.Bool], []),
-  'getAllAdminUsers' : IDL.Func([], [IDL.Vec(AdminUser)], ['query']),
+  'getAdmins' : IDL.Func([], [IDL.Vec(AdminRecord)], []),
   'getAllMediaAssets' : IDL.Func([], [IDL.Vec(MediaAsset)], ['query']),
   'getAllVisitorSessions' : IDL.Func([], [IDL.Vec(VisitorSession)], ['query']),
   'getAllVisits' : IDL.Func([], [IDL.Vec(Visit)], ['query']),
@@ -151,7 +155,7 @@ export const idlService = IDL.Service({
     ),
   'getBannerImages' : IDL.Func([], [IDL.Vec(BannerImage)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
-  'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
   'getMediaAssetByBlobId' : IDL.Func(
       [IDL.Text],
       [IDL.Opt(MediaAsset)],
@@ -159,6 +163,7 @@ export const idlService = IDL.Service({
     ),
   'getMediaAssetById' : IDL.Func([IDL.Nat], [IDL.Opt(MediaAsset)], ['query']),
   'getMediaAssets' : IDL.Func([], [IDL.Vec(MediaAsset)], ['query']),
+  'getMyRole' : IDL.Func([], [IDL.Opt(UserRole)], []),
   'getOnlineUsers' : IDL.Func([], [IDL.Nat], ['query']),
   'getStableVisitorStats' : IDL.Func([], [VisitorStats], ['query']),
   'getTotalPageViews' : IDL.Func([], [IDL.Nat], ['query']),
@@ -178,6 +183,7 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'updateAdmin' : IDL.Func([IDL.Principal, UserRole], [], []),
   'updateMediaAsset' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Vec(IDL.Nat8), IDL.Nat],
       [],
@@ -212,15 +218,18 @@ export const idlFactory = ({ IDL }) => {
   });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
+    'super_admin' : IDL.Null,
+  });
+  const UserRole__1 = IDL.Variant({
+    'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
-  const AdminUser = IDL.Record({
+  const AdminRecord = IDL.Record({
     'principal' : IDL.Principal,
-    'name' : IDL.Text,
     'createdAt' : IDL.Int,
     'role' : UserRole,
-    'email' : IDL.Text,
+    'updatedAt' : IDL.Int,
   });
   const MediaAsset = IDL.Record({
     'id' : IDL.Nat,
@@ -322,15 +331,12 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-    'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'addAdmin' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
     'cleanupExpiredSessions' : IDL.Func([], [], []),
-    'createAdminUser' : IDL.Func(
-        [IDL.Text, IDL.Text, UserRole],
-        [AdminUser],
-        [],
-      ),
+    'deleteAdmin' : IDL.Func([IDL.Principal], [], []),
     'deleteMediaAsset' : IDL.Func([IDL.Nat], [IDL.Bool], []),
-    'getAllAdminUsers' : IDL.Func([], [IDL.Vec(AdminUser)], ['query']),
+    'getAdmins' : IDL.Func([], [IDL.Vec(AdminRecord)], []),
     'getAllMediaAssets' : IDL.Func([], [IDL.Vec(MediaAsset)], ['query']),
     'getAllVisitorSessions' : IDL.Func(
         [],
@@ -350,7 +356,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getBannerImages' : IDL.Func([], [IDL.Vec(BannerImage)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
-    'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
     'getMediaAssetByBlobId' : IDL.Func(
         [IDL.Text],
         [IDL.Opt(MediaAsset)],
@@ -358,6 +364,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getMediaAssetById' : IDL.Func([IDL.Nat], [IDL.Opt(MediaAsset)], ['query']),
     'getMediaAssets' : IDL.Func([], [IDL.Vec(MediaAsset)], ['query']),
+    'getMyRole' : IDL.Func([], [IDL.Opt(UserRole)], []),
     'getOnlineUsers' : IDL.Func([], [IDL.Nat], ['query']),
     'getStableVisitorStats' : IDL.Func([], [VisitorStats], ['query']),
     'getTotalPageViews' : IDL.Func([], [IDL.Nat], ['query']),
@@ -377,6 +384,7 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'updateAdmin' : IDL.Func([IDL.Principal, UserRole], [], []),
     'updateMediaAsset' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Vec(IDL.Nat8), IDL.Nat],
         [],

@@ -1,24 +1,112 @@
 import Time "mo:core/Time";
-import Array "mo:core/Array";
-import Int "mo:core/Int";
 import Map "mo:core/Map";
-import Nat "mo:core/Nat";
 import Blob "mo:core/Blob";
+import Array "mo:core/Array";
 import Iter "mo:core/Iter";
-import Text "mo:core/Text";
+import Runtime "mo:core/Runtime";
+import Principal "mo:core/Principal";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
-import Runtime "mo:core/Runtime";
-import Principal "mo:core/Principal";
+import Text "mo:core/Text";
+import Int "mo:core/Int";
+import Migration "migration";
 
-
-
+(with migration = Migration.run)
 actor {
   include MixinStorage();
 
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
+
+  let variants = Map.empty<Nat, Variant>();
+  let colors = Map.empty<Nat, Color>();
+  let variantColorMappings = Map.empty<Nat, VariantColorMapping>();
+  let vehicleImages = Map.empty<Nat, VehicleImage>();
+  let specifications = Map.empty<Nat, Specification>();
+  let features = Map.empty<Nat, Feature>();
+  let promotions = Map.empty<Nat, Promotion>();
+  let testimonials = Map.empty<Nat, Testimonial>();
+  let blogPosts = Map.empty<Nat, BlogPost>();
+  let mediaAssets = Map.empty<Nat, MediaAsset>();
+  let commercialVehicleCategories = Map.empty<Nat, CommercialVehicleCategory>();
+  let idMapping = Map.empty<Text, Nat>();
+  let vehicles = Map.empty<Nat, Vehicle>();
+  let creditSimulations = Map.empty<Nat, CreditSimulation>();
+  let bannerImages = Map.empty<Nat, BannerImage>();
+  let metaStore = Map.empty<Text, MetaEntry>();
+
+  var websiteSettings : WebsiteSettings = {
+    siteName = "";
+    contactPhone = "";
+    contactWhatsapp = "";
+    contactEmail = "";
+    dealerAddress = "";
+    operationalHours = "";
+    facebookUrl = "";
+    instagramUrl = "";
+    tiktokUrl = "";
+    youtubeUrl = "";
+    mainBannerImageId = null;
+    ctaBannerImageId = null;
+    lastUpdated = -1;
+  };
+
+  let productLikes = Map.empty<Nat, ProductLike>();
+  let productShares = Map.empty<Nat, ProductShare>();
+  let articleComments = Map.empty<Nat, ArticleComment>();
+  let contactSubmissions = Map.empty<Nat, ContactSubmission>();
+
+  let visitorSessions = Map.empty<Text, VisitorSession>();
+  let visits = Map.empty<Text, Visit>();
+
+  var visitorStats : VisitorStats = {
+    totalVisitors = 0;
+    visitorsToday = 0;
+    visitorsYesterday = 0;
+    visitorsThisWeek = 0;
+    visitorsThisMonth = 0;
+    visitorsThisYear = 0;
+    onlineNow = 0;
+    pageViewsToday = 0;
+  };
+
+  let dailyStats = Map.empty<Int, DailyStats>();
+
+  public type UserRole = {
+    #super_admin;
+    #admin;
+  };
+
+  public type AdminRecord = {
+    principal : Principal;
+    role : UserRole;
+    createdAt : Int;
+    updatedAt : Int;
+  };
+
+  var adminStore : [(Principal, AdminRecord)] = [];
+  let userProfiles = Map.empty<Principal, UserProfile>();
+
+  var variantIdCounter = 1;
+  var colorIdCounter = 1;
+  var mappingIdCounter = 1;
+  var imageIdCounter = 1;
+  var specIdCounter = 1;
+  var featureIdCounter = 1;
+  var promotionIdCounter = 1;
+  var testimonialIdCounter = 1;
+  var blogPostIdCounter = 1;
+  var mediaAssetIdCounter = 1;
+  var commercialCategoryIdCounter = 1;
+  var vehicleIdCounter = 1;
+  var creditSimCounter = 1;
+  var bannerImageIdCounter = 1;
+  var likeCounter = 1;
+  var shareCounter = 1;
+  var commentCounter = 1;
+  var contactCounter = 1;
+  var visitIdCounter = 1;
 
   public type DailyStats = {
     date : Int;
@@ -203,14 +291,6 @@ actor {
     displayOrder : Nat;
   };
 
-  public type AdminUser = {
-    principal : Principal;
-    name : Text;
-    email : Text;
-    role : AccessControl.UserRole;
-    createdAt : Int;
-  };
-
   public type BannerImageType = {
     #mainBanner;
     #ctaBanner;
@@ -260,78 +340,81 @@ actor {
     pageViewsToday : Nat;
   };
 
-  stable let variants = Map.empty<Nat, Variant>();
-  stable let colors = Map.empty<Nat, Color>();
-  stable let variantColorMappings = Map.empty<Nat, VariantColorMapping>();
-  stable let vehicleImages = Map.empty<Nat, VehicleImage>();
-  stable let specifications = Map.empty<Nat, Specification>();
-  stable let features = Map.empty<Nat, Feature>();
-  stable let promotions = Map.empty<Nat, Promotion>();
-  stable let testimonials = Map.empty<Nat, Testimonial>();
-  stable let blogPosts = Map.empty<Nat, BlogPost>();
-  stable let mediaAssets = Map.empty<Nat, MediaAsset>();
-  stable let commercialVehicleCategories = Map.empty<Nat, CommercialVehicleCategory>();
-  stable let adminUsers = Map.empty<Principal, AdminUser>();
-  stable let vehicles = Map.empty<Nat, Vehicle>();
-  stable let creditSimulations = Map.empty<Nat, CreditSimulation>();
-  stable let bannerImages = Map.empty<Nat, BannerImage>();
-  stable let userProfiles = Map.empty<Principal, UserProfile>();
-  stable var websiteSettings : WebsiteSettings = {
-    siteName = "";
-    contactPhone = "";
-    contactWhatsapp = "";
-    contactEmail = "";
-    dealerAddress = "";
-    operationalHours = "";
-    facebookUrl = "";
-    instagramUrl = "";
-    tiktokUrl = "";
-    youtubeUrl = "";
-    mainBannerImageId = null;
-    ctaBannerImageId = null;
-    lastUpdated = -1;
+  public type MetaEntry = {
+    key : Text;
+    value : Text;
+    lastUpdated : Int;
   };
 
-  stable let productLikes = Map.empty<Nat, ProductLike>();
-  stable let productShares = Map.empty<Nat, ProductShare>();
-  stable let articleComments = Map.empty<Nat, ArticleComment>();
-  stable let contactSubmissions = Map.empty<Nat, ContactSubmission>();
-
-  stable let visitorSessions = Map.empty<Text, VisitorSession>();
-  stable let visits = Map.empty<Text, Visit>();
-
-  stable var variantIdCounter = 1;
-  stable var colorIdCounter = 1;
-  stable var mappingIdCounter = 1;
-  stable var imageIdCounter = 1;
-  stable var specIdCounter = 1;
-  stable var featureIdCounter = 1;
-  stable var promotionIdCounter = 1;
-  stable var testimonialIdCounter = 1;
-  stable var blogPostIdCounter = 1;
-  stable var mediaAssetIdCounter = 1;
-  stable var commercialCategoryIdCounter = 1;
-  stable var vehicleIdCounter = 1;
-  stable var creditSimCounter = 1;
-  stable var bannerImageIdCounter = 1;
-  stable var likeCounter = 1;
-  stable var shareCounter = 1;
-  stable var commentCounter = 1;
-  stable var contactCounter = 1;
-  stable var visitIdCounter = 1;
-
-  stable var visitorStats : VisitorStats = {
-    totalVisitors = 0;
-    visitorsToday = 0;
-    visitorsYesterday = 0;
-    visitorsThisWeek = 0;
-    visitorsThisMonth = 0;
-    visitorsThisYear = 0;
-    onlineNow = 0;
-    pageViewsToday = 0;
+  // Promote an existing admin record to super_admin role
+  func promoteToSuperAdmin(caller : Principal) {
+    let currentAdmins = adminStore.map(
+      func((principal, record)) {
+        if (principal == caller) {
+          (principal, { record with role = #super_admin });
+        } else {
+          (principal, record);
+        };
+      }
+    );
+    adminStore := currentAdmins;
   };
 
-  stable let dailyStats = Map.empty<Int, DailyStats>();
+  // Count how many super_admins exist in adminStore
+  func superAdminCount() : Nat {
+    adminStore.filter(func((_, record)) { record.role == #super_admin }).size();
+  };
+
+  // Bootstrap: if adminStore is empty, add caller as super_admin and return true.
+  // Returns false if store was not empty.
+  func bootstrapIfEmpty(caller : Principal) : Bool {
+    if (adminStore.size() == 0) {
+      let now = Time.now();
+      let newAdmin : AdminRecord = {
+        principal = caller;
+        role = #super_admin;
+        createdAt = now;
+        updatedAt = now;
+      };
+      adminStore := [(caller, newAdmin)];
+      return true;
+    };
+    false;
+  };
+
+  // Recovery: if no super_admin exists and caller is an admin, promote caller to super_admin.
+  // This runs inline within privileged update calls.
+  func recoverSuperAdminIfNeeded(caller : Principal) {
+    if (superAdminCount() == 0) {
+      switch (findAdminRecord(caller)) {
+        case (?(_, _)) {
+          // Caller is an admin but no super_admin exists — promote caller
+          promoteToSuperAdmin(caller);
+        };
+        case (null) {};
+      };
+    };
+  };
+
+  func findAdminRecord(p : Principal) : ?(Principal, AdminRecord) {
+    adminStore.find(
+      func((principal, _)) { principal == p }
+    );
+  };
+
+  func callerIsSuperAdmin(caller : Principal) : Bool {
+    switch (findAdminRecord(caller)) {
+      case (?(_, record)) { record.role == #super_admin };
+      case (null) { false };
+    };
+  };
+
+  func callerIsAnyAdmin(caller : Principal) : Bool {
+    switch (findAdminRecord(caller)) {
+      case (?(_, _)) { true };
+      case (null) { false };
+    };
+  };
 
   func isToday(timestamp : Int, now : Int) : Bool {
     let nowNanos = now;
@@ -736,57 +819,141 @@ actor {
     websiteSettings;
   };
 
-  // Completed and refactored createAdminUser function
-  public shared ({ caller }) func createAdminUser(
-    name : Text,
-    email : Text,
-    role : AccessControl.UserRole,
-  ) : async AdminUser {
-    // First admin logic: create with admin role and bypass authorization if no existing admins
-    if (adminUsers.size() == 0) {
-      let createdAt = Time.now();
-      let newAdminUser : AdminUser = {
-        principal = caller;
-        name;
-        email;
-        role = #admin;
-        createdAt;
+  // Admin management functions
+
+  // getAdmins: update call so bootstrap and recovery can mutate state.
+  // Bootstrap if empty (caller becomes super_admin), then require caller to be any admin.
+  public shared ({ caller }) func getAdmins() : async [AdminRecord] {
+    // Bootstrap: if no admins exist, assign caller as super_admin
+    ignore bootstrapIfEmpty(caller);
+
+    // Inline recovery: if no super_admin exists and caller is an admin, promote caller
+    recoverSuperAdminIfNeeded(caller);
+
+    // After potential bootstrap/recovery, caller must be an admin to list admins
+    if (not callerIsAnyAdmin(caller)) {
+      Runtime.trap("Unauthorized: Only admins can view the admin list");
+    };
+
+    adminStore.map(func((_, record)) { record });
+  };
+
+  // addAdmin: bootstrap if empty (caller becomes super_admin), otherwise only super_admin can add.
+  // Inline recovery runs before authorization check.
+  public shared ({ caller }) func addAdmin(principal : Principal, role : UserRole) : async () {
+    // Bootstrap: if no admins exist, assign caller as super_admin first
+    let wasBootstrapped = bootstrapIfEmpty(caller);
+
+    if (wasBootstrapped) {
+      // Bootstrap already added the caller as super_admin.
+      // If the caller wants to add themselves, they are already added.
+      if (principal == caller) {
+        return;
       };
-
-      adminUsers.add(caller, newAdminUser);
-      return newAdminUser;
+      // Fall through to add the requested principal as well; caller is now super_admin.
     };
 
-    // After first admin: only admins can create new admin users
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can create admin users");
+    // Inline recovery: if no super_admin exists and caller is an admin, promote caller
+    recoverSuperAdminIfNeeded(caller);
+
+    // Caller must be super_admin to add new admins
+    if (not callerIsSuperAdmin(caller)) {
+      Runtime.trap("Unauthorized: Only super_admins can add new admins");
     };
 
-    // Prevent duplicate admin registration
-    switch (adminUsers.get(caller)) {
-      case (?_existing) {
-        Runtime.trap("Admin user already exists with this principal");
+    // Check if principal already exists
+    switch (findAdminRecord(principal)) {
+      case (?_) {
+        Runtime.trap("Admin already exists for this principal");
       };
       case (null) {};
     };
 
-    let createdAt = Time.now();
-    let newAdminUser : AdminUser = {
-      principal = caller;
-      name;
-      email;
+    let now = Time.now();
+    let newAdmin : AdminRecord = {
+      principal;
       role;
-      createdAt;
+      createdAt = now;
+      updatedAt = now;
     };
-
-    adminUsers.add(caller, newAdminUser);
-    newAdminUser;
+    adminStore := adminStore.concat([(principal, newAdmin)]);
   };
 
-  public query ({ caller }) func getAllAdminUsers() : async [AdminUser] {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can view all admin users");
+  // updateAdmin: only super_admin can update roles.
+  // Bootstrap and inline recovery run before authorization check.
+  public shared ({ caller }) func updateAdmin(principal : Principal, newRole : UserRole) : async () {
+    // Bootstrap: if no admins exist, assign caller as super_admin
+    ignore bootstrapIfEmpty(caller);
+
+    // Inline recovery: if no super_admin exists and caller is an admin, promote caller
+    recoverSuperAdminIfNeeded(caller);
+
+    if (not callerIsSuperAdmin(caller)) {
+      Runtime.trap("Unauthorized: Only super_admins can update admin roles");
     };
-    adminUsers.values().toArray();
+
+    switch (findAdminRecord(principal)) {
+      case (null) {
+        Runtime.trap("Admin not found for the given principal");
+      };
+      case (?(_, existingRecord)) {
+        let now = Time.now();
+        let updatedRecord : AdminRecord = {
+          existingRecord with
+          role = newRole;
+          updatedAt = now;
+        };
+        adminStore := adminStore.map(func((p, record)) {
+          if (p == principal) {
+            (p, updatedRecord);
+          } else {
+            (p, record);
+          };
+        });
+      };
+    };
+  };
+
+  // deleteAdmin: only super_admin can delete, cannot delete last remaining admin.
+  // Bootstrap and inline recovery run before authorization check.
+  public shared ({ caller }) func deleteAdmin(principal : Principal) : async () {
+    // Bootstrap: if no admins exist, assign caller as super_admin
+    ignore bootstrapIfEmpty(caller);
+
+    // Inline recovery: if no super_admin exists and caller is an admin, promote caller
+    recoverSuperAdminIfNeeded(caller);
+
+    if (not callerIsSuperAdmin(caller)) {
+      Runtime.trap("Unauthorized: Only super_admins can delete admins");
+    };
+
+    // Must not delete the last remaining admin
+    if (adminStore.size() <= 1) {
+      Runtime.trap("Cannot delete the last remaining admin");
+    };
+
+    switch (findAdminRecord(principal)) {
+      case (null) {
+        Runtime.trap("Admin not found for the given principal");
+      };
+      case (?_) {
+        adminStore := adminStore.filter(func((p, _)) { p != principal });
+      };
+    };
+  };
+
+  // getMyRole: update call so bootstrap and recovery can mutate state.
+  // Bootstrap if empty, then return the caller's role (or null if not an admin).
+  public shared ({ caller }) func getMyRole() : async ?UserRole {
+    // Bootstrap: if no admins exist, assign caller as super_admin
+    ignore bootstrapIfEmpty(caller);
+
+    // Inline recovery: if no super_admin exists and caller is an admin, promote caller
+    recoverSuperAdminIfNeeded(caller);
+
+    switch (findAdminRecord(caller)) {
+      case (?(_, record)) { ?record.role };
+      case (null) { null };
+    };
   };
 };
