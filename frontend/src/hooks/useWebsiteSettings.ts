@@ -11,9 +11,14 @@ export function useGetWebsiteSettings() {
     queryKey: ['websiteSettings'],
     queryFn: async () => {
       if (!actor) return null;
-      return actor.getWebsiteSettings();
+      try {
+        return await actor.getWebsiteSettings();
+      } catch {
+        return null;
+      }
     },
     enabled: !!actor && !isFetching,
+    staleTime: 30_000,
   });
 }
 

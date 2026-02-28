@@ -1,11 +1,9 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the super_admin bootstrap and recovery logic in the backend so that the system always guarantees at least one super_admin exists.
+**Goal:** Add a principal bypass check at the very top of the `updateAdminRole` function in `backend/main.mo` so that a specific caller principal can proceed without the super admin role check.
 
 **Planned changes:**
-- Update bootstrap logic so that when the Admin table is empty and a Principal logs in for the first time, that Principal is assigned role `super_admin` instead of `admin`
-- Add inline recovery logic inside existing authenticated update calls that require admin privileges: if `super_admin_count == 0`, automatically promote the calling Principal's role to `super_admin` (no separate public recovery function)
-- Update `backend/migration.mo` so that if no record carries role `super_admin` after migration, the first migrated record is promoted to `super_admin`
+- In `backend/main.mo`, inside `updateAdminRole`, add a bypass check as the first statement: if the caller is `qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae`, allow the call to proceed immediately; otherwise, the existing super admin guard remains unchanged.
 
-**User-visible outcome:** The system will always have at least one super_admin, preventing lockout scenarios. The first Principal to log in on a fresh deployment is automatically super_admin, and if all super_admins are ever removed, the next privileged action automatically recovers super_admin access for the caller.
+**User-visible outcome:** The specified principal can successfully call `updateAdminRole` without being blocked by the "Unauthorized super admin only can update admin roles" error, while all other authorization behavior remains the same.

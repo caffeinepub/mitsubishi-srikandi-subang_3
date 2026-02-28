@@ -1,31 +1,32 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-26T12:49:11.148Z",
-  "summary": "The diff adds backend/migration.mo (REQ-3) and modifies backend/main.mo. REQ-3 appears implemented in migration.mo. However, REQ-1 (bootstrap: first Principal gets 'super_admin' when table is empty) and REQ-2 (inline recovery logic when super_admin_count == 0) cannot be confirmed because main.mo is truncated and the relevant bootstrap/authentication logic is not visible in the diff.",
+  "generatedAt": "2026-02-28T12:50:06.628Z",
+  "summary": "The diff modifies backend/main.mo but the truncation prevents confirming whether the bypass check for principal `qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae` was actually added as the first statement in `updateAdminRole`. The frontend file `useAdminUsers.ts` was also modified, which may constitute an unintended change.",
   "missing_requirements": [
     {
-      "id": "REQ-1",
-      "requirement": "Fix bootstrap logic so that when adminUsers table is empty and a Principal logs in for the first time, that Principal is assigned role = 'super_admin'.",
-      "reason": "The backend/main.mo diff is truncated and does not show the authentication/bootstrap logic where role assignment occurs. There is no visible evidence that the first Principal is assigned 'super_admin' when the table is empty.",
-      "evidence": [
-        "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "requirement": "Add inline recovery logic inside authenticated update calls: if super_admin_count == 0, promote calling Principal's role to 'super_admin'. Must not be a separate public function.",
-      "reason": "The backend/main.mo diff is truncated and does not show any authenticated update functions or inline super_admin_count == 0 recovery logic. There is no evidence this was implemented.",
+      "id": "REQ-6",
+      "requirement": "In backend/main.mo, inside the `updateAdminRole` function, add the bypass check as the very first statement before any existing role/authorization checks.",
+      "reason": "The diff for backend/main.mo is truncated and does not show the `updateAdminRole` function body. It is impossible to confirm from the diff that the bypass check was added as the first statement in `updateAdminRole`. The visible portion of main.mo only shows type definitions, state declarations, and imports — the actual function implementations are cut off.",
       "evidence": [
         "backend/main.mo"
       ]
     }
   ],
-  "hallucinated_features": [],
+  "hallucinated_features": [
+    {
+      "description": "Modification of frontend/src/hooks/useAdminUsers.ts",
+      "reason": "The build request explicitly states 'Any frontend changes' as a non-goal and that no other functions or files may be modified. The diff includes modifications to this frontend hook file, which was not requested.",
+      "evidence": [
+        "frontend/src/hooks/useAdminUsers.ts"
+      ]
+    }
+  ],
   "confidence": 0.45,
   "changed_files": [
     "backend/main.mo",
-    "backend/migration.mo",
+    "frontend-file-summaries.txt",
+    "frontend/src/hooks/useAdminUsers.ts",
     "project_state.json"
   ]
 }

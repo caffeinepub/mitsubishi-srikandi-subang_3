@@ -1,6 +1,6 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix super_admin bootstrap and recovery logic in backend",
+  "title": "Add principal bypass at top of updateAdminRole",
   "requirements": []
 }

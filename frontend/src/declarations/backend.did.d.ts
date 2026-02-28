@@ -118,7 +118,6 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
-  'addAdmin' : ActorMethod<[Principal, UserRole], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole__1], undefined>,
   'cleanupExpiredSessions' : ActorMethod<[], undefined>,
   'deleteAdmin' : ActorMethod<[Principal], undefined>,
@@ -150,7 +149,7 @@ export interface _SERVICE {
     [string, string, string, string, string, string, string],
     undefined
   >,
-  'updateAdmin' : ActorMethod<[Principal, UserRole], undefined>,
+  'updateAdminRole' : ActorMethod<[Principal, UserRole], undefined>,
   'updateMediaAsset' : ActorMethod<
     [bigint, string, string, Uint8Array, bigint],
     undefined

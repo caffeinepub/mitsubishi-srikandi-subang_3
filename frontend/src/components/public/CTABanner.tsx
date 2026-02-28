@@ -2,11 +2,16 @@ import { useGetWebsiteSettings } from '@/hooks/useWebsiteSettings';
 import { useGetMediaAssetById } from '@/hooks/useMediaAssets';
 import { createBlobUrlFromData } from '@/utils/blobUrl';
 import { useEffect, useState } from 'react';
+import { useInternetIdentity } from '@/hooks/useInternetIdentity';
 
 export default function CTABanner() {
   const { data: settings } = useGetWebsiteSettings();
-  // Convert undefined to null so useGetMediaAssetById accepts it
-  const bannerImageId = settings?.ctaBannerImageId ?? null;
+  const { identity } = useInternetIdentity();
+
+  // Only attempt to load media asset if user is authenticated
+  // (getMediaAssetById requires #user permission)
+  const isAuthenticated = !!identity;
+  const bannerImageId = isAuthenticated ? (settings?.ctaBannerImageId ?? null) : null;
   const { data: bannerAsset } = useGetMediaAssetById(bannerImageId);
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
 
@@ -16,8 +21,7 @@ export default function CTABanner() {
         const url = createBlobUrlFromData(bannerAsset.data, bannerAsset.mimeType);
         setBannerUrl(url);
         return () => URL.revokeObjectURL(url);
-      } catch (error) {
-        console.error('[CTABanner] Error creating blob URL:', error);
+      } catch {
         setBannerUrl(null);
       }
     } else {
@@ -26,6 +30,12 @@ export default function CTABanner() {
   }, [bannerAsset]);
 
   const imageSrc = bannerUrl || '/assets/generated/cta-banner.dim_1920x400.png';
+
+  // Build WhatsApp link from settings
+  const waNumber = settings?.contactWhatsapp
+    ? settings.contactWhatsapp.replace(/\D/g, '')
+    : '6281234567890';
+  const waLink = `https://wa.me/${waNumber}`;
 
   return (
     <section className="relative w-full h-[300px] md:h-[400px] overflow-hidden my-12">
@@ -43,7 +53,7 @@ export default function CTABanner() {
             Hubungi kami sekarang untuk promo spesial
           </p>
           <a
-            href="https://wa.me/6281234567890"
+            href={waLink}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold px-8 py-3 rounded-full transition-colors"

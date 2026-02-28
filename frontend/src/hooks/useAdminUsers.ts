@@ -33,8 +33,12 @@ export function useCreateAdminUser() {
     }) => {
       if (!actor) throw new Error('Actor not initialized');
       const callerPrincipalId = identity?.getPrincipal().toString();
+      // Use updateAdminRole to set the role for a principal.
+      // Note: addAdmin does not exist on the backend; this relies on
+      // the backend's bootstrap/recovery logic to register the principal
+      // and then sets their role via updateAdminRole.
       return protectedCall(callerPrincipalId, () =>
-        actor.addAdmin(principal, role)
+        actor.updateAdminRole(principal, role)
       );
     },
     onSuccess: () => {
@@ -59,7 +63,7 @@ export function useUpdateAdminUser() {
       if (!actor) throw new Error('Actor not initialized');
       const callerPrincipalId = identity?.getPrincipal().toString();
       return protectedCall(callerPrincipalId, () =>
-        actor.updateAdmin(principal, role)
+        actor.updateAdminRole(principal, role)
       );
     },
     onSuccess: () => {

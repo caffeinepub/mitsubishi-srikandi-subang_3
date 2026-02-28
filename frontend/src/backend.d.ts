@@ -94,7 +94,6 @@ export enum UserRole__1 {
     guest = "guest"
 }
 export interface backendInterface {
-    addAdmin(principal: Principal, role: UserRole): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole__1): Promise<void>;
     cleanupExpiredSessions(): Promise<void>;
     deleteAdmin(principal: Principal): Promise<void>;
@@ -123,7 +122,7 @@ export interface backendInterface {
     periodicCleanup(): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     trackVisitor(sessionId: string, ipAddress: string, userAgent: string, pageUrl: string, referrer: string, deviceType: string, browser: string): Promise<void>;
-    updateAdmin(principal: Principal, newRole: UserRole): Promise<void>;
+    updateAdminRole(principal: Principal, newRole: UserRole): Promise<void>;
     updateMediaAsset(id: bigint, newFilename: string, newMimeType: string, newData: Uint8Array, newSize: bigint): Promise<void>;
     updateWebsiteSettings(newSettings: WebsiteSettings): Promise<void>;
     uploadBannerImage(filename: string, bannerType: BannerImageType, mimeType: string, data: Uint8Array, fileSize: bigint): Promise<bigint>;

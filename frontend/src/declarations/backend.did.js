@@ -19,14 +19,14 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
-export const UserRole = IDL.Variant({
-  'admin' : IDL.Null,
-  'super_admin' : IDL.Null,
-});
 export const UserRole__1 = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
   'guest' : IDL.Null,
+});
+export const UserRole = IDL.Variant({
+  'admin' : IDL.Null,
+  'super_admin' : IDL.Null,
 });
 export const AdminRecord = IDL.Record({
   'principal' : IDL.Principal,
@@ -134,7 +134,6 @@ export const idlService = IDL.Service({
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-  'addAdmin' : IDL.Func([IDL.Principal, UserRole], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
   'cleanupExpiredSessions' : IDL.Func([], [], []),
   'deleteAdmin' : IDL.Func([IDL.Principal], [], []),
@@ -183,7 +182,7 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
-  'updateAdmin' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'updateAdminRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'updateMediaAsset' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Vec(IDL.Nat8), IDL.Nat],
       [],
@@ -216,14 +215,14 @@ export const idlFactory = ({ IDL }) => {
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
   });
-  const UserRole = IDL.Variant({
-    'admin' : IDL.Null,
-    'super_admin' : IDL.Null,
-  });
   const UserRole__1 = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
+  });
+  const UserRole = IDL.Variant({
+    'admin' : IDL.Null,
+    'super_admin' : IDL.Null,
   });
   const AdminRecord = IDL.Record({
     'principal' : IDL.Principal,
@@ -331,7 +330,6 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-    'addAdmin' : IDL.Func([IDL.Principal, UserRole], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
     'cleanupExpiredSessions' : IDL.Func([], [], []),
     'deleteAdmin' : IDL.Func([IDL.Principal], [], []),
@@ -384,7 +382,7 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
-    'updateAdmin' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'updateAdminRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'updateMediaAsset' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, IDL.Vec(IDL.Nat8), IDL.Nat],
         [],

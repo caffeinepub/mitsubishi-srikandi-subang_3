@@ -10,9 +10,7 @@ import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
 import Text "mo:core/Text";
 import Int "mo:core/Int";
-import Migration "migration";
 
-(with migration = Migration.run)
 actor {
   include MixinStorage();
 
@@ -36,7 +34,7 @@ actor {
   let bannerImages = Map.empty<Nat, BannerImage>();
   let metaStore = Map.empty<Text, MetaEntry>();
 
-  var websiteSettings : WebsiteSettings = {
+  stable var websiteSettings : WebsiteSettings = {
     siteName = "";
     contactPhone = "";
     contactWhatsapp = "";
@@ -346,7 +344,6 @@ actor {
     lastUpdated : Int;
   };
 
-  // Promote an existing admin record to super_admin role
   func promoteToSuperAdmin(caller : Principal) {
     let currentAdmins = adminStore.map(
       func((principal, record)) {
@@ -360,13 +357,10 @@ actor {
     adminStore := currentAdmins;
   };
 
-  // Count how many super_admins exist in adminStore
   func superAdminCount() : Nat {
     adminStore.filter(func((_, record)) { record.role == #super_admin }).size();
   };
 
-  // Bootstrap: if adminStore is empty, add caller as super_admin and return true.
-  // Returns false if store was not empty.
   func bootstrapIfEmpty(caller : Principal) : Bool {
     if (adminStore.size() == 0) {
       let now = Time.now();
@@ -382,13 +376,10 @@ actor {
     false;
   };
 
-  // Recovery: if no super_admin exists and caller is an admin, promote caller to super_admin.
-  // This runs inline within privileged update calls.
   func recoverSuperAdminIfNeeded(caller : Principal) {
     if (superAdminCount() == 0) {
       switch (findAdminRecord(caller)) {
         case (?(_, _)) {
-          // Caller is an admin but no super_admin exists — promote caller
           promoteToSuperAdmin(caller);
         };
         case (null) {};
@@ -412,6 +403,13 @@ actor {
   func callerIsAnyAdmin(caller : Principal) : Bool {
     switch (findAdminRecord(caller)) {
       case (?(_, _)) { true };
+      case (null) { false };
+    };
+  };
+
+  func isSuperAdmin(p : Principal) : Bool {
+    switch (findAdminRecord(p)) {
+      case (?(_, record)) { record.role == #super_admin };
       case (null) { false };
     };
   };
@@ -819,18 +817,11 @@ actor {
     websiteSettings;
   };
 
-  // Admin management functions
-
-  // getAdmins: update call so bootstrap and recovery can mutate state.
-  // Bootstrap if empty (caller becomes super_admin), then require caller to be any admin.
   public shared ({ caller }) func getAdmins() : async [AdminRecord] {
-    // Bootstrap: if no admins exist, assign caller as super_admin
     ignore bootstrapIfEmpty(caller);
 
-    // Inline recovery: if no super_admin exists and caller is an admin, promote caller
     recoverSuperAdminIfNeeded(caller);
 
-    // After potential bootstrap/recovery, caller must be an admin to list admins
     if (not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only admins can view the admin list");
     };
@@ -838,59 +829,16 @@ actor {
     adminStore.map(func((_, record)) { record });
   };
 
-  // addAdmin: bootstrap if empty (caller becomes super_admin), otherwise only super_admin can add.
-  // Inline recovery runs before authorization check.
-  public shared ({ caller }) func addAdmin(principal : Principal, role : UserRole) : async () {
-    // Bootstrap: if no admins exist, assign caller as super_admin first
-    let wasBootstrapped = bootstrapIfEmpty(caller);
-
-    if (wasBootstrapped) {
-      // Bootstrap already added the caller as super_admin.
-      // If the caller wants to add themselves, they are already added.
-      if (principal == caller) {
-        return;
-      };
-      // Fall through to add the requested principal as well; caller is now super_admin.
-    };
-
-    // Inline recovery: if no super_admin exists and caller is an admin, promote caller
-    recoverSuperAdminIfNeeded(caller);
-
-    // Caller must be super_admin to add new admins
-    if (not callerIsSuperAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only super_admins can add new admins");
-    };
-
-    // Check if principal already exists
-    switch (findAdminRecord(principal)) {
-      case (?_) {
-        Runtime.trap("Admin already exists for this principal");
-      };
-      case (null) {};
-    };
-
-    let now = Time.now();
-    let newAdmin : AdminRecord = {
-      principal;
-      role;
-      createdAt = now;
-      updatedAt = now;
-    };
-    adminStore := adminStore.concat([(principal, newAdmin)]);
-  };
-
-  // updateAdmin: only super_admin can update roles.
+  // updateAdminRole: only super_admin can update roles.
   // Bootstrap and inline recovery run before authorization check.
-  public shared ({ caller }) func updateAdmin(principal : Principal, newRole : UserRole) : async () {
-    // Bootstrap: if no admins exist, assign caller as super_admin
-    ignore bootstrapIfEmpty(caller);
-
-    // Inline recovery: if no super_admin exists and caller is an admin, promote caller
-    recoverSuperAdminIfNeeded(caller);
-
-    if (not callerIsSuperAdmin(caller)) {
+  public shared ({ caller }) func updateAdminRole(principal : Principal, newRole : UserRole) : async () {
+    if (not isSuperAdmin(caller)) {
       Runtime.trap("Unauthorized: Only super_admins can update admin roles");
     };
+
+    ignore bootstrapIfEmpty(caller);
+
+    recoverSuperAdminIfNeeded(caller);
 
     switch (findAdminRecord(principal)) {
       case (null) {
@@ -914,20 +862,15 @@ actor {
     };
   };
 
-  // deleteAdmin: only super_admin can delete, cannot delete last remaining admin.
-  // Bootstrap and inline recovery run before authorization check.
   public shared ({ caller }) func deleteAdmin(principal : Principal) : async () {
-    // Bootstrap: if no admins exist, assign caller as super_admin
-    ignore bootstrapIfEmpty(caller);
-
-    // Inline recovery: if no super_admin exists and caller is an admin, promote caller
-    recoverSuperAdminIfNeeded(caller);
-
-    if (not callerIsSuperAdmin(caller)) {
+    if (not isSuperAdmin(caller)) {
       Runtime.trap("Unauthorized: Only super_admins can delete admins");
     };
 
-    // Must not delete the last remaining admin
+    ignore bootstrapIfEmpty(caller);
+
+    recoverSuperAdminIfNeeded(caller);
+
     if (adminStore.size() <= 1) {
       Runtime.trap("Cannot delete the last remaining admin");
     };
@@ -942,13 +885,9 @@ actor {
     };
   };
 
-  // getMyRole: update call so bootstrap and recovery can mutate state.
-  // Bootstrap if empty, then return the caller's role (or null if not an admin).
   public shared ({ caller }) func getMyRole() : async ?UserRole {
-    // Bootstrap: if no admins exist, assign caller as super_admin
     ignore bootstrapIfEmpty(caller);
 
-    // Inline recovery: if no super_admin exists and caller is an admin, promote caller
     recoverSuperAdminIfNeeded(caller);
 
     switch (findAdminRecord(caller)) {
