@@ -1,6 +1,24 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Add principal bypass at top of updateAdminRole",
-  "requirements": []
+  "title": "Add whoAmI() backend function and temporary frontend test button",
+  "requirements": [
+    {
+      "id": "REQ-8",
+      "summary": "Add a temporary debug button in the frontend that calls actor.whoAmI() and displays the result using alert() or console.log()",
+      "acceptanceCriteria": [
+        "A button labeled 'Test whoAmI' is visible in the frontend UI",
+        "Clicking the button calls `actor.whoAmI()` using the existing actor from `useActor`",
+        "The result (caller principal as Text) is displayed via `alert()` or logged via `console.log()`",
+        "No other existing frontend components, hooks, routes, or logic are modified"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/LoginPage.tsx",
+          "operation": "modify",
+          "description": "Add a temporary 'Test whoAmI' button below the existing login button that calls actor.whoAmI() when clicked and displays the result via alert(). The button should be visible, clearly labeled, and use the actor from useActor hook. Include proper error handling for cases where actor is not available. This is a temporary debug feature and should not affect any existing login logic or UI layout."
+        }
+      ]
+    }
+  ]
 }

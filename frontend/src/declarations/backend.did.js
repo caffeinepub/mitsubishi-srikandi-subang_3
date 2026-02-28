@@ -199,6 +199,7 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'whoAmI' : IDL.Func([], [IDL.Text], []),
 });
 
 export const idlInitArgs = [];
@@ -399,6 +400,7 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'whoAmI' : IDL.Func([], [IDL.Text], []),
   });
 };
 

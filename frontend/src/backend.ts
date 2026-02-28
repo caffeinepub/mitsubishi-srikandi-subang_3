@@ -227,6 +227,7 @@ export interface backendInterface {
     updateWebsiteSettings(newSettings: WebsiteSettings): Promise<void>;
     uploadBannerImage(filename: string, bannerType: BannerImageType, mimeType: string, data: Uint8Array, fileSize: bigint): Promise<bigint>;
     uploadMediaAsset(filename: string, mimeType: string, data: Uint8Array, fileSize: bigint): Promise<void>;
+    whoAmI(): Promise<string>;
 }
 import type { AdminRecord as _AdminRecord, BannerImage as _BannerImage, BannerImageType as _BannerImageType, MediaAsset as _MediaAsset, UserProfile as _UserProfile, UserRole as _UserRole, UserRole__1 as _UserRole__1, WebsiteSettings as _WebsiteSettings, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -788,6 +789,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.uploadMediaAsset(arg0, arg1, arg2, arg3);
+            return result;
+        }
+    }
+    async whoAmI(): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.whoAmI();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.whoAmI();
             return result;
         }
     }

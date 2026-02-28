@@ -163,6 +163,7 @@ export interface _SERVICE {
     [string, string, Uint8Array, bigint],
     undefined
   >,
+  'whoAmI' : ActorMethod<[], string>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

@@ -127,4 +127,5 @@ export interface backendInterface {
     updateWebsiteSettings(newSettings: WebsiteSettings): Promise<void>;
     uploadBannerImage(filename: string, bannerType: BannerImageType, mimeType: string, data: Uint8Array, fileSize: bigint): Promise<bigint>;
     uploadMediaAsset(filename: string, mimeType: string, data: Uint8Array, fileSize: bigint): Promise<void>;
+    whoAmI(): Promise<string>;
 }

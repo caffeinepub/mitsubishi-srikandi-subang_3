@@ -1,40 +1,56 @@
 {
   "kind": "build_request",
-  "title": "Add principal bypass at top of updateAdminRole",
+  "title": "Add whoAmI() backend function and temporary frontend test button",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-6",
-      "text": "In backend/main.mo, inside the `updateAdminRole` function, add the following bypass check as the very first statement in the function body — before any existing role/authorization checks — so that caller principal `qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae` is immediately allowed to proceed without going through the super admin role check:\n\n```\nif (caller == Principal.fromText(\"qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae\")) {\n  // bypass: allowed without role check\n} else {\n  // existing super_admin guard remains here, unchanged\n};\n```\n\nAll other logic in `updateAdminRole` must remain exactly as-is. No other functions may be modified.",
+      "id": "REQ-7",
+      "text": "Add a `whoAmI` public shared function to the backend actor in `backend/main.mo` that returns the caller's principal as Text. The function signature must be: `public shared({ caller }) func whoAmI() : async Text { return Principal.toText(caller); }`. No other existing logic may be modified.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-recent"
+          "msg-latest"
         ],
         "quotes": [
-          "Di function yang mengembalikan error: \"Unauthorized super admin only can update admin roles\" tambahkan di paling atas: if (caller == Principal.fromText(\"qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae\")) { // langsung lanjut tanpa cek role } Jangan ubah logic lain."
+          "public shared({ caller }) func whoAmI() : async Text {\n  return Principal.toText(caller);\n}"
         ]
       },
       "acceptanceCriteria": [
-        "Calling `updateAdminRole` from principal `qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae` does not return `#err(\"Unauthorized super admin only can update admin roles\")` and proceeds to execute the role-update logic.",
-        "Calling `updateAdminRole` from any other non-super-admin principal still returns `#err(\"Unauthorized super admin only can update admin roles\")`.",
-        "Calling `updateAdminRole` from a valid `#super_admin` principal (other than the bypass principal) still succeeds as before.",
-        "No other functions (`addAdmin`, `deleteAdmin`, content CRUD, etc.) are modified.",
-        "The bypass check is the first statement in the `updateAdminRole` function body."
+        "The `whoAmI` function exists in `backend/main.mo` with exactly the specified signature",
+        "Calling `whoAmI()` returns the caller's principal as a Text string",
+        "No other existing functions or state in `backend/main.mo` are modified"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "Add a temporary debug button in the frontend that calls `actor.whoAmI()` and displays the result using `alert()` or `console.log()`. Place this button in a visible location (e.g., the admin dashboard page or login page) so it is easy to test. The button should be clearly labeled 'Test whoAmI'. No other existing frontend logic or UI may be changed.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "Tambahkan sementara tombol di frontend yang memanggil actor.whoAmI() dan tampilkan hasilnya dengan alert atau console.log."
+        ]
+      },
+      "acceptanceCriteria": [
+        "A button labeled 'Test whoAmI' is visible in the frontend UI",
+        "Clicking the button calls `actor.whoAmI()` using the existing actor from `useActor`",
+        "The result (caller principal as Text) is displayed via `alert()` or logged via `console.log()`",
+        "No other existing frontend components, hooks, routes, or logic are modified"
       ]
     }
   ],
   "constraints": [
-    "Only modify the `updateAdminRole` function in backend/main.mo.",
-    "Do not alter any other function or authorization logic.",
-    "The bypass principal is exactly: qm56h-bpinv-zejzt-qtty4-j2dph-j5h6y-fwxfs-jlsv3-suwa5-poxol-wae",
-    "The bypass check must be placed before any existing authorization/role checks in updateAdminRole."
+    "Do not modify any existing logic in backend/main.mo beyond adding the whoAmI function",
+    "Do not modify any existing frontend components, hooks, routes, or pages beyond adding the temporary test button",
+    "The whoAmI function must use exactly the shared({ caller }) pattern specified by the user"
   ],
   "nonGoals": [
-    "Modifying addAdmin or deleteAdmin authorization logic.",
-    "Adding bypass principal to any function other than updateAdminRole.",
-    "Any frontend changes.",
-    "Changing adminStore structure, AdminRecord type, or UserRole type."
+    "Persisting or storing the whoAmI result anywhere",
+    "Adding any new routes or pages for this feature",
+    "Styling or polishing the temporary test button",
+    "Removing or cleaning up the temporary button (that is a future task)"
   ],
   "imageRequirements": {
     "required": [],

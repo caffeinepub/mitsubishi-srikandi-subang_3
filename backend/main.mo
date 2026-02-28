@@ -5,11 +5,11 @@ import Array "mo:core/Array";
 import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
+import Text "mo:core/Text";
+import Int "mo:core/Int";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
-import Text "mo:core/Text";
-import Int "mo:core/Int";
 
 actor {
   include MixinStorage();
@@ -894,5 +894,9 @@ actor {
       case (?(_, record)) { ?record.role };
       case (null) { null };
     };
+  };
+
+  public shared ({ caller }) func whoAmI() : async Text {
+    caller.toText();
   };
 };

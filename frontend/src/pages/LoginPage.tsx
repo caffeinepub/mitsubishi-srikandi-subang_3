@@ -1,13 +1,16 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useQueryClient } from '@tanstack/react-query';
 import { syncAuthToken, clearAuthToken } from '../utils/apiClient';
+import { useActor } from '../hooks/useActor';
 
 export default function LoginPage() {
   const { login, clear, loginStatus, identity, isInitializing } = useInternetIdentity();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { actor } = useActor();
+  const [whoAmILoading, setWhoAmILoading] = useState(false);
 
   const isAuthenticated = !!identity && identity.getPrincipal().toString() !== '2vxsx-fae';
   const isLoggingIn = loginStatus === 'logging-in';
@@ -39,6 +42,24 @@ export default function LoginPage() {
       }, 100);
     } catch (err) {
       console.error('[LoginPage] Login error:', err);
+    }
+  };
+
+  const handleWhoAmI = async () => {
+    if (!actor) {
+      alert('Actor belum siap. Coba lagi sebentar.');
+      return;
+    }
+    setWhoAmILoading(true);
+    try {
+      const result = await actor.whoAmI();
+      console.log('[whoAmI] result:', result);
+      alert('whoAmI result:\n' + result);
+    } catch (err) {
+      console.error('[whoAmI] error:', err);
+      alert('Error: ' + String(err));
+    } finally {
+      setWhoAmILoading(false);
     }
   };
 
@@ -84,6 +105,22 @@ export default function LoginPage() {
             </>
           ) : (
             <span>Login dengan Internet Identity</span>
+          )}
+        </button>
+
+        {/* Temporary debug button */}
+        <button
+          onClick={handleWhoAmI}
+          disabled={whoAmILoading || !actor}
+          className="w-full mt-3 py-2 px-6 bg-muted text-muted-foreground border border-border rounded-lg font-medium text-sm transition-all hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {whoAmILoading ? (
+            <>
+              <div className="w-3 h-3 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
+              <span>Memanggil whoAmI...</span>
+            </>
+          ) : (
+            <span>🔍 Test whoAmI</span>
           )}
         </button>
 

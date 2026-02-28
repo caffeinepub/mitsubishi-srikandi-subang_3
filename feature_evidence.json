@@ -1,4 +1,26 @@
 {
   "kind": "feature_evidence_report",
-  "features": []
+  "features": [
+    {
+      "featureId": "feature-add-a-temporary-debug-button-in-the-frontend-that-calls-actor-whoami-and-displays-the-result-using-alert-or-console-log-place-this-button-in-a-visible-location-e-g-the-admin-dashboard-page-or-login-page-so-it-is-easy-to-test-the-button-should-be-clearly-labeled-test-whoami-no-other-existing-frontend-logic-or-ui-may-be-changed",
+      "featureTitle": "Add a temporary debug button in the frontend that calls `actor.whoAmI()` and displays the result using `alert()` or `console.log()`. Place this button in a visible location (e.g., the admin dashboard page or login page) so it is easy to test. The button should be clearly labeled 'Test whoAmI'. No other existing frontend logic or UI may be changed.",
+      "files": [
+        "frontend/src/pages/LoginPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-8"
+      ],
+      "confidence": "high"
+    }
+  ]
 }
