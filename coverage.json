@@ -1,46 +1,31 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-28T13:03:24.717Z",
+  "generatedAt": "2026-03-01T12:52:02.112Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 1,
+    "total": 1,
+    "implemented": 0,
     "items": [
       {
-        "id": "REQ-7",
-        "summary": "Add a `whoAmI` public shared function to the backend actor in `backend/main.mo` that returns the caller's principal as Text. The function signature must be: `public shared({ caller }) func whoAmI() : async Text { return Principal.toText(caller); }`. No other existing logic may be modified.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-8",
-        "summary": "Add a temporary debug button in the frontend that calls `actor.whoAmI()` and displays the result using `alert()` or `console.log()`. Place this button in a visible location (e.g., the admin dashboard page or login page) so it is easy to test. The button should be clearly labeled 'Test whoAmI'. No other existing frontend logic or UI may be changed.",
-        "status": "implemented",
+        "id": "REQ-1",
+        "summary": "Update the useActor hook (frontend/src/hooks/useActor.ts) to create the backend actor using the authenticated identity retrieved from authClient.getIdentity() instead of an anonymous identity. The actor must be rebuilt whenever the authentication state changes, ensuring all canister calls are made with the user's authenticated Internet Identity principal.",
+        "status": "missing",
         "plannedFiles": [
-          "frontend/src/pages/LoginPage.tsx"
+          "frontend/src/hooks/useActor.ts"
         ],
-        "matchedFiles": [
-          "frontend/src/pages/LoginPage.tsx"
-        ]
+        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/pages/LoginPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

@@ -1,56 +1,39 @@
 {
   "kind": "build_request",
-  "title": "Add whoAmI() backend function and temporary frontend test button",
+  "title": "Fix Internet Identity actor configuration to use authenticated identity",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-7",
-      "text": "Add a `whoAmI` public shared function to the backend actor in `backend/main.mo` that returns the caller's principal as Text. The function signature must be: `public shared({ caller }) func whoAmI() : async Text { return Principal.toText(caller); }`. No other existing logic may be modified.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-latest"
-        ],
-        "quotes": [
-          "public shared({ caller }) func whoAmI() : async Text {\n  return Principal.toText(caller);\n}"
-        ]
-      },
-      "acceptanceCriteria": [
-        "The `whoAmI` function exists in `backend/main.mo` with exactly the specified signature",
-        "Calling `whoAmI()` returns the caller's principal as a Text string",
-        "No other existing functions or state in `backend/main.mo` are modified"
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "text": "Add a temporary debug button in the frontend that calls `actor.whoAmI()` and displays the result using `alert()` or `console.log()`. Place this button in a visible location (e.g., the admin dashboard page or login page) so it is easy to test. The button should be clearly labeled 'Test whoAmI'. No other existing frontend logic or UI may be changed.",
+      "id": "REQ-1",
+      "text": "Update the useActor hook (frontend/src/hooks/useActor.ts) to create the backend actor using the authenticated identity retrieved from authClient.getIdentity() instead of an anonymous identity. The actor must be rebuilt whenever the authentication state changes, ensuring all canister calls are made with the user's authenticated Internet Identity principal.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-latest"
+          "msg-8"
         ],
         "quotes": [
-          "Tambahkan sementara tombol di frontend yang memanggil actor.whoAmI() dan tampilkan hasilnya dengan alert atau console.log."
+          "Pastikan actor dibuat menggunakan identity dari AuthClient, bukan anonymous identity.",
+          "Gunakan identity dari authClient.getIdentity() saat membuat actor."
         ]
       },
       "acceptanceCriteria": [
-        "A button labeled 'Test whoAmI' is visible in the frontend UI",
-        "Clicking the button calls `actor.whoAmI()` using the existing actor from `useActor`",
-        "The result (caller principal as Text) is displayed via `alert()` or logged via `console.log()`",
-        "No other existing frontend components, hooks, routes, or logic are modified"
+        "The actor is created using the identity from authClient.getIdentity(), not AnonymousIdentity",
+        "The actor is re-created when the authentication state changes (login/logout)",
+        "Authenticated canister calls include the user's Internet Identity principal",
+        "Unauthenticated state falls back gracefully (e.g., anonymous actor for public calls)",
+        "The useActor hook reads the authClient instance from the InternetIdentity context"
       ]
     }
   ],
   "constraints": [
-    "Do not modify any existing logic in backend/main.mo beyond adding the whoAmI function",
-    "Do not modify any existing frontend components, hooks, routes, or pages beyond adding the temporary test button",
-    "The whoAmI function must use exactly the shared({ caller }) pattern specified by the user"
+    "Do not modify frontend/src/hooks/useInternetIdentity.ts — it is an immutable path",
+    "Do not modify frontend/src/hooks/useActor.ts in a way that breaks existing query key invalidation logic",
+    "Do not change the backend Motoko actor"
   ],
   "nonGoals": [
-    "Persisting or storing the whoAmI result anywhere",
-    "Adding any new routes or pages for this feature",
-    "Styling or polishing the temporary test button",
-    "Removing or cleaning up the temporary button (that is a future task)"
+    "Adding new authentication flows or providers",
+    "Changing the backend authorization model",
+    "Modifying any public-facing pages or components"
   ],
   "imageRequirements": {
     "required": [],
