@@ -1,11 +1,13 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
+  "projectStateVersion": 5,
   "summary": "Project using Internet Computer (ICP) with Internet Identity authentication. Frontend actor must be created using authenticated identity from AuthClient.",
   "architectural_notes": [
     "Frontend actor must be created using identity from authClient.getIdentity(), not anonymous identity."
   ],
-  "known_issues": [],
+  "known_issues": [
+    "Backend canister bskla-eiaaa-aaaaan-q4qba-cai was found in stopped state (IC0508), causing all canister calls including whoAmI to fail."
+  ],
   "isFixRequest": true,
   "existing_features": [],
   "new_feature_requests": [
@@ -14,6 +16,14 @@
       "summary": "Update the useActor hook (frontend/src/hooks/useActor.ts) to create the backend actor using the authenticated identity retrieved from authClient.getIdentity() instead of an anonymous identity. The actor must be rebuilt whenever the authentication state changes, ensuring all canister calls are made with the user's authenticated Internet Identity principal.",
       "reqIds": [
         "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Redeploy the backend canister (bskla-eiaaa-aaaaan-q4qba-cai) without modifying any existing backend code, so that the canister returns to a running state and all canister calls (including whoAmI) are functional again.",
+      "reqIds": [
+        "REQ-2"
       ],
       "status": "pending"
     }

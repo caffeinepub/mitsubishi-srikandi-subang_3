@@ -1,39 +1,40 @@
 {
   "kind": "build_request",
-  "title": "Fix Internet Identity actor configuration to use authenticated identity",
-  "priority": "normal",
+  "title": "Redeploy backend canister to restore running status",
+  "projectName": "Mitsubishi Srikandi Subang",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Update the useActor hook (frontend/src/hooks/useActor.ts) to create the backend actor using the authenticated identity retrieved from authClient.getIdentity() instead of an anonymous identity. The actor must be rebuilt whenever the authentication state changes, ensuring all canister calls are made with the user's authenticated Internet Identity principal.",
-      "target": "frontend",
+      "id": "REQ-2",
+      "text": "Redeploy the backend canister (bskla-eiaaa-aaaaan-q4qba-cai) without modifying any existing backend code, so that the canister returns to a running state and all canister calls (including whoAmI) are functional again.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-8"
+          "msg-latest"
         ],
         "quotes": [
-          "Pastikan actor dibuat menggunakan identity dari AuthClient, bukan anonymous identity.",
-          "Gunakan identity dari authClient.getIdentity() saat membuat actor."
+          "Tolong lakukan redeploy backend canister dan pastikan statusnya running.",
+          "Proyek ini dibuat dan dikelola sepenuhnya melalui Caffeine. Saya tidak pernah deploy manual via dfx."
         ]
       },
       "acceptanceCriteria": [
-        "The actor is created using the identity from authClient.getIdentity(), not AnonymousIdentity",
-        "The actor is re-created when the authentication state changes (login/logout)",
-        "Authenticated canister calls include the user's Internet Identity principal",
-        "Unauthenticated state falls back gracefully (e.g., anonymous actor for public calls)",
-        "The useActor hook reads the authClient instance from the InternetIdentity context"
+        "Backend canister bskla-eiaaa-aaaaan-q4qba-cai is in running state after deployment.",
+        "Calling whoAmI from the frontend returns a valid principal without IC0508 error.",
+        "No existing backend Motoko code is modified — only redeployment is performed.",
+        "All previously working canister calls continue to function as before."
       ]
     }
   ],
   "constraints": [
-    "Do not modify frontend/src/hooks/useInternetIdentity.ts — it is an immutable path",
-    "Do not modify frontend/src/hooks/useActor.ts in a way that breaks existing query key invalidation logic",
-    "Do not change the backend Motoko actor"
+    "Do not modify any existing backend Motoko code in backend/main.mo.",
+    "Do not change any frontend code.",
+    "This is a redeploy-only operation — no schema or logic changes."
   ],
   "nonGoals": [
-    "Adding new authentication flows or providers",
-    "Changing the backend authorization model",
-    "Modifying any public-facing pages or components"
+    "Modifying backend business logic or data models.",
+    "Changing frontend components or hooks.",
+    "Adding new features or endpoints.",
+    "Migrating stable state."
   ],
   "imageRequirements": {
     "required": [],

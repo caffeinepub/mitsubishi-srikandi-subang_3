@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T12:52:02.112Z",
+  "generatedAt": "2026-03-02T12:59:10.333Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -11,12 +11,10 @@
     "implemented": 0,
     "items": [
       {
-        "id": "REQ-1",
-        "summary": "Update the useActor hook (frontend/src/hooks/useActor.ts) to create the backend actor using the authenticated identity retrieved from authClient.getIdentity() instead of an anonymous identity. The actor must be rebuilt whenever the authentication state changes, ensuring all canister calls are made with the user's authenticated Internet Identity principal.",
-        "status": "missing",
-        "plannedFiles": [
-          "frontend/src/hooks/useActor.ts"
-        ],
+        "id": "REQ-2",
+        "summary": "Redeploy the backend canister (bskla-eiaaa-aaaaan-q4qba-cai) without modifying any existing backend code, so that the canister returns to a running state and all canister calls (including whoAmI) are functional again.",
+        "status": "unknown",
+        "plannedFiles": [],
         "matchedFiles": []
       }
     ]
@@ -24,8 +22,11 @@
   "changedFiles": [
     "build-request.json",
     "feature_evidence.json",
-    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",
