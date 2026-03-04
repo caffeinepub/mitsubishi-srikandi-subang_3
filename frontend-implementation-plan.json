@@ -1,6 +1,6 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Redeploy backend canister to restore running status",
+  "title": "Add temporary forceSetMeAsSuperAdmin function to backend",
   "requirements": []
 }

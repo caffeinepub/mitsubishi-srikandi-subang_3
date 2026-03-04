@@ -1,35 +1,32 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 5,
-  "summary": "Project using Internet Computer (ICP) with Internet Identity authentication. Frontend actor must be created using authenticated identity from AuthClient.",
+  "projectStateVersion": 3,
+  "summary": "Backend admin management app with super admin role functionality. Includes a temporary forceSetMeAsSuperAdmin function for development/testing purposes.",
   "architectural_notes": [
-    "Frontend actor must be created using identity from authClient.getIdentity(), not anonymous identity."
+    "Backend uses adminStore (map of principal -> record with role field) for admin management",
+    "Admin roles include at least #super_admin role type"
   ],
-  "known_issues": [
-    "Backend canister bskla-eiaaa-aaaaan-q4qba-cai was found in stopped state (IC0508), causing all canister calls including whoAmI to fail."
-  ],
-  "isFixRequest": true,
+  "known_issues": [],
+  "isFixRequest": false,
   "existing_features": [],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Update the useActor hook (frontend/src/hooks/useActor.ts) to create the backend actor using the authenticated identity retrieved from authClient.getIdentity() instead of an anonymous identity. The actor must be rebuilt whenever the authentication state changes, ensuring all canister calls are made with the user's authenticated Internet Identity principal.",
-      "reqIds": [
-        "REQ-1"
-      ],
+      "summary": "Add temporary forceSetMeAsSuperAdmin function to backend that sets caller's role to #super_admin in adminStore without changing other logic or data structures",
+      "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Redeploy the backend canister (bskla-eiaaa-aaaaan-q4qba-cai) without modifying any existing backend code, so that the canister returns to a running state and all canister calls (including whoAmI) are functional again.",
+      "summary": "Add the following temporary public shared function to the backend main actor, without modifying any existing logic, data structures, or other functions:\n\n```motoko\npublic shared ({ caller }) func forceSetMeAsSuperAdmin() : async Text {\n  let updated = adminStore.map(\n    func((principal, record)) {\n      if (principal == caller) {\n        (principal, { record with role = #super_admin });\n      } else {\n        (principal, record);\n      }\n    }\n  );\n  adminStore := updated;\n  return \"Role updated to super_admin for caller\";\n};\n```",
       "reqIds": [
-        "REQ-2"
+        "REQ-1"
       ],
       "status": "pending"
     }
   ],
   "gameProjectType": "none",
-  "projectName": "Fix Internet Identity actor configuration to use authenticated identity",
+  "projectName": "Mitsubishi Srikandi Subang",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

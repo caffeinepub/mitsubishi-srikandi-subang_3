@@ -122,6 +122,7 @@ export interface _SERVICE {
   'cleanupExpiredSessions' : ActorMethod<[], undefined>,
   'deleteAdmin' : ActorMethod<[Principal], undefined>,
   'deleteMediaAsset' : ActorMethod<[bigint], boolean>,
+  'forceSetMeAsSuperAdmin' : ActorMethod<[], string>,
   'getAdmins' : ActorMethod<[], Array<AdminRecord>>,
   'getAllMediaAssets' : ActorMethod<[], Array<MediaAsset>>,
   'getAllVisitorSessions' : ActorMethod<[], Array<VisitorSession>>,

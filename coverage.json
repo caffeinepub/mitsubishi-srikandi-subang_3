@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-03-02T12:59:10.333Z",
+  "generatedAt": "2026-03-03T12:55:39.314Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -11,8 +11,8 @@
     "implemented": 0,
     "items": [
       {
-        "id": "REQ-2",
-        "summary": "Redeploy the backend canister (bskla-eiaaa-aaaaan-q4qba-cai) without modifying any existing backend code, so that the canister returns to a running state and all canister calls (including whoAmI) are functional again.",
+        "id": "REQ-1",
+        "summary": "Add the following temporary public shared function to the backend main actor, without modifying any existing logic, data structures, or other functions:\n\n```motoko\npublic shared ({ caller }) func forceSetMeAsSuperAdmin() : async Text {\n  let updated = adminStore.map(\n    func((principal, record)) {\n      if (principal == caller) {\n        (principal, { record with role = #super_admin });\n      } else {\n        (principal, record);\n      }\n    }\n  );\n  adminStore := updated;\n  return \"Role updated to super_admin for caller\";\n};\n```",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
@@ -20,6 +20,7 @@
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-implementation-plan.json",

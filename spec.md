@@ -1,9 +1,10 @@
 # Specification
 
 ## Summary
-**Goal:** Redeploy the backend canister to restore it to a running state without modifying any existing code.
+**Goal:** Add a temporary `forceSetMeAsSuperAdmin` function to the backend to allow the caller to set their own role to `#super_admin`.
 
 **Planned changes:**
-- Redeploy the backend canister (bskla-eiaaa-aaaaan-q4qba-cai) as-is, with no code modifications
+- Add a new public shared function `forceSetMeAsSuperAdmin` to `backend/main.mo` that updates the caller's role to `#super_admin` in `adminStore` and returns a confirmation string
+- No existing logic, data structures, or other functions are modified
 
-**User-visible outcome:** The backend canister returns to a running state, all canister calls (including whoAmI) work correctly, and IC0508 errors are resolved.
+**User-visible outcome:** A developer can call `forceSetMeAsSuperAdmin` on the backend canister to elevate their own account to super admin role without any frontend changes.

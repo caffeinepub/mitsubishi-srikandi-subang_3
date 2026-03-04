@@ -138,6 +138,7 @@ export const idlService = IDL.Service({
   'cleanupExpiredSessions' : IDL.Func([], [], []),
   'deleteAdmin' : IDL.Func([IDL.Principal], [], []),
   'deleteMediaAsset' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'forceSetMeAsSuperAdmin' : IDL.Func([], [IDL.Text], []),
   'getAdmins' : IDL.Func([], [IDL.Vec(AdminRecord)], []),
   'getAllMediaAssets' : IDL.Func([], [IDL.Vec(MediaAsset)], ['query']),
   'getAllVisitorSessions' : IDL.Func([], [IDL.Vec(VisitorSession)], ['query']),
@@ -335,6 +336,7 @@ export const idlFactory = ({ IDL }) => {
     'cleanupExpiredSessions' : IDL.Func([], [], []),
     'deleteAdmin' : IDL.Func([IDL.Principal], [], []),
     'deleteMediaAsset' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'forceSetMeAsSuperAdmin' : IDL.Func([], [IDL.Text], []),
     'getAdmins' : IDL.Func([], [IDL.Vec(AdminRecord)], []),
     'getAllMediaAssets' : IDL.Func([], [IDL.Vec(MediaAsset)], ['query']),
     'getAllVisitorSessions' : IDL.Func(

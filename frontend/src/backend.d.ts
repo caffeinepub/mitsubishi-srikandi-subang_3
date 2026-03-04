@@ -98,6 +98,7 @@ export interface backendInterface {
     cleanupExpiredSessions(): Promise<void>;
     deleteAdmin(principal: Principal): Promise<void>;
     deleteMediaAsset(id: bigint): Promise<boolean>;
+    forceSetMeAsSuperAdmin(): Promise<string>;
     getAdmins(): Promise<Array<AdminRecord>>;
     getAllMediaAssets(): Promise<Array<MediaAsset>>;
     getAllVisitorSessions(): Promise<Array<VisitorSession>>;

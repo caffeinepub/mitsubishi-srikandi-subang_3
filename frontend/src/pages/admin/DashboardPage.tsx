@@ -1,10 +1,37 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { useAdminStats } from '../../hooks/useAdminStats';
-import { Car, Truck, FileText, Mail, Image, Users } from 'lucide-react';
+import { useActor } from '../../hooks/useActor';
+import { Car, Truck, FileText, Mail, Image, Users, UserCircle, Loader2 } from 'lucide-react';
 
 export default function DashboardPage() {
   const { data: stats, isLoading } = useAdminStats();
+  const { actor, isFetching: actorFetching } = useActor();
+
+  const [whoAmIResult, setWhoAmIResult] = useState<string | null>(null);
+  const [whoAmILoading, setWhoAmILoading] = useState(false);
+  const [whoAmIError, setWhoAmIError] = useState<string | null>(null);
+
+  const handleWhoAmI = async () => {
+    if (!actor) {
+      setWhoAmIError('Actor belum siap. Pastikan kamu sudah login.');
+      return;
+    }
+    setWhoAmILoading(true);
+    setWhoAmIError(null);
+    setWhoAmIResult(null);
+    try {
+      const result = await actor.whoAmI();
+      setWhoAmIResult(result);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setWhoAmIError(`Gagal memanggil whoAmI: ${message}`);
+    } finally {
+      setWhoAmILoading(false);
+    }
+  };
 
   const statCards = [
     {
@@ -76,6 +103,52 @@ export default function DashboardPage() {
           );
         })}
       </div>
+
+      {/* Who Am I Section */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <UserCircle className="h-4 w-4 text-muted-foreground" />
+            Identitas Caller (whoAmI)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Klik tombol di bawah untuk memeriksa principal ID yang dikenali oleh backend canister.
+          </p>
+          <Button
+            onClick={handleWhoAmI}
+            disabled={whoAmILoading || actorFetching || !actor}
+            variant="outline"
+            size="sm"
+          >
+            {whoAmILoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Memuat...
+              </>
+            ) : (
+              <>
+                <UserCircle className="mr-2 h-4 w-4" />
+                Who Am I?
+              </>
+            )}
+          </Button>
+
+          {whoAmIResult && (
+            <div className="rounded-md bg-muted px-4 py-3">
+              <p className="text-xs text-muted-foreground mb-1">Principal ID:</p>
+              <p className="font-mono text-sm break-all text-foreground">{whoAmIResult}</p>
+            </div>
+          )}
+
+          {whoAmIError && (
+            <div className="rounded-md bg-destructive/10 border border-destructive/20 px-4 py-3">
+              <p className="text-sm text-destructive">{whoAmIError}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

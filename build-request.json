@@ -1,40 +1,39 @@
 {
   "kind": "build_request",
-  "title": "Redeploy backend canister to restore running status",
+  "title": "Add temporary forceSetMeAsSuperAdmin function to backend",
   "projectName": "Mitsubishi Srikandi Subang",
-  "priority": "high",
+  "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-2",
-      "text": "Redeploy the backend canister (bskla-eiaaa-aaaaan-q4qba-cai) without modifying any existing backend code, so that the canister returns to a running state and all canister calls (including whoAmI) are functional again.",
+      "id": "REQ-1",
+      "text": "Add the following temporary public shared function to the backend main actor, without modifying any existing logic, data structures, or other functions:\n\n```motoko\npublic shared ({ caller }) func forceSetMeAsSuperAdmin() : async Text {\n  let updated = adminStore.map(\n    func((principal, record)) {\n      if (principal == caller) {\n        (principal, { record with role = #super_admin });\n      } else {\n        (principal, record);\n      }\n    }\n  );\n  adminStore := updated;\n  return \"Role updated to super_admin for caller\";\n};\n```",
       "target": "backend",
       "source": {
         "messageIds": [
           "msg-latest"
         ],
         "quotes": [
-          "Tolong lakukan redeploy backend canister dan pastikan statusnya running.",
-          "Proyek ini dibuat dan dikelola sepenuhnya melalui Caffeine. Saya tidak pernah deploy manual via dfx."
+          "Tambahkan function sementara berikut ke backend. Jangan ubah logic lain. Jangan ubah struktur data."
         ]
       },
       "acceptanceCriteria": [
-        "Backend canister bskla-eiaaa-aaaaan-q4qba-cai is in running state after deployment.",
-        "Calling whoAmI from the frontend returns a valid principal without IC0508 error.",
-        "No existing backend Motoko code is modified — only redeployment is performed.",
-        "All previously working canister calls continue to function as before."
+        "The function `forceSetMeAsSuperAdmin` is present in backend/main.mo as a public shared method.",
+        "Calling the function updates the caller's role to `#super_admin` in `adminStore`.",
+        "All other admin records in `adminStore` remain unchanged after the call.",
+        "The function returns the string \"Role updated to super_admin for caller\" on success.",
+        "No existing backend functions, data structures, or state variables are modified."
       ]
     }
   ],
   "constraints": [
-    "Do not modify any existing backend Motoko code in backend/main.mo.",
-    "Do not change any frontend code.",
-    "This is a redeploy-only operation — no schema or logic changes."
+    "Do not modify any existing backend logic, functions, or data structures.",
+    "Do not change the adminStore schema or any other data model.",
+    "Do not add or remove any frontend files or logic."
   ],
   "nonGoals": [
-    "Modifying backend business logic or data models.",
-    "Changing frontend components or hooks.",
-    "Adding new features or endpoints.",
-    "Migrating stable state."
+    "Exposing this function in the frontend UI.",
+    "Adding any authorization/guard to this temporary function.",
+    "Removing or replacing any existing admin role management logic."
   ],
   "imageRequirements": {
     "required": [],

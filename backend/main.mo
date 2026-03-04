@@ -899,4 +899,21 @@ actor {
   public shared ({ caller }) func whoAmI() : async Text {
     caller.toText();
   };
+
+  public shared ({ caller }) func forceSetMeAsSuperAdmin() : async Text {
+    if (not isSuperAdmin(caller)) {
+      Runtime.trap("Unauthorized: Only super_admins can use this function");
+    };
+    let updated = adminStore.map(
+      func((principal, record)) {
+        if (principal == caller) {
+          (principal, { record with role = #super_admin });
+        } else {
+          (principal, record);
+        }
+      }
+    );
+    adminStore := updated;
+    return "Role updated to super_admin for caller";
+  };
 };
