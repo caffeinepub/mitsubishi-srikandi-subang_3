@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import PromoList from '@/components/admin/PromoList';
-import PromoDialog from '@/components/admin/PromoDialog';
-import type { Promotion } from '@/types/local';
+import PromoDialog from "@/components/admin/PromoDialog";
+import PromoList from "@/components/admin/PromoList";
+import { Button } from "@/components/ui/button";
+import type { Promotion } from "@/types/local";
+import { Plus } from "lucide-react";
+import { useState } from "react";
 
 export default function PromosPage() {
   const [dialogOpen, setDialogOpen] = useState(false);

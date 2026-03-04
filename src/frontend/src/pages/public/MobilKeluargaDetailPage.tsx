@@ -1,24 +1,24 @@
-import { useState } from 'react';
-import { useParams } from '@tanstack/react-router';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useGetAllVehicleCatalogs } from '@/hooks/usePublicData';
-import VariantColorSelector from '@/components/public/VariantColorSelector';
-import ProductInteractions from '@/components/public/ProductInteractions';
+import ProductInteractions from "@/components/public/ProductInteractions";
+import VariantColorSelector from "@/components/public/VariantColorSelector";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useGetAllVehicleCatalogs } from "@/hooks/usePublicData";
+import { useParams } from "@tanstack/react-router";
+import { useState } from "react";
 
 export default function MobilKeluargaDetailPage() {
-  const { slug } = useParams({ from: '/mobil-keluarga/$slug' });
+  const { slug } = useParams({ from: "/mobil-keluarga/$slug" });
   const { data: catalogs } = useGetAllVehicleCatalogs();
 
   const catalog = catalogs?.find(
-    (c) => c.vehicle.vehicleName.toLowerCase().replace(/\s+/g, '-') === slug
+    (c) => c.vehicle.vehicleName.toLowerCase().replace(/\s+/g, "-") === slug,
   );
 
   const [selectedVariantId, setSelectedVariantId] = useState<bigint | null>(
-    catalog?.variants[0]?.id || null
+    catalog?.variants[0]?.id || null,
   );
-  const [selectedColorId, setSelectedColorId] = useState<bigint | null>(
-    catalog?.colors[0]?.id || null
+  const [_selectedColorId, setSelectedColorId] = useState<bigint | null>(
+    catalog?.colors[0]?.id || null,
   );
 
   if (!catalog) {
@@ -29,13 +29,16 @@ export default function MobilKeluargaDetailPage() {
     );
   }
 
-  const selectedVariant = catalog.variants.find((v) => v.id === selectedVariantId);
-  const currentPrice = selectedVariant?.overridePrice || catalog.vehicle.basePrice;
+  const selectedVariant = catalog.variants.find(
+    (v) => v.id === selectedVariantId,
+  );
+  const currentPrice =
+    selectedVariant?.overridePrice || catalog.vehicle.basePrice;
 
   const formatPrice = (price: bigint) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
       minimumFractionDigits: 0,
     }).format(Number(price));
   };
@@ -61,7 +64,9 @@ export default function MobilKeluargaDetailPage() {
 
         <div>
           <div className="mb-6">
-            <h1 className="text-3xl font-bold mb-4">{catalog.vehicle.vehicleName}</h1>
+            <h1 className="text-3xl font-bold mb-4">
+              {catalog.vehicle.vehicleName}
+            </h1>
             <p className="text-gray-600 mb-6">{catalog.vehicle.description}</p>
             <div className="text-3xl font-bold text-red-600 mb-6">
               {formatPrice(currentPrice)}
@@ -112,9 +117,14 @@ export default function MobilKeluargaDetailPage() {
             <div className="grid md:grid-cols-2 gap-4">
               {catalog.features.length > 0 ? (
                 catalog.features.map((feature) => (
-                  <div key={feature.id.toString()} className="border rounded-lg p-4">
+                  <div
+                    key={feature.id.toString()}
+                    className="border rounded-lg p-4"
+                  >
                     <h3 className="font-medium mb-2">{feature.name}</h3>
-                    <p className="text-gray-600 text-sm">{feature.description}</p>
+                    <p className="text-gray-600 text-sm">
+                      {feature.description}
+                    </p>
                   </div>
                 ))
               ) : (

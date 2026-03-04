@@ -1,14 +1,14 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useActor } from './useActor';
-import type { CommercialVehicleCategory } from '../types/local';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { CommercialVehicleCategory } from "../types/local";
+import { useActor } from "./useActor";
 
 export function useGetAllCommercialVehicleCategories() {
   const { actor, isFetching } = useActor();
 
   return useQuery<CommercialVehicleCategory[]>({
-    queryKey: ['commercialVehicleCategories'],
+    queryKey: ["commercialVehicleCategories"],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error("Actor not available");
       // Backend method missing - return empty array
       return [] as CommercialVehicleCategory[];
     },
@@ -20,7 +20,7 @@ export function useGetCommercialVehicleCategory(categoryId: bigint | null) {
   const { actor, isFetching } = useActor();
 
   return useQuery<CommercialVehicleCategory | null>({
-    queryKey: ['commercialVehicleCategory', categoryId?.toString()],
+    queryKey: ["commercialVehicleCategory", categoryId?.toString()],
     queryFn: async () => {
       if (!actor || !categoryId) return null;
       // Backend method missing - return null
@@ -35,14 +35,18 @@ export function useCreateCommercialVehicleCategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (category: CommercialVehicleCategory) => {
-      if (!actor) throw new Error('Actor not available');
+    mutationFn: async (_category: CommercialVehicleCategory) => {
+      if (!actor) throw new Error("Actor not available");
       // Backend method missing - stub
-      console.warn('createCommercialVehicleCategory not implemented in backend');
+      console.warn(
+        "createCommercialVehicleCategory not implemented in backend",
+      );
       return BigInt(0);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['commercialVehicleCategories'] });
+      queryClient.invalidateQueries({
+        queryKey: ["commercialVehicleCategories"],
+      });
     },
   });
 }
@@ -52,14 +56,20 @@ export function useUpdateCommercialVehicleCategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (category: CommercialVehicleCategory) => {
-      if (!actor) throw new Error('Actor not available');
+    mutationFn: async (_category: CommercialVehicleCategory) => {
+      if (!actor) throw new Error("Actor not available");
       // Backend method missing - stub
-      console.warn('updateCommercialVehicleCategory not implemented in backend');
+      console.warn(
+        "updateCommercialVehicleCategory not implemented in backend",
+      );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['commercialVehicleCategories'] });
-      queryClient.invalidateQueries({ queryKey: ['commercialVehicleCategory'] });
+      queryClient.invalidateQueries({
+        queryKey: ["commercialVehicleCategories"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["commercialVehicleCategory"],
+      });
     },
   });
 }
@@ -69,13 +79,17 @@ export function useDeleteCommercialVehicleCategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (categoryId: bigint) => {
-      if (!actor) throw new Error('Actor not available');
+    mutationFn: async (_categoryId: bigint) => {
+      if (!actor) throw new Error("Actor not available");
       // Backend method missing - stub
-      console.warn('deleteCommercialVehicleCategory not implemented in backend');
+      console.warn(
+        "deleteCommercialVehicleCategory not implemented in backend",
+      );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['commercialVehicleCategories'] });
+      queryClient.invalidateQueries({
+        queryKey: ["commercialVehicleCategories"],
+      });
     },
   });
 }

@@ -1,35 +1,41 @@
-import { RouterProvider, createRouter, createRoute, createRootRoute, Outlet } from '@tanstack/react-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from 'next-themes';
-import { Toaster } from '@/components/ui/sonner';
-import LoginPage from './pages/LoginPage';
-import AdminLayout from './layouts/AdminLayout';
-import PublicLayout from './layouts/PublicLayout';
-import DashboardPage from './pages/admin/DashboardPage';
-import PassengerVehiclesPage from './pages/admin/PassengerVehiclesPage';
-import CommercialVehiclesPage from './pages/admin/CommercialVehiclesPage';
-import PromosPage from './pages/admin/PromosPage';
-import TestimonialsPage from './pages/admin/TestimonialsPage';
-import BlogPage from './pages/admin/BlogPage';
-import MediaManagerPage from './pages/admin/MediaManagerPage';
-import LeadsPage from './pages/admin/LeadsPage';
-import CreditSimulationsPage from './pages/admin/CreditSimulationsPage';
-import VisitorStatsPage from './pages/admin/VisitorStatsPage';
-import WebsiteSettingsPage from './pages/admin/WebsiteSettingsPage';
-import AdminUsersPage from './pages/admin/AdminUsersPage';
-import BerandaPage from './pages/public/BerandaPage';
-import MobilKeluargaPage from './pages/public/MobilKeluargaPage';
-import MobilKeluargaDetailPage from './pages/public/MobilKeluargaDetailPage';
-import MobilNiagaPage from './pages/public/MobilNiagaPage';
-import MobilNiagaCategoryPage from './pages/public/MobilNiagaCategoryPage';
-import MobilNiagaDetailPage from './pages/public/MobilNiagaDetailPage';
-import PromoPage from './pages/public/PromoPage';
-import TestimoniPage from './pages/public/TestimoniPage';
-import BlogListPage from './pages/public/BlogListPage';
-import BlogDetailPage from './pages/public/BlogDetailPage';
-import KontakPage from './pages/public/KontakPage';
-import SimulasiKreditPage from './pages/public/SimulasiKreditPage';
-import AuthGuard from './components/AuthGuard';
+import { Toaster } from "@/components/ui/sonner";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  Outlet,
+  RouterProvider,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from "@tanstack/react-router";
+import { ThemeProvider } from "next-themes";
+import AuthGuard from "./components/AuthGuard";
+import AdminLayout from "./layouts/AdminLayout";
+import PublicLayout from "./layouts/PublicLayout";
+import LoginPage from "./pages/LoginPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import BlogPage from "./pages/admin/BlogPage";
+import CommercialVehiclesPage from "./pages/admin/CommercialVehiclesPage";
+import CreditSimulationsPage from "./pages/admin/CreditSimulationsPage";
+import DashboardPage from "./pages/admin/DashboardPage";
+import LeadsPage from "./pages/admin/LeadsPage";
+import MediaManagerPage from "./pages/admin/MediaManagerPage";
+import PassengerVehiclesPage from "./pages/admin/PassengerVehiclesPage";
+import PromosPage from "./pages/admin/PromosPage";
+import TestimonialsPage from "./pages/admin/TestimonialsPage";
+import VisitorStatsPage from "./pages/admin/VisitorStatsPage";
+import WebsiteSettingsPage from "./pages/admin/WebsiteSettingsPage";
+import BerandaPage from "./pages/public/BerandaPage";
+import BlogDetailPage from "./pages/public/BlogDetailPage";
+import BlogListPage from "./pages/public/BlogListPage";
+import KontakPage from "./pages/public/KontakPage";
+import MobilKeluargaDetailPage from "./pages/public/MobilKeluargaDetailPage";
+import MobilKeluargaPage from "./pages/public/MobilKeluargaPage";
+import MobilNiagaCategoryPage from "./pages/public/MobilNiagaCategoryPage";
+import MobilNiagaDetailPage from "./pages/public/MobilNiagaDetailPage";
+import MobilNiagaPage from "./pages/public/MobilNiagaPage";
+import PromoPage from "./pages/public/PromoPage";
+import SimulasiKreditPage from "./pages/public/SimulasiKreditPage";
+import TestimoniPage from "./pages/public/TestimoniPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,14 +57,14 @@ const rootRoute = createRootRoute({
 
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/login',
+  path: "/login",
   component: LoginPage,
 });
 
 // Admin routes
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/admin',
+  path: "/admin",
   component: () => (
     <AuthGuard>
       <AdminLayout>
@@ -70,80 +76,80 @@ const adminRoute = createRoute({
 
 const dashboardRoute = createRoute({
   getParentRoute: () => adminRoute,
-  path: '/dashboard',
+  path: "/dashboard",
   component: DashboardPage,
 });
 
 const adminPassengerVehiclesRoute = createRoute({
   getParentRoute: () => adminRoute,
-  path: '/mobil-keluarga',
+  path: "/mobil-keluarga",
   component: PassengerVehiclesPage,
 });
 
 const adminCommercialVehiclesRoute = createRoute({
   getParentRoute: () => adminRoute,
-  path: '/mobil-niaga',
+  path: "/mobil-niaga",
   component: CommercialVehiclesPage,
 });
 
 const adminPromosRoute = createRoute({
   getParentRoute: () => adminRoute,
-  path: '/promo',
+  path: "/promo",
   component: PromosPage,
 });
 
 const adminTestimonialsRoute = createRoute({
   getParentRoute: () => adminRoute,
-  path: '/testimoni',
+  path: "/testimoni",
   component: TestimonialsPage,
 });
 
 const adminBlogRoute = createRoute({
   getParentRoute: () => adminRoute,
-  path: '/blog',
+  path: "/blog",
   component: BlogPage,
 });
 
 const mediaRoute = createRoute({
   getParentRoute: () => adminRoute,
-  path: '/media',
+  path: "/media",
   component: MediaManagerPage,
 });
 
 const leadsRoute = createRoute({
   getParentRoute: () => adminRoute,
-  path: '/leads',
+  path: "/leads",
   component: LeadsPage,
 });
 
 const adminCreditSimulationsRoute = createRoute({
   getParentRoute: () => adminRoute,
-  path: '/simulasi-kredit',
+  path: "/simulasi-kredit",
   component: CreditSimulationsPage,
 });
 
 const visitorStatsRoute = createRoute({
   getParentRoute: () => adminRoute,
-  path: '/statistik',
+  path: "/statistik",
   component: VisitorStatsPage,
 });
 
 const websiteSettingsRoute = createRoute({
   getParentRoute: () => adminRoute,
-  path: '/pengaturan',
+  path: "/pengaturan",
   component: WebsiteSettingsPage,
 });
 
 const adminUsersRoute = createRoute({
   getParentRoute: () => adminRoute,
-  path: '/admin-users',
+  path: "/admin-users",
   component: AdminUsersPage,
 });
 
 // Public routes
 const berandaRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/',
+  path: "/",
   component: () => (
     <PublicLayout>
       <BerandaPage />
@@ -153,7 +159,7 @@ const berandaRoute = createRoute({
 
 const mobilKeluargaRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/mobil-keluarga',
+  path: "/mobil-keluarga",
   component: () => (
     <PublicLayout>
       <MobilKeluargaPage />
@@ -163,7 +169,7 @@ const mobilKeluargaRoute = createRoute({
 
 const mobilKeluargaDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/mobil-keluarga/$slug',
+  path: "/mobil-keluarga/$slug",
   component: () => (
     <PublicLayout>
       <MobilKeluargaDetailPage />
@@ -173,7 +179,7 @@ const mobilKeluargaDetailRoute = createRoute({
 
 const mobilNiagaRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/mobil-niaga',
+  path: "/mobil-niaga",
   component: () => (
     <PublicLayout>
       <MobilNiagaPage />
@@ -183,7 +189,7 @@ const mobilNiagaRoute = createRoute({
 
 const mobilNiagaCategoryRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/mobil-niaga/$kategori',
+  path: "/mobil-niaga/$kategori",
   component: () => (
     <PublicLayout>
       <MobilNiagaCategoryPage />
@@ -193,7 +199,7 @@ const mobilNiagaCategoryRoute = createRoute({
 
 const mobilNiagaDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/mobil-niaga/$kategori/$slug',
+  path: "/mobil-niaga/$kategori/$slug",
   component: () => (
     <PublicLayout>
       <MobilNiagaDetailPage />
@@ -203,7 +209,7 @@ const mobilNiagaDetailRoute = createRoute({
 
 const promoRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/promo',
+  path: "/promo",
   component: () => (
     <PublicLayout>
       <PromoPage />
@@ -213,7 +219,7 @@ const promoRoute = createRoute({
 
 const testimoniRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/testimoni',
+  path: "/testimoni",
   component: () => (
     <PublicLayout>
       <TestimoniPage />
@@ -223,7 +229,7 @@ const testimoniRoute = createRoute({
 
 const blogListRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/blog',
+  path: "/blog",
   component: () => (
     <PublicLayout>
       <BlogListPage />
@@ -233,7 +239,7 @@ const blogListRoute = createRoute({
 
 const blogDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/blog/$slug',
+  path: "/blog/$slug",
   component: () => (
     <PublicLayout>
       <BlogDetailPage />
@@ -243,7 +249,7 @@ const blogDetailRoute = createRoute({
 
 const kontakRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/kontak',
+  path: "/kontak",
   component: () => (
     <PublicLayout>
       <KontakPage />
@@ -253,7 +259,7 @@ const kontakRoute = createRoute({
 
 const simulasiKreditRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/simulasi-kredit',
+  path: "/simulasi-kredit",
   component: () => (
     <PublicLayout>
       <SimulasiKreditPage />
@@ -293,7 +299,7 @@ const routeTree = rootRoute.addChildren([
 
 const router = createRouter({ routeTree });
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;
   }

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import type { Variant } from '../../types/local';
+import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import type { Variant } from "../../types/local";
 
 interface CommercialVariantSelectorProps {
   variants: Variant[];
@@ -12,7 +12,7 @@ export default function CommercialVariantSelector({
   onSelectionChange,
 }: CommercialVariantSelectorProps) {
   const [selectedVariant, setSelectedVariant] = useState<bigint | null>(
-    variants.length > 0 ? variants[0].id : null
+    variants.length > 0 ? variants[0].id : null,
   );
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export default function CommercialVariantSelector({
           {variants.map((variant) => (
             <Button
               key={variant.id.toString()}
-              variant={selectedVariant === variant.id ? 'default' : 'outline'}
+              variant={selectedVariant === variant.id ? "default" : "outline"}
               onClick={() => handleVariantChange(variant.id)}
             >
               {variant.name}

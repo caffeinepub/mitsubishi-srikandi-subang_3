@@ -1,17 +1,17 @@
-import { useQuery } from '@tanstack/react-query';
-import { useActor } from './useActor';
-import type { VisitorStats } from '../backend';
+import { useQuery } from "@tanstack/react-query";
+import type { VisitorStats } from "../backend";
+import { useActor } from "./useActor";
 
 export function useGetVisitorStats(options?: { refetchInterval?: number }) {
   const { actor, isFetching } = useActor();
 
   return useQuery<VisitorStats>({
-    queryKey: ['visitorStats'],
+    queryKey: ["visitorStats"],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      console.log('[useGetVisitorStats] Fetching visitor stats...');
+      if (!actor) throw new Error("Actor not available");
+      console.log("[useGetVisitorStats] Fetching visitor stats...");
       const stats = await actor.getVisitorStats();
-      console.log('[useGetVisitorStats] Received stats:', stats);
+      console.log("[useGetVisitorStats] Received stats:", stats);
       return stats;
     },
     enabled: !!actor && !isFetching,
@@ -20,14 +20,14 @@ export function useGetVisitorStats(options?: { refetchInterval?: number }) {
 }
 
 export function useGetVisitorTrend() {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching: _isFetching } = useActor();
 
   return useQuery<Array<[bigint, bigint]>>({
-    queryKey: ['visitorTrend'],
+    queryKey: ["visitorTrend"],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error("Actor not available");
       // This endpoint doesn't exist in backend yet
-      console.warn('[useGetVisitorTrend] Backend method not implemented');
+      console.warn("[useGetVisitorTrend] Backend method not implemented");
       return [];
     },
     enabled: false, // Disabled until backend implements this
@@ -36,14 +36,14 @@ export function useGetVisitorTrend() {
 }
 
 export function useGetPageViews() {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching: _isFetchingPV } = useActor();
 
   return useQuery<Array<[string, bigint]>>({
-    queryKey: ['pageViews'],
+    queryKey: ["pageViews"],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error("Actor not available");
       // This endpoint doesn't exist in backend yet
-      console.warn('[useGetPageViews] Backend method not implemented');
+      console.warn("[useGetPageViews] Backend method not implemented");
       return [];
     },
     enabled: false, // Disabled until backend implements this

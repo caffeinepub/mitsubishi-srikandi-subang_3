@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import type { Variant, Color } from '../../types/local';
+import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import type { Color, Variant } from "../../types/local";
 
 interface VariantColorSelectorProps {
   variants: Variant[];
@@ -14,10 +14,10 @@ export default function VariantColorSelector({
   onSelectionChange,
 }: VariantColorSelectorProps) {
   const [selectedVariant, setSelectedVariant] = useState<bigint | null>(
-    variants.length > 0 ? variants[0].id : null
+    variants.length > 0 ? variants[0].id : null,
   );
   const [selectedColor, setSelectedColor] = useState<bigint | null>(
-    colors.length > 0 ? colors[0].id : null
+    colors.length > 0 ? colors[0].id : null,
   );
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export default function VariantColorSelector({
           {variants.map((variant) => (
             <Button
               key={variant.id.toString()}
-              variant={selectedVariant === variant.id ? 'default' : 'outline'}
+              variant={selectedVariant === variant.id ? "default" : "outline"}
               onClick={() => handleVariantChange(variant.id)}
             >
               {variant.name}
@@ -57,7 +57,7 @@ export default function VariantColorSelector({
           {colors.map((color) => (
             <Button
               key={color.id.toString()}
-              variant={selectedColor === color.id ? 'default' : 'outline'}
+              variant={selectedColor === color.id ? "default" : "outline"}
               onClick={() => handleColorChange(color.id)}
               className="flex items-center gap-2"
             >

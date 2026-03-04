@@ -1,20 +1,20 @@
-import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import type { BlogPost } from '@/types/local';
-import { useCreateBlogPost, useUpdateBlogPost } from '@/hooks/useBlogPosts';
-import { useInternetIdentity } from '@/hooks/useInternetIdentity';
-import { DelegationIdentity, isDelegationValid } from '@icp-sdk/core/identity';
-import { toast } from 'sonner';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useCreateBlogPost, useUpdateBlogPost } from "@/hooks/useBlogPosts";
+import { useInternetIdentity } from "@/hooks/useInternetIdentity";
+import type { BlogPost } from "@/types/local";
+import { DelegationIdentity, isDelegationValid } from "@icp-sdk/core/identity";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface BlogPostDialogProps {
   open: boolean;
@@ -31,9 +31,9 @@ export default function BlogPostDialog({
 }: BlogPostDialogProps) {
   const { identity } = useInternetIdentity();
   const [formData, setFormData] = useState({
-    title: '',
-    excerpt: '',
-    content: '',
+    title: "",
+    excerpt: "",
+    content: "",
   });
 
   const createBlogPost = useCreateBlogPost();
@@ -42,25 +42,25 @@ export default function BlogPostDialog({
   useEffect(() => {
     if (blogPost) {
       setFormData({
-        title: blogPost.title || '',
-        excerpt: blogPost.excerpt || '',
-        content: blogPost.content || '',
+        title: blogPost.title || "",
+        excerpt: blogPost.excerpt || "",
+        content: blogPost.content || "",
       });
     } else {
       setFormData({
-        title: '',
-        excerpt: '',
-        content: '',
+        title: "",
+        excerpt: "",
+        content: "",
       });
     }
-  }, [blogPost, open]);
+  }, [blogPost]);
 
   const validateTokenAndRefresh = async (): Promise<boolean> => {
-    console.log('[BlogPostDialog] Starting token validation');
-    
+    console.log("[BlogPostDialog] Starting token validation");
+
     if (!identity) {
-      console.log('[BlogPostDialog] No identity found');
-      toast.error('Anda harus login terlebih dahulu');
+      console.log("[BlogPostDialog] No identity found");
+      toast.error("Anda harus login terlebih dahulu");
       return false;
     }
 
@@ -68,45 +68,48 @@ export default function BlogPostDialog({
     if (identity instanceof DelegationIdentity) {
       const delegation = identity.getDelegation();
       const expiration = delegation.delegations[0]?.delegation.expiration;
-      
+
       if (expiration) {
         const expiryTime = Number(expiration) / 1000000; // Convert to milliseconds
         const currentTime = Date.now();
         const timeUntilExpiry = expiryTime - currentTime;
-        
-        console.log('[BlogPostDialog] Token validation:', {
+
+        console.log("[BlogPostDialog] Token validation:", {
           expiryTime: new Date(expiryTime).toISOString(),
           currentTime: new Date(currentTime).toISOString(),
           timeUntilExpiry: `${Math.floor(timeUntilExpiry / 1000 / 60)} minutes`,
-          isValid: isDelegationValid(delegation)
+          isValid: isDelegationValid(delegation),
         });
 
         // Check if token is expired or expiring within 5 minutes
-        if (!isDelegationValid(delegation) || timeUntilExpiry < (5 * 60 * 1000)) {
-          console.log('[BlogPostDialog] Token expired or expiring soon');
-          toast.error('Sesi Anda telah berakhir. Silakan login kembali.');
+        if (!isDelegationValid(delegation) || timeUntilExpiry < 5 * 60 * 1000) {
+          console.log("[BlogPostDialog] Token expired or expiring soon");
+          toast.error("Sesi Anda telah berakhir. Silakan login kembali.");
           return false;
         }
       }
     }
 
-    console.log('[BlogPostDialog] Token validation successful');
+    console.log("[BlogPostDialog] Token validation successful");
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('[BlogPostDialog] Form submission initiated at', new Date().toISOString());
+    console.log(
+      "[BlogPostDialog] Form submission initiated at",
+      new Date().toISOString(),
+    );
 
     // Validate token before proceeding
     const isTokenValid = await validateTokenAndRefresh();
     if (!isTokenValid) {
-      console.log('[BlogPostDialog] Submission aborted due to invalid token');
+      console.log("[BlogPostDialog] Submission aborted due to invalid token");
       return;
     }
 
     if (!identity) {
-      alert('Anda harus login terlebih dahulu');
+      alert("Anda harus login terlebih dahulu");
       return;
     }
 
@@ -125,31 +128,31 @@ export default function BlogPostDialog({
       updatedAt: now,
     };
 
-    console.log('[BlogPostDialog] Attempting backend save:', {
+    console.log("[BlogPostDialog] Attempting backend save:", {
       isUpdate: !!blogPost,
       title: blogPostData.title,
-      id: blogPost?.id?.toString()
+      id: blogPost?.id?.toString(),
     });
 
     try {
       if (blogPost) {
         await updateBlogPost.mutateAsync(blogPostData);
-        console.log('[BlogPostDialog] Update successful');
+        console.log("[BlogPostDialog] Update successful");
       } else {
         await createBlogPost.mutateAsync(blogPostData);
-        console.log('[BlogPostDialog] Create successful');
+        console.log("[BlogPostDialog] Create successful");
       }
-      
-      console.log('[BlogPostDialog] Closing dialog');
+
+      console.log("[BlogPostDialog] Closing dialog");
       onOpenChange(false);
-      
+
       // Trigger cache invalidation callback
       if (onSuccess) {
-        console.log('[BlogPostDialog] Triggering cache invalidation');
+        console.log("[BlogPostDialog] Triggering cache invalidation");
         onSuccess();
       }
     } catch (error) {
-      console.error('[BlogPostDialog] Save failed:', error);
+      console.error("[BlogPostDialog] Save failed:", error);
     }
   };
 
@@ -160,7 +163,7 @@ export default function BlogPostDialog({
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {blogPost ? 'Edit Artikel' : 'Tambah Artikel Baru'}
+            {blogPost ? "Edit Artikel" : "Tambah Artikel Baru"}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -214,7 +217,7 @@ export default function BlogPostDialog({
               Batal
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Menyimpan...' : 'Simpan'}
+              {isLoading ? "Menyimpan..." : "Simpan"}
             </Button>
           </DialogFooter>
         </form>

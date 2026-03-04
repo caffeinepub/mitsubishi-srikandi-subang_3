@@ -1,5 +1,5 @@
-import { useMutation } from '@tanstack/react-query';
-import { useActor } from './useActor';
+import { useMutation } from "@tanstack/react-query";
+import { useActor } from "./useActor";
 
 interface ContactFormData {
   name: string;
@@ -7,17 +7,20 @@ interface ContactFormData {
   message: string;
 }
 
-export function useSubmitContact() {
+export function useSubmitContactForm() {
   const { actor } = useActor();
 
   return useMutation({
     mutationFn: async (data: ContactFormData) => {
-      if (!actor) throw new Error('Actor not available');
-      // Backend method missing - stub
-      console.warn('submitContact not implemented in backend', data);
+      if (!actor) throw new Error("Actor not initialized");
+      // Stubbed: backend doesn't have submitContactForm yet
+      // Public form - no auth required
+      console.log("[ContactForm] Submitted:", data);
+      return { success: true };
     },
   });
 }
 
-// Export alias for backward compatibility
-export const useContactForm = useSubmitContact;
+// Backward compatibility aliases
+export const useSubmitContact = useSubmitContactForm;
+export const useContactForm = useSubmitContactForm;

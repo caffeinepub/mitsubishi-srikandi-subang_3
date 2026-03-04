@@ -1,9 +1,5 @@
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import TestimonialList from '@/components/admin/TestimonialList';
-import TestimonialDialog from '@/components/admin/TestimonialDialog';
-import type { Testimonial } from '@/types/local';
+import TestimonialDialog from "@/components/admin/TestimonialDialog";
+import TestimonialList from "@/components/admin/TestimonialList";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,14 +9,20 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { useDeleteTestimonial } from '@/hooks/useTestimonials';
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { useDeleteTestimonial } from "@/hooks/useTestimonials";
+import type { Testimonial } from "@/types/local";
+import { Plus } from "lucide-react";
+import { useState } from "react";
 
 export default function TestimonialsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedTestimonial, setSelectedTestimonial] = useState<Testimonial | null>(null);
+  const [selectedTestimonial, setSelectedTestimonial] =
+    useState<Testimonial | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [testimonialToDelete, setTestimonialToDelete] = useState<Testimonial | null>(null);
+  const [testimonialToDelete, setTestimonialToDelete] =
+    useState<Testimonial | null>(null);
   const deleteTestimonial = useDeleteTestimonial();
 
   const handleAdd = () => {
@@ -40,7 +42,7 @@ export default function TestimonialsPage() {
 
   const handleDeleteConfirm = () => {
     if (testimonialToDelete) {
-      deleteTestimonial.mutate(testimonialToDelete.id, {
+      deleteTestimonial.mutate(Number(testimonialToDelete.id), {
         onSuccess: () => {
           setDeleteDialogOpen(false);
           setTestimonialToDelete(null);
@@ -72,8 +74,9 @@ export default function TestimonialsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Konfirmasi Hapus</AlertDialogTitle>
             <AlertDialogDescription>
-              Apakah Anda yakin ingin menghapus testimoni dari "{testimonialToDelete?.customerName}"?
-              Tindakan ini tidak dapat dibatalkan.
+              Apakah Anda yakin ingin menghapus testimoni dari "
+              {testimonialToDelete?.customerName}"? Tindakan ini tidak dapat
+              dibatalkan.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

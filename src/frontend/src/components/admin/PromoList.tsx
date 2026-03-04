@@ -1,17 +1,3 @@
-import { useState } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useGetAllPromotions, useDeletePromotion, useTogglePromoActiveStatus } from '@/hooks/usePromotions';
-import type { Promotion } from '@/types/local';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,8 +7,26 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Switch } from '@/components/ui/switch';
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  useDeletePromotion,
+  useGetAllPromotions,
+  useTogglePromoActiveStatus,
+} from "@/hooks/usePromotions";
+import type { Promotion } from "@/types/local";
+import { Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
 
 interface PromoListProps {
   onEdit: (promo: Promotion) => void;
@@ -42,7 +46,7 @@ export default function PromoList({ onEdit }: PromoListProps) {
 
   const handleDeleteConfirm = () => {
     if (promoToDelete) {
-      deletePromotion.mutate(promoToDelete.id, {
+      deletePromotion.mutate(Number(promoToDelete.id), {
         onSuccess: () => {
           setDeleteDialogOpen(false);
           setPromoToDelete(null);
@@ -52,7 +56,10 @@ export default function PromoList({ onEdit }: PromoListProps) {
   };
 
   const handleToggleActive = (promoId: bigint, currentActive: boolean) => {
-    toggleActiveStatus.mutate({ promoId, active: !currentActive });
+    toggleActiveStatus.mutate({
+      promoId: Number(promoId),
+      active: !currentActive,
+    });
   };
 
   if (isLoading) {
@@ -89,18 +96,25 @@ export default function PromoList({ onEdit }: PromoListProps) {
             <TableRow key={promo.id.toString()}>
               <TableCell className="font-medium">{promo.title}</TableCell>
               <TableCell>
-                {new Date(Number(promo.startDate) / 1000000).toLocaleDateString('id-ID')} -{' '}
-                {new Date(Number(promo.endDate) / 1000000).toLocaleDateString('id-ID')}
+                {new Date(Number(promo.startDate) / 1000000).toLocaleDateString(
+                  "id-ID",
+                )}{" "}
+                -{" "}
+                {new Date(Number(promo.endDate) / 1000000).toLocaleDateString(
+                  "id-ID",
+                )}
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={promo.active}
-                    onCheckedChange={() => handleToggleActive(promo.id, promo.active)}
+                    onCheckedChange={() =>
+                      handleToggleActive(promo.id, promo.active)
+                    }
                     disabled={toggleActiveStatus.isPending}
                   />
                   <span className="text-sm">
-                    {promo.active ? 'Aktif' : 'Nonaktif'}
+                    {promo.active ? "Aktif" : "Nonaktif"}
                   </span>
                 </div>
               </TableCell>

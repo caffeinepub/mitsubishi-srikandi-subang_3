@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import BlogPostList from '@/components/admin/BlogPostList';
-import BlogPostDialog from '@/components/admin/BlogPostDialog';
-import type { BlogPost } from '@/types/local';
-import { useQueryClient } from '@tanstack/react-query';
+import BlogPostDialog from "@/components/admin/BlogPostDialog";
+import BlogPostList from "@/components/admin/BlogPostList";
+import { Button } from "@/components/ui/button";
+import type { BlogPost } from "@/types/local";
+import { useQueryClient } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
+import { useState } from "react";
 
 export default function BlogPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -22,8 +22,8 @@ export default function BlogPage() {
   };
 
   const handleSuccess = () => {
-    console.log('[BlogPage] Invalidating blogPosts cache');
-    queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
+    console.log("[BlogPage] Invalidating blogPosts cache");
+    queryClient.invalidateQueries({ queryKey: ["blogPosts"] });
   };
 
   return (

@@ -1,21 +1,23 @@
-import { useState } from 'react';
-import { useParams } from '@tanstack/react-router';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useGetAllVehicleCatalogs } from '@/hooks/usePublicData';
-import CommercialVariantSelector from '@/components/public/CommercialVariantSelector';
-import ProductInteractions from '@/components/public/ProductInteractions';
+import CommercialVariantSelector from "@/components/public/CommercialVariantSelector";
+import ProductInteractions from "@/components/public/ProductInteractions";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useGetAllVehicleCatalogs } from "@/hooks/usePublicData";
+import { useParams } from "@tanstack/react-router";
+import { useState } from "react";
 
 export default function MobilNiagaDetailPage() {
-  const { kategori, slug } = useParams({ from: '/mobil-niaga/$kategori/$slug' });
+  const { kategori: _kategori, slug } = useParams({
+    from: "/mobil-niaga/$kategori/$slug",
+  });
   const { data: catalogs } = useGetAllVehicleCatalogs();
 
   const catalog = catalogs?.find(
-    (c) => c.vehicle.vehicleName.toLowerCase().replace(/\s+/g, '-') === slug
+    (c) => c.vehicle.vehicleName.toLowerCase().replace(/\s+/g, "-") === slug,
   );
 
   const [selectedVariantId, setSelectedVariantId] = useState<bigint | null>(
-    catalog?.variants[0]?.id || null
+    catalog?.variants[0]?.id || null,
   );
 
   if (!catalog) {
@@ -26,13 +28,16 @@ export default function MobilNiagaDetailPage() {
     );
   }
 
-  const selectedVariant = catalog.variants.find((v) => v.id === selectedVariantId);
-  const currentPrice = selectedVariant?.overridePrice || catalog.vehicle.basePrice;
+  const selectedVariant = catalog.variants.find(
+    (v) => v.id === selectedVariantId,
+  );
+  const currentPrice =
+    selectedVariant?.overridePrice || catalog.vehicle.basePrice;
 
   const formatPrice = (price: bigint) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
       minimumFractionDigits: 0,
     }).format(Number(price));
   };
@@ -57,7 +62,9 @@ export default function MobilNiagaDetailPage() {
 
         <div>
           <div className="mb-6">
-            <h1 className="text-3xl font-bold mb-4">{catalog.vehicle.vehicleName}</h1>
+            <h1 className="text-3xl font-bold mb-4">
+              {catalog.vehicle.vehicleName}
+            </h1>
             <p className="text-gray-600 mb-6">{catalog.vehicle.description}</p>
             <div className="text-3xl font-bold text-red-600 mb-6">
               {formatPrice(currentPrice)}
@@ -107,9 +114,14 @@ export default function MobilNiagaDetailPage() {
             <div className="grid md:grid-cols-2 gap-4">
               {catalog.features.length > 0 ? (
                 catalog.features.map((feature) => (
-                  <div key={feature.id.toString()} className="border rounded-lg p-4">
+                  <div
+                    key={feature.id.toString()}
+                    className="border rounded-lg p-4"
+                  >
                     <h3 className="font-medium mb-2">{feature.name}</h3>
-                    <p className="text-gray-600 text-sm">{feature.description}</p>
+                    <p className="text-gray-600 text-sm">
+                      {feature.description}
+                    </p>
                   </div>
                 ))
               ) : (

@@ -1,27 +1,35 @@
-import { useState, useEffect } from 'react';
-import { useCreditSimulationForm } from '@/hooks/useCreditSimulationForm';
-import { useGetAllVehicleCatalogs } from '@/hooks/usePublicData';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
-import { calculateInstallment } from '@/utils/creditCalculation';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useCreditSimulationForm } from "@/hooks/useCreditSimulationForm";
+import { useGetAllVehicleCatalogs } from "@/hooks/usePublicData";
+import { calculateInstallment } from "@/utils/creditCalculation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function SimulasiKreditPage() {
   const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    phone: '',
-    email: '',
-    vehicleId: '',
-    downPayment: '',
-    tenor: '',
-    message: '',
+    name: "",
+    address: "",
+    phone: "",
+    email: "",
+    vehicleId: "",
+    downPayment: "",
+    tenor: "",
+    message: "",
   });
 
-  const [selectedVehiclePrice, setSelectedVehiclePrice] = useState<bigint>(BigInt(0));
+  const [selectedVehiclePrice, setSelectedVehiclePrice] = useState<bigint>(
+    BigInt(0),
+  );
   const [estimatedInstallment, setEstimatedInstallment] = useState<number>(0);
 
   const { data: catalogs } = useGetAllVehicleCatalogs();
@@ -32,17 +40,24 @@ export default function SimulasiKreditPage() {
       const installment = calculateInstallment(
         Number(selectedVehiclePrice),
         Number(formData.downPayment),
-        Number(formData.tenor)
+        Number(formData.tenor),
       );
       setEstimatedInstallment(installment);
     } else {
       setEstimatedInstallment(0);
     }
-  }, [formData.vehicleId, formData.downPayment, formData.tenor, selectedVehiclePrice]);
+  }, [
+    formData.vehicleId,
+    formData.downPayment,
+    formData.tenor,
+    selectedVehiclePrice,
+  ]);
 
   const handleVehicleChange = (vehicleId: string) => {
     setFormData({ ...formData, vehicleId });
-    const catalog = catalogs?.find((c) => c.vehicle.id.toString() === vehicleId);
+    const catalog = catalogs?.find(
+      (c) => c.vehicle.id.toString() === vehicleId,
+    );
     if (catalog) {
       setSelectedVehiclePrice(catalog.vehicle.basePrice);
     }
@@ -58,30 +73,30 @@ export default function SimulasiKreditPage() {
       },
       {
         onSuccess: () => {
-          toast.success('Simulasi kredit berhasil dikirim');
+          toast.success("Simulasi kredit berhasil dikirim");
           setFormData({
-            name: '',
-            address: '',
-            phone: '',
-            email: '',
-            vehicleId: '',
-            downPayment: '',
-            tenor: '',
-            message: '',
+            name: "",
+            address: "",
+            phone: "",
+            email: "",
+            vehicleId: "",
+            downPayment: "",
+            tenor: "",
+            message: "",
           });
           setEstimatedInstallment(0);
         },
         onError: () => {
-          toast.error('Gagal mengirim simulasi kredit');
+          toast.error("Gagal mengirim simulasi kredit");
         },
-      }
+      },
     );
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
       minimumFractionDigits: 0,
     }).format(price);
   };
@@ -96,7 +111,9 @@ export default function SimulasiKreditPage() {
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               required
             />
           </div>
@@ -105,7 +122,9 @@ export default function SimulasiKreditPage() {
             <Input
               id="address"
               value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, address: e.target.value })
+              }
               required
             />
           </div>
@@ -114,7 +133,9 @@ export default function SimulasiKreditPage() {
             <Input
               id="phone"
               value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, phone: e.target.value })
+              }
               required
             />
           </div>
@@ -124,20 +145,30 @@ export default function SimulasiKreditPage() {
               id="email"
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
               required
             />
           </div>
           <div>
             <Label htmlFor="vehicleId">Unit Diminati *</Label>
-            <Select value={formData.vehicleId} onValueChange={handleVehicleChange} required>
+            <Select
+              value={formData.vehicleId}
+              onValueChange={handleVehicleChange}
+              required
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Pilih kendaraan" />
               </SelectTrigger>
               <SelectContent>
                 {catalogs?.map((catalog) => (
-                  <SelectItem key={catalog.vehicle.id.toString()} value={catalog.vehicle.id.toString()}>
-                    {catalog.vehicle.vehicleName} - {formatPrice(Number(catalog.vehicle.basePrice))}
+                  <SelectItem
+                    key={catalog.vehicle.id.toString()}
+                    value={catalog.vehicle.id.toString()}
+                  >
+                    {catalog.vehicle.vehicleName} -{" "}
+                    {formatPrice(Number(catalog.vehicle.basePrice))}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -149,13 +180,21 @@ export default function SimulasiKreditPage() {
               id="downPayment"
               type="number"
               value={formData.downPayment}
-              onChange={(e) => setFormData({ ...formData, downPayment: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, downPayment: e.target.value })
+              }
               required
             />
           </div>
           <div>
             <Label htmlFor="tenor">Tenor (Bulan) *</Label>
-            <Select value={formData.tenor} onValueChange={(value) => setFormData({ ...formData, tenor: value })} required>
+            <Select
+              value={formData.tenor}
+              onValueChange={(value) =>
+                setFormData({ ...formData, tenor: value })
+              }
+              required
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Pilih tenor" />
               </SelectTrigger>
@@ -171,9 +210,15 @@ export default function SimulasiKreditPage() {
 
           {estimatedInstallment > 0 && (
             <div className="bg-[#C90010] text-white p-6 rounded-lg">
-              <h3 className="text-xl font-bold mb-2">Estimasi Cicilan Per Bulan</h3>
-              <p className="text-3xl font-bold">{formatPrice(estimatedInstallment)}</p>
-              <p className="text-sm mt-2 opacity-90">*Estimasi ini bersifat sementara dan dapat berubah</p>
+              <h3 className="text-xl font-bold mb-2">
+                Estimasi Cicilan Per Bulan
+              </h3>
+              <p className="text-3xl font-bold">
+                {formatPrice(estimatedInstallment)}
+              </p>
+              <p className="text-sm mt-2 opacity-90">
+                *Estimasi ini bersifat sementara dan dapat berubah
+              </p>
             </div>
           )}
 
@@ -182,7 +227,9 @@ export default function SimulasiKreditPage() {
             <Textarea
               id="message"
               value={formData.message}
-              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, message: e.target.value })
+              }
               rows={4}
             />
           </div>
@@ -191,7 +238,7 @@ export default function SimulasiKreditPage() {
             className="w-full bg-[#C90010] hover:bg-[#A00008]"
             disabled={creditMutation.isPending}
           >
-            {creditMutation.isPending ? 'Mengirim...' : 'Kirim Data'}
+            {creditMutation.isPending ? "Mengirim..." : "Kirim Data"}
           </Button>
         </form>
       </div>

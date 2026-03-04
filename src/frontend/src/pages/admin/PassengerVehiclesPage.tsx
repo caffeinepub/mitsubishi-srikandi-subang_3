@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import PassengerVehicleList from '@/components/admin/PassengerVehicleList';
-import PassengerVehicleDialog from '@/components/admin/PassengerVehicleDialog';
-import type { Vehicle } from '@/types/local';
+import PassengerVehicleDialog from "@/components/admin/PassengerVehicleDialog";
+import PassengerVehicleList from "@/components/admin/PassengerVehicleList";
+import { Button } from "@/components/ui/button";
+import type { Vehicle } from "@/types/local";
+import { Plus } from "lucide-react";
+import { useState } from "react";
 
 export default function PassengerVehiclesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);

@@ -1,7 +1,8 @@
 // Local type definitions for types not exported by backend
 // These should match the backend types but are defined here for frontend use
 
-import { Principal } from '@dfinity/principal';
+import type { Principal } from "@dfinity/principal";
+import type { UserRole } from "../backend";
 
 export interface Vehicle {
   id: bigint;
@@ -119,12 +120,13 @@ export interface WebsiteSettings {
   lastUpdated: bigint;
 }
 
+// Updated to match the new Principal-based AdminRecord from the backend.
+// Fields: principal, role, createdAt, updatedAt — no name, email, or password.
 export interface AdminUser {
   principal: Principal;
-  name: string;
-  email: string;
-  role: 'admin' | 'user' | 'guest';
+  role: UserRole;
   createdAt: bigint;
+  updatedAt: bigint;
 }
 
 export interface ContactSubmission {

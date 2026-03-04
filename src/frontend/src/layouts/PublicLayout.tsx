@@ -1,18 +1,18 @@
-import { ReactNode, useEffect } from 'react';
-import { useLocation } from '@tanstack/react-router';
-import Navbar from '@/components/public/Navbar';
-import HeroSection from '@/components/public/HeroSection';
-import Footer from '@/components/public/Footer';
-import BottomCTABar from '@/components/public/BottomCTABar';
-import { useActor } from '@/hooks/useActor';
+import BottomCTABar from "@/components/public/BottomCTABar";
+import Footer from "@/components/public/Footer";
+import HeroSection from "@/components/public/HeroSection";
+import Navbar from "@/components/public/Navbar";
+import { useActor } from "@/hooks/useActor";
 import {
-  getOrCreateSessionId,
-  detectDeviceType,
   detectBrowser,
-  isBot,
-  isAdminRoute,
+  detectDeviceType,
   getClientIP,
-} from '@/utils/visitorTracking';
+  getOrCreateSessionId,
+  isAdminRoute,
+  isBot,
+} from "@/utils/visitorTracking";
+import { useLocation } from "@tanstack/react-router";
+import { type ReactNode, useEffect } from "react";
 
 interface PublicLayoutProps {
   children: ReactNode;
@@ -24,25 +24,26 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
   const { actor } = useActor();
 
   // Don't show HeroSection on homepage
-  const showHeroSection = pathname !== '/';
+  const showHeroSection = pathname !== "/";
 
   // Track visitor on every page navigation
+  // biome-ignore lint/correctness/useExhaustiveDependencies: location.pathname triggers re-run intentionally
   useEffect(() => {
     // Skip tracking if actor is not ready
     if (!actor) {
-      console.log('[Visitor Tracking] Actor not ready yet');
+      console.log("[Visitor Tracking] Actor not ready yet");
       return;
     }
 
     // Skip tracking for admin routes
     if (isAdminRoute(pathname)) {
-      console.log('[Visitor Tracking] Skipping admin route:', pathname);
+      console.log("[Visitor Tracking] Skipping admin route:", pathname);
       return;
     }
 
     // Skip tracking for bots
     if (isBot()) {
-      console.log('[Visitor Tracking] Skipping bot');
+      console.log("[Visitor Tracking] Skipping bot");
       return;
     }
 
@@ -51,11 +52,11 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
     const ipAddress = getClientIP();
     const userAgent = navigator.userAgent;
     const pageUrl = window.location.href;
-    const referrer = document.referrer || 'direct';
+    const referrer = document.referrer || "direct";
     const deviceType = detectDeviceType();
     const browser = detectBrowser();
 
-    console.log('[Visitor Tracking] Tracking visit:', {
+    console.log("[Visitor Tracking] Tracking visit:", {
       sessionId,
       pageUrl,
       deviceType,
@@ -64,14 +65,22 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
 
     // Track the visit
     actor
-      .trackVisitor(sessionId, ipAddress, userAgent, pageUrl, referrer, deviceType, browser)
+      .trackVisitor(
+        sessionId,
+        ipAddress,
+        userAgent,
+        pageUrl,
+        referrer,
+        deviceType,
+        browser,
+      )
       .then(() => {
-        console.log('[Visitor Tracking] Successfully tracked visit');
+        console.log("[Visitor Tracking] Successfully tracked visit");
       })
       .catch((error) => {
-        console.error('[Visitor Tracking] Error:', error);
+        console.error("[Visitor Tracking] Error:", error);
       });
-  }, [location.pathname, actor]);
+  }, [location.pathname, pathname, actor]);
 
   return (
     <div className="min-h-screen flex flex-col pb-[50px]">

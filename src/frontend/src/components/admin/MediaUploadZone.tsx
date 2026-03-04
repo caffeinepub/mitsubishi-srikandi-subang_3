@@ -1,178 +1,287 @@
-import { useCallback, useState } from 'react';
-import { Upload } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { useUploadMediaAsset } from '@/hooks/useMediaAssets';
-import { useActor } from '@/hooks/useActor';
-import { useInternetIdentity } from '@/hooks/useInternetIdentity';
-import { validateDelegationIdentity } from '@/utils/validation';
-import { toast } from 'sonner';
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { useActor } from "@/hooks/useActor";
+import { useInternetIdentity } from "@/hooks/useInternetIdentity";
+import { useUploadMediaAsset } from "@/hooks/useMediaAssets";
+import { validateDelegationIdentity } from "@/utils/validation";
+import { AlertCircle, CheckCircle, Upload, X } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-const ALLOWED_DOCUMENT_TYPES = ['application/pdf'];
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
-const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024; // 10MB
+interface UploadFile {
+  file: File;
+  status: "pending" | "uploading" | "success" | "error";
+  progress: number;
+  error?: string;
+}
 
 interface MediaUploadZoneProps {
   onUploadSuccess?: () => void;
 }
 
-export default function MediaUploadZone({ onUploadSuccess }: MediaUploadZoneProps) {
-  const { actor, isFetching: actorFetching } = useActor();
-  const { identity } = useInternetIdentity();
-  const uploadAsset = useUploadMediaAsset();
+const ACCEPTED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "application/pdf",
+];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+export default function MediaUploadZone({
+  onUploadSuccess,
+}: MediaUploadZoneProps) {
+  const [files, setFiles] = useState<UploadFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadAsset = useUploadMediaAsset();
+  const { identity } = useInternetIdentity();
+  const { actor, isFetching: actorFetching } = useActor();
 
-  const validateFile = (file: File): string | null => {
-    const isImage = ALLOWED_IMAGE_TYPES.includes(file.type);
-    const isDocument = ALLOWED_DOCUMENT_TYPES.includes(file.type);
-
-    if (!isImage && !isDocument) {
-      return 'Format file tidak didukung. Gunakan JPEG, PNG, GIF, WebP, atau PDF.';
+  const validateFile = useCallback((file: File): string | null => {
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      return `Tipe file tidak didukung: ${file.type}. Gunakan JPG, PNG, GIF, WebP, atau PDF.`;
     }
-
-    const maxSize = isImage ? MAX_IMAGE_SIZE : MAX_DOCUMENT_SIZE;
-    if (file.size > maxSize) {
-      const maxSizeMB = maxSize / (1024 * 1024);
-      return `Ukuran file terlalu besar. Maksimal ${maxSizeMB}MB untuk ${isImage ? 'gambar' : 'dokumen'}.`;
+    if (file.size > MAX_FILE_SIZE) {
+      return `Ukuran file terlalu besar: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maksimal 10MB.`;
     }
-
     return null;
-  };
+  }, []);
 
-  const handleFileUpload = useCallback(
-    async (files: FileList | null) => {
-      console.log('[MediaUpload] Upload initiated at', new Date().toISOString());
-      
-      if (!files || files.length === 0) return;
-
-      // Check if actor is ready
-      if (!actor) {
-        toast.error('Sistem belum siap. Silakan tunggu sebentar dan coba lagi.');
-        return;
-      }
-
-      // Validate delegation identity
-      const validationError = validateDelegationIdentity(identity);
-      if (validationError) {
-        console.log('[MediaUpload] Delegation validation failed:', validationError);
-        toast.error(validationError);
-        return;
-      }
-
-      const file = files[0];
-      console.log('[MediaUpload] File selected:', {
-        name: file.name,
-        size: file.size,
-        type: file.type
+  const addFiles = useCallback(
+    (newFiles: FileList | File[]) => {
+      const fileArray = Array.from(newFiles);
+      const uploadFiles: UploadFile[] = fileArray.map((file) => {
+        const error = validateFile(file);
+        return {
+          file,
+          status: error ? "error" : "pending",
+          progress: 0,
+          error: error || undefined,
+        };
       });
-
-      const fileValidationError = validateFile(file);
-      if (fileValidationError) {
-        console.log('[MediaUpload] File validation failed:', fileValidationError);
-        toast.error(fileValidationError);
-        return;
-      }
-
-      setUploadProgress(0);
-      console.log('[MediaUpload] Starting file read');
-
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const arrayBuffer = e.target?.result as ArrayBuffer;
-        const bytes = new Uint8Array(arrayBuffer);
-
-        console.log('[MediaUpload] File read complete, starting upload');
-
-        try {
-          await uploadAsset.mutateAsync({
-            fileContent: bytes,
-            filename: file.name,
-            mimeType: file.type,
-            fileSize: file.size,
-            onProgress: (percentage) => {
-              setUploadProgress(percentage);
-            }
-          });
-          
-          console.log('[MediaUpload] Upload successful');
-          setUploadProgress(null);
-          
-          // Trigger cache invalidation callback
-          if (onUploadSuccess) {
-            console.log('[MediaUpload] Triggering cache invalidation');
-            onUploadSuccess();
-          }
-        } catch (error) {
-          console.error('[MediaUpload] Upload failed:', error);
-          setUploadProgress(null);
-        }
-      };
-
-      reader.onerror = () => {
-        console.error('[MediaUpload] File read error');
-        toast.error('Gagal membaca file');
-        setUploadProgress(null);
-      };
-
-      reader.readAsArrayBuffer(file);
+      setFiles((prev) => [...prev, ...uploadFiles]);
     },
-    [actor, identity, uploadAsset, onUploadSuccess]
+    [validateFile],
   );
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      addFiles(e.dataTransfer.files);
+    },
+    [addFiles],
+  );
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      addFiles(e.target.files);
+    }
   };
 
-  const handleDragLeave = () => {
-    setIsDragging(false);
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    handleFileUpload(e.dataTransfer.files);
+  const uploadSingleFile = async (uploadFile: UploadFile, index: number) => {
+    // Validate identity
+    const validationError = validateDelegationIdentity(identity);
+    if (validationError) {
+      setFiles((prev) =>
+        prev.map((f, i) =>
+          i === index ? { ...f, status: "error", error: validationError } : f,
+        ),
+      );
+      return;
+    }
+
+    // Check actor readiness
+    if (!actor || actorFetching) {
+      setFiles((prev) =>
+        prev.map((f, i) =>
+          i === index
+            ? { ...f, status: "error", error: "Actor belum siap. Coba lagi." }
+            : f,
+        ),
+      );
+      return;
+    }
+
+    setFiles((prev) =>
+      prev.map((f, i) =>
+        i === index ? { ...f, status: "uploading", progress: 0 } : f,
+      ),
+    );
+
+    try {
+      const arrayBuffer = await uploadFile.file.arrayBuffer();
+      const data = new Uint8Array(arrayBuffer);
+
+      await uploadAsset.mutateAsync({
+        filename: uploadFile.file.name,
+        mimeType: uploadFile.file.type,
+        data,
+        fileSize: BigInt(uploadFile.file.size),
+        onProgress: (pct) => {
+          setFiles((prev) =>
+            prev.map((f, i) => (i === index ? { ...f, progress: pct } : f)),
+          );
+        },
+      });
+
+      setFiles((prev) =>
+        prev.map((f, i) =>
+          i === index ? { ...f, status: "success", progress: 100 } : f,
+        ),
+      );
+
+      onUploadSuccess?.();
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Upload gagal";
+      setFiles((prev) =>
+        prev.map((f, i) =>
+          i === index ? { ...f, status: "error", error: errorMessage } : f,
+        ),
+      );
+    }
   };
 
-  const isActorReady = !!actor && !actorFetching;
+  const uploadAll = async () => {
+    const pendingEntries = files
+      .map((f, i) => ({ file: f, index: i }))
+      .filter(({ file }) => file.status === "pending");
+
+    for (const { file, index } of pendingEntries) {
+      await uploadSingleFile(file, index);
+    }
+  };
+
+  const clearCompleted = () => {
+    setFiles((prev) => prev.filter((f) => f.status !== "success"));
+  };
+
+  const hasPending = files.some((f) => f.status === "pending");
+  const hasCompleted = files.some((f) => f.status === "success");
 
   return (
-    <div
-      className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-        isDragging ? 'border-primary bg-primary/5' : 'border-gray-300'
-      }`}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
-      <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-      <p className="text-lg font-medium mb-2">Upload Media</p>
-      <p className="text-sm text-gray-500 mb-4">
-        Drag & drop file atau klik tombol di bawah
-      </p>
-      <p className="text-xs text-gray-400 mb-4">
-        Format: JPEG, PNG, GIF, WebP (max 5MB), PDF (max 10MB)
-      </p>
-      <input
-        type="file"
-        id="file-upload"
-        className="hidden"
-        accept={[...ALLOWED_IMAGE_TYPES, ...ALLOWED_DOCUMENT_TYPES].join(',')}
-        onChange={(e) => handleFileUpload(e.target.files)}
-        disabled={!isActorReady || uploadAsset.isPending}
-      />
-      <Button
-        onClick={() => document.getElementById('file-upload')?.click()}
-        disabled={!isActorReady || uploadAsset.isPending}
+    <div className="space-y-4">
+      {/* Drop Zone */}
+      {/* biome-ignore lint/a11y/useSemanticElements: drop zone div needs onDrop which <button> doesn't support natively */}
+      <div
+        role="button"
+        tabIndex={0}
+        onDrop={handleDrop}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        onClick={() => fileInputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click();
+        }}
+        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+          isDragging
+            ? "border-primary bg-primary/5"
+            : "border-gray-300 hover:border-primary hover:bg-gray-50"
+        }`}
       >
-        {uploadAsset.isPending ? 'Mengunggah...' : isActorReady ? 'Pilih File' : 'Memuat...'}
-      </Button>
-      {uploadProgress !== null && (
-        <div className="mt-4">
-          <Progress value={uploadProgress} className="w-full" />
-          <p className="text-sm text-gray-600 mt-2">{uploadProgress}%</p>
+        <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+        <p className="text-lg font-medium text-gray-700">
+          Drag &amp; drop file di sini
+        </p>
+        <p className="text-sm text-gray-500 mt-1">
+          atau klik untuk memilih file
+        </p>
+        <p className="text-xs text-gray-400 mt-2">
+          JPG, PNG, GIF, WebP, PDF — Maks. 10MB per file
+        </p>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept={ACCEPTED_TYPES.join(",")}
+          onChange={handleFileInput}
+          className="hidden"
+        />
+      </div>
+
+      {/* File List */}
+      {files.length > 0 && (
+        <div className="space-y-2">
+          {files.map((uploadFile, index) => (
+            <div
+              key={`file-${uploadFile.file.name}-${index}`}
+              className="flex items-center gap-3 p-3 border rounded-lg bg-white"
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {uploadFile.file.name}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {(uploadFile.file.size / 1024).toFixed(1)} KB
+                </p>
+                {uploadFile.status === "uploading" && (
+                  <Progress value={uploadFile.progress} className="mt-1 h-1" />
+                )}
+                {uploadFile.status === "error" && uploadFile.error && (
+                  <p className="text-xs text-destructive mt-1">
+                    {uploadFile.error}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                {uploadFile.status === "success" && (
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                )}
+                {uploadFile.status === "error" && (
+                  <AlertCircle className="h-5 w-5 text-destructive" />
+                )}
+                {uploadFile.status === "pending" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      uploadSingleFile(uploadFile, index);
+                    }}
+                  >
+                    Upload
+                  </Button>
+                )}
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFile(index);
+                  }}
+                  className="h-7 w-7"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+
+          <div className="flex gap-2 justify-end">
+            {hasCompleted && (
+              <Button variant="outline" size="sm" onClick={clearCompleted}>
+                Hapus yang Selesai
+              </Button>
+            )}
+            {hasPending && (
+              <Button
+                size="sm"
+                onClick={uploadAll}
+                disabled={uploadAsset.isPending}
+              >
+                {uploadAsset.isPending ? "Mengupload..." : "Upload Semua"}
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -1,14 +1,14 @@
-import { useQuery } from '@tanstack/react-query';
-import { useActor } from './useActor';
-import type { VehicleCatalog } from '../types/local';
+import { useQuery } from "@tanstack/react-query";
+import type { VehicleCatalog } from "../types/local";
+import { useActor } from "./useActor";
 
 export function useGetAllVehicleCatalogs() {
   const { actor, isFetching } = useActor();
 
   return useQuery<VehicleCatalog[]>({
-    queryKey: ['vehicleCatalogs'],
+    queryKey: ["vehicleCatalogs"],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error("Actor not available");
       // Backend method missing - return empty array
       return [] as VehicleCatalog[];
     },
@@ -20,7 +20,7 @@ export function useGetVehicleWithCatalog(vehicleId: bigint | null) {
   const { actor, isFetching } = useActor();
 
   return useQuery<VehicleCatalog | null>({
-    queryKey: ['vehicleWithCatalog', vehicleId?.toString()],
+    queryKey: ["vehicleWithCatalog", vehicleId?.toString()],
     queryFn: async () => {
       if (!actor || !vehicleId) return null;
       // Backend method missing - return null

@@ -1,203 +1,113 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useActor } from './useActor';
-import type { BlogPost } from '../types/local';
-import { toast } from 'sonner';
-
-// Enhanced helper function to check if error is authentication-related
-function isAuthError(error: any): boolean {
-  const errorMessage = error?.message?.toLowerCase() || '';
-  const errorString = String(error).toLowerCase();
-  
-  const isAuth = (
-    errorMessage.includes('unauthorized') ||
-    errorMessage.includes('not authenticated') ||
-    errorMessage.includes('authentication required') ||
-    errorMessage.includes('session expired') ||
-    errorMessage.includes('invalid session') ||
-    errorMessage.includes('login required') ||
-    errorMessage.includes('permission denied') ||
-    errorString.includes('unauthorized')
-  );
-  
-  console.log('[useBlogPosts] Error classification:', {
-    message: error?.message,
-    isAuthError: isAuth
-  });
-  
-  return isAuth;
-}
-
-function isNetworkError(error: any): boolean {
-  const errorMessage = error?.message?.toLowerCase() || '';
-  const errorString = String(error).toLowerCase();
-  
-  return (
-    errorMessage.includes('network') ||
-    errorMessage.includes('fetch') ||
-    errorMessage.includes('connection') ||
-    errorMessage.includes('timeout') ||
-    errorString.includes('networkerror') ||
-    errorString.includes('failed to fetch')
-  );
-}
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { BlogPost } from "../types/local";
+import { protectedCall } from "../utils/apiClient";
+import { useActor } from "./useActor";
+import { useInternetIdentity } from "./useInternetIdentity";
 
 export function useGetAllBlogPosts() {
   const { actor, isFetching } = useActor();
 
   return useQuery<BlogPost[]>({
-    queryKey: ['blogPosts'],
+    queryKey: ["blogPosts"],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      console.log('[useGetAllBlogPosts] Fetching blog posts');
-      // Stub: Backend doesn't have getBlogPosts method yet
-      console.warn('[useGetAllBlogPosts] Backend method not implemented, returning empty array');
+      if (!actor) return [];
+      // Stubbed: backend doesn't have getAllBlogPosts yet
       return [];
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useGetBlogPost(blogPostId: bigint | null) {
+export function useGetBlogPostById(id: number) {
   const { actor, isFetching } = useActor();
 
   return useQuery<BlogPost | null>({
-    queryKey: ['blogPost', blogPostId?.toString()],
+    queryKey: ["blogPost", id],
     queryFn: async () => {
-      if (!actor || !blogPostId) return null;
-      // Stub: return null until backend implements getBlogPost
+      if (!actor) return null;
       return null;
     },
-    enabled: !!actor && !isFetching && blogPostId !== null,
+    enabled: !!actor && !isFetching && !!id,
   });
 }
 
 export function useCreateBlogPost() {
   const { actor } = useActor();
+  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (blogPost: BlogPost) => {
-      if (!actor) throw new Error('Actor not available');
-      console.log('[useCreateBlogPost] Creating blog post:', blogPost.title);
-      
-      // Stub: Backend doesn't have createBlogPost method yet
-      console.warn('[useCreateBlogPost] Backend method not implemented');
-      throw new Error('Backend method createBlogPost not implemented yet');
+    mutationFn: async (_post: BlogPost) => {
+      if (!actor) throw new Error("Actor not initialized");
+      const principalId = identity?.getPrincipal().toString();
+      return protectedCall(principalId, async () => {
+        throw new Error("createBlogPost not yet implemented in backend");
+      });
     },
     onSuccess: () => {
-      console.log('[useCreateBlogPost] Success - invalidating queries');
-      queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
-      queryClient.invalidateQueries({ queryKey: ['adminStats'] });
-      toast.success('Artikel berhasil disimpan');
-    },
-    onError: (error: any) => {
-      console.error('[useCreateBlogPost] Error:', error);
-      
-      if (isNetworkError(error)) {
-        toast.error('Koneksi gagal. Periksa internet Anda dan coba lagi.');
-      } else if (isAuthError(error)) {
-        toast.error('Sesi Anda telah berakhir. Silakan login kembali.');
-      } else {
-        const errorMsg = error.message || 'Gagal menyimpan artikel';
-        toast.error(errorMsg);
-      }
+      queryClient.invalidateQueries({ queryKey: ["blogPosts"] });
     },
   });
 }
 
 export function useUpdateBlogPost() {
   const { actor } = useActor();
+  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (blogPost: BlogPost) => {
-      if (!actor) throw new Error('Actor not available');
-      console.log('[useUpdateBlogPost] Updating blog post:', blogPost.id);
-      
-      // Stub: Backend doesn't have updateBlogPost method yet
-      console.warn('[useUpdateBlogPost] Backend method not implemented');
-      throw new Error('Backend method updateBlogPost not implemented yet');
+    mutationFn: async (_post: BlogPost) => {
+      if (!actor) throw new Error("Actor not initialized");
+      const principalId = identity?.getPrincipal().toString();
+      return protectedCall(principalId, async () => {
+        throw new Error("updateBlogPost not yet implemented in backend");
+      });
     },
     onSuccess: () => {
-      console.log('[useUpdateBlogPost] Success - invalidating queries');
-      queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
-      queryClient.invalidateQueries({ queryKey: ['blogPost'] });
-      queryClient.invalidateQueries({ queryKey: ['adminStats'] });
-      toast.success('Artikel berhasil diperbarui');
-    },
-    onError: (error: any) => {
-      console.error('[useUpdateBlogPost] Error:', error);
-      
-      if (isNetworkError(error)) {
-        toast.error('Koneksi gagal. Periksa internet Anda dan coba lagi.');
-      } else if (isAuthError(error)) {
-        toast.error('Sesi Anda telah berakhir. Silakan login kembali.');
-      } else {
-        const errorMsg = error.message || 'Gagal memperbarui artikel';
-        toast.error(errorMsg);
-      }
+      queryClient.invalidateQueries({ queryKey: ["blogPosts"] });
     },
   });
 }
 
 export function useDeleteBlogPost() {
   const { actor } = useActor();
+  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (blogPostId: bigint) => {
-      if (!actor) throw new Error('Actor not available');
-      console.log('[useDeleteBlogPost] Deleting blog post:', blogPostId);
-      // Stub: do nothing until backend implements deleteBlogPost
+    mutationFn: async (_id: number) => {
+      if (!actor) throw new Error("Actor not initialized");
+      const principalId = identity?.getPrincipal().toString();
+      return protectedCall(principalId, async () => {
+        throw new Error("deleteBlogPost not yet implemented in backend");
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
-      queryClient.invalidateQueries({ queryKey: ['adminStats'] });
-      toast.success('Artikel berhasil dihapus');
-      console.log('[useDeleteBlogPost] Success');
-    },
-    onError: (error: any) => {
-      console.error('[useDeleteBlogPost] Error:', error);
-      
-      if (isNetworkError(error)) {
-        toast.error('Koneksi gagal. Periksa internet Anda dan coba lagi.');
-      } else if (isAuthError(error)) {
-        toast.error('Sesi Anda telah berakhir. Silakan login kembali.');
-      } else {
-        const errorMsg = error.message || 'Gagal menghapus artikel';
-        toast.error(errorMsg);
-      }
+      queryClient.invalidateQueries({ queryKey: ["blogPosts"] });
     },
   });
 }
 
 export function useToggleBlogPostPublishStatus() {
   const { actor } = useActor();
+  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ blogPostId, publish }: { blogPostId: bigint; publish: boolean }) => {
-      if (!actor) throw new Error('Actor not available');
-      console.log('[useToggleBlogPostPublishStatus] Toggling status for blog post:', blogPostId, 'to', publish);
-      // Stub: do nothing until backend implements toggleBlogPostPublishStatus
+    mutationFn: async ({
+      blogPostId: _blogPostId,
+      publish: _publish,
+    }: { blogPostId: number; publish: boolean }) => {
+      if (!actor) throw new Error("Actor not initialized");
+      const principalId = identity?.getPrincipal().toString();
+      return protectedCall(principalId, async () => {
+        throw new Error(
+          "toggleBlogPostPublishStatus not yet implemented in backend",
+        );
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
-      queryClient.invalidateQueries({ queryKey: ['adminStats'] });
-      toast.success('Status publikasi artikel berhasil diubah');
-      console.log('[useToggleBlogPostPublishStatus] Success');
-    },
-    onError: (error: any) => {
-      console.error('[useToggleBlogPostPublishStatus] Error:', error);
-      
-      if (isNetworkError(error)) {
-        toast.error('Koneksi gagal. Periksa internet Anda dan coba lagi.');
-      } else if (isAuthError(error)) {
-        toast.error('Sesi Anda telah berakhir. Silakan login kembali.');
-      } else {
-        const errorMsg = error.message || 'Gagal mengubah status publikasi';
-        toast.error(errorMsg);
-      }
+      queryClient.invalidateQueries({ queryKey: ["blogPosts"] });
     },
   });
 }

@@ -1,17 +1,20 @@
-import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import type { Testimonial } from '@/types/local';
-import { useCreateTestimonial, useUpdateTestimonial } from '@/hooks/useTestimonials';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  useCreateTestimonial,
+  useUpdateTestimonial,
+} from "@/hooks/useTestimonials";
+import type { Testimonial } from "@/types/local";
+import { useEffect, useState } from "react";
 
 interface TestimonialDialogProps {
   open: boolean;
@@ -25,9 +28,9 @@ export default function TestimonialDialog({
   testimonial,
 }: TestimonialDialogProps) {
   const [formData, setFormData] = useState({
-    customerName: '',
-    content: '',
-    rating: '5',
+    customerName: "",
+    content: "",
+    rating: "5",
   });
 
   const createTestimonial = useCreateTestimonial();
@@ -36,25 +39,25 @@ export default function TestimonialDialog({
   useEffect(() => {
     if (testimonial) {
       setFormData({
-        customerName: testimonial.customerName || '',
-        content: testimonial.content || '',
-        rating: testimonial.rating ? testimonial.rating.toString() : '5',
+        customerName: testimonial.customerName || "",
+        content: testimonial.content || "",
+        rating: testimonial.rating ? testimonial.rating.toString() : "5",
       });
     } else {
       setFormData({
-        customerName: '',
-        content: '',
-        rating: '5',
+        customerName: "",
+        content: "",
+        rating: "5",
       });
     }
-  }, [testimonial, open]);
+  }, [testimonial]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const ratingValue = parseInt(formData.rating);
+    const ratingValue = Number.parseInt(formData.rating);
     if (ratingValue < 1 || ratingValue > 5) {
-      alert('Rating harus antara 1 dan 5');
+      alert("Rating harus antara 1 dan 5");
       return;
     }
 
@@ -91,7 +94,7 @@ export default function TestimonialDialog({
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
-            {testimonial ? 'Edit Testimoni' : 'Tambah Testimoni Baru'}
+            {testimonial ? "Edit Testimoni" : "Tambah Testimoni Baru"}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -147,7 +150,7 @@ export default function TestimonialDialog({
               Batal
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Menyimpan...' : 'Simpan'}
+              {isLoading ? "Menyimpan..." : "Simpan"}
             </Button>
           </DialogFooter>
         </form>

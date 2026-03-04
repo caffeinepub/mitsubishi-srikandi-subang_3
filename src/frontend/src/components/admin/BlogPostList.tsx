@@ -1,17 +1,3 @@
-import { useState } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useGetAllBlogPosts, useDeleteBlogPost, useToggleBlogPostPublishStatus } from '@/hooks/useBlogPosts';
-import type { BlogPost } from '@/types/local';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,8 +7,26 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Switch } from '@/components/ui/switch';
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  useDeleteBlogPost,
+  useGetAllBlogPosts,
+  useToggleBlogPostPublishStatus,
+} from "@/hooks/useBlogPosts";
+import type { BlogPost } from "@/types/local";
+import { Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
 
 interface BlogPostListProps {
   onEdit: (blogPost: BlogPost) => void;
@@ -42,7 +46,7 @@ export default function BlogPostList({ onEdit }: BlogPostListProps) {
 
   const handleDeleteConfirm = () => {
     if (postToDelete) {
-      deleteBlogPost.mutate(postToDelete.id, {
+      deleteBlogPost.mutate(Number(postToDelete.id), {
         onSuccess: () => {
           setDeleteDialogOpen(false);
           setPostToDelete(null);
@@ -52,7 +56,10 @@ export default function BlogPostList({ onEdit }: BlogPostListProps) {
   };
 
   const handleTogglePublish = (postId: bigint, currentPublished: boolean) => {
-    togglePublishStatus.mutate({ blogPostId: postId, publish: !currentPublished });
+    togglePublishStatus.mutate({
+      blogPostId: Number(postId),
+      publish: !currentPublished,
+    });
   };
 
   if (isLoading) {
@@ -89,17 +96,21 @@ export default function BlogPostList({ onEdit }: BlogPostListProps) {
             <TableRow key={post.id.toString()}>
               <TableCell className="font-medium">{post.title}</TableCell>
               <TableCell>
-                {new Date(Number(post.createdAt) / 1000000).toLocaleDateString('id-ID')}
+                {new Date(Number(post.createdAt) / 1000000).toLocaleDateString(
+                  "id-ID",
+                )}
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={post.published}
-                    onCheckedChange={() => handleTogglePublish(post.id, post.published)}
+                    onCheckedChange={() =>
+                      handleTogglePublish(post.id, post.published)
+                    }
                     disabled={togglePublishStatus.isPending}
                   />
                   <span className="text-sm">
-                    {post.published ? 'Dipublikasi' : 'Draft'}
+                    {post.published ? "Dipublikasi" : "Draft"}
                   </span>
                 </div>
               </TableCell>
@@ -135,7 +146,8 @@ export default function BlogPostList({ onEdit }: BlogPostListProps) {
               Apakah Anda yakin ingin menghapus artikel "{postToDelete?.title}"?
               <br />
               <br />
-              <strong>Peringatan:</strong> Menghapus artikel ini juga akan menghapus semua komentar terkait.
+              <strong>Peringatan:</strong> Menghapus artikel ini juga akan
+              menghapus semua komentar terkait.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

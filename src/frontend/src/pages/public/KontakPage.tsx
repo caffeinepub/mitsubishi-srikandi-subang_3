@@ -1,22 +1,22 @@
-import { useState } from 'react';
-import { useContactForm } from '@/hooks/useContactForm';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { Phone, Mail, MapPin, Clock, MessageCircle } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useContactForm } from "@/hooks/useContactForm";
+import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function KontakPage() {
   const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    phone: '',
-    email: '',
-    interestedVehicle: '',
-    downPayment: '',
-    tenor: '',
-    message: '',
+    name: "",
+    address: "",
+    phone: "",
+    email: "",
+    interestedVehicle: "",
+    downPayment: "",
+    tenor: "",
+    message: "",
   });
 
   const contactMutation = useContactForm();
@@ -31,22 +31,22 @@ export default function KontakPage() {
       },
       {
         onSuccess: () => {
-          toast.success('Pesan berhasil dikirim');
+          toast.success("Pesan berhasil dikirim");
           setFormData({
-            name: '',
-            address: '',
-            phone: '',
-            email: '',
-            interestedVehicle: '',
-            downPayment: '',
-            tenor: '',
-            message: '',
+            name: "",
+            address: "",
+            phone: "",
+            email: "",
+            interestedVehicle: "",
+            downPayment: "",
+            tenor: "",
+            message: "",
           });
         },
         onError: () => {
-          toast.error('Gagal mengirim pesan');
+          toast.error("Gagal mengirim pesan");
         },
-      }
+      },
     );
   };
 
@@ -62,7 +62,9 @@ export default function KontakPage() {
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 required
               />
             </div>
@@ -71,7 +73,9 @@ export default function KontakPage() {
               <Input
                 id="address"
                 value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, address: e.target.value })
+                }
                 required
               />
             </div>
@@ -80,7 +84,9 @@ export default function KontakPage() {
               <Input
                 id="phone"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
                 required
               />
             </div>
@@ -90,7 +96,9 @@ export default function KontakPage() {
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 required
               />
             </div>
@@ -99,7 +107,12 @@ export default function KontakPage() {
               <Input
                 id="interestedVehicle"
                 value={formData.interestedVehicle}
-                onChange={(e) => setFormData({ ...formData, interestedVehicle: e.target.value })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    interestedVehicle: e.target.value,
+                  })
+                }
               />
             </div>
             <div>
@@ -107,7 +120,9 @@ export default function KontakPage() {
               <Input
                 id="downPayment"
                 value={formData.downPayment}
-                onChange={(e) => setFormData({ ...formData, downPayment: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, downPayment: e.target.value })
+                }
               />
             </div>
             <div>
@@ -115,7 +130,9 @@ export default function KontakPage() {
               <Input
                 id="tenor"
                 value={formData.tenor}
-                onChange={(e) => setFormData({ ...formData, tenor: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, tenor: e.target.value })
+                }
               />
             </div>
             <div>
@@ -123,7 +140,9 @@ export default function KontakPage() {
               <Textarea
                 id="message"
                 value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, message: e.target.value })
+                }
                 rows={4}
               />
             </div>
@@ -132,7 +151,7 @@ export default function KontakPage() {
               className="w-full bg-[#C90010] hover:bg-[#A00008]"
               disabled={contactMutation.isPending}
             >
-              {contactMutation.isPending ? 'Mengirim...' : 'Kirim Pesan'}
+              {contactMutation.isPending ? "Mengirim..." : "Kirim Pesan"}
             </Button>
           </form>
         </div>
@@ -160,14 +179,18 @@ export default function KontakPage() {
                 <MapPin className="text-[#C90010] mt-1" size={20} />
                 <div>
                   <div className="font-medium">Alamat</div>
-                  <div className="text-gray-600">Jl. Raya Subang No. 123, Subang, Jawa Barat</div>
+                  <div className="text-gray-600">
+                    Jl. Raya Subang No. 123, Subang, Jawa Barat
+                  </div>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
                 <Clock className="text-[#C90010] mt-1" size={20} />
                 <div>
                   <div className="font-medium">Jam Operasional</div>
-                  <div className="text-gray-600">Senin - Sabtu: 08:00 - 17:00</div>
+                  <div className="text-gray-600">
+                    Senin - Sabtu: 08:00 - 17:00
+                  </div>
                 </div>
               </div>
             </div>
@@ -185,7 +208,9 @@ export default function KontakPage() {
               <p className="text-gray-600 mb-4">Sales Consultant</p>
               <Button
                 className="w-full bg-[#398E3D] hover:bg-[#2d7230]"
-                onClick={() => window.open('https://wa.me/6281234567890', '_blank')}
+                onClick={() =>
+                  window.open("https://wa.me/6281234567890", "_blank")
+                }
               >
                 <MessageCircle className="mr-2" size={20} />
                 Hubungi via WhatsApp

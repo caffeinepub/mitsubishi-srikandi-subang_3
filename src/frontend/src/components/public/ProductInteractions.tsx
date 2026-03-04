@@ -1,13 +1,16 @@
-import { Heart, Share2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useProductInteractions } from '@/hooks/useProductInteractions';
+import { Button } from "@/components/ui/button";
+import { useProductInteractions } from "@/hooks/useProductInteractions";
+import { Heart, Share2 } from "lucide-react";
 
 interface ProductInteractionsProps {
   vehicleId: bigint;
 }
 
-export default function ProductInteractions({ vehicleId }: ProductInteractionsProps) {
-  const { likeCount, shareCount, likeProduct, shareProduct } = useProductInteractions(vehicleId);
+export default function ProductInteractions({
+  vehicleId,
+}: ProductInteractionsProps) {
+  const { likeCount, shareCount, likeProduct, shareProduct } =
+    useProductInteractions(vehicleId);
 
   const handleLike = () => {
     likeProduct();
@@ -17,12 +20,14 @@ export default function ProductInteractions({ vehicleId }: ProductInteractionsPr
     shareProduct();
     // Could also trigger native share API here
     if (navigator.share) {
-      navigator.share({
-        title: 'Lihat kendaraan ini',
-        url: window.location.href,
-      }).catch(() => {
-        // User cancelled or share failed
-      });
+      navigator
+        .share({
+          title: "Lihat kendaraan ini",
+          url: window.location.href,
+        })
+        .catch(() => {
+          // User cancelled or share failed
+        });
     }
   };
 

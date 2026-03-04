@@ -1,11 +1,3 @@
-import { useState, useEffect } from 'react';
-import { Copy, Trash2, FileText, Car } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useGetAllMediaAssets, useDeleteMediaAsset } from '@/hooks/useMediaAssets';
-import { useActor } from '@/hooks/useActor';
-import { useInternetIdentity } from '@/hooks/useInternetIdentity';
-import type { MediaAsset } from '@/types/local';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,10 +7,25 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { toast } from 'sonner';
-import { createBlobUrlFromData, isImageMimeType, isPdfMimeType } from '@/utils/blobUrl';
-import { validateDelegationIdentity } from '@/utils/validation';
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useActor } from "@/hooks/useActor";
+import { useInternetIdentity } from "@/hooks/useInternetIdentity";
+import {
+  useDeleteMediaAsset,
+  useGetAllMediaAssets,
+} from "@/hooks/useMediaAssets";
+import type { MediaAsset } from "@/types/local";
+import {
+  createBlobUrlFromData,
+  isImageMimeType,
+  isPdfMimeType,
+} from "@/utils/blobUrl";
+import { validateDelegationIdentity } from "@/utils/validation";
+import { Car, Copy, FileText, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function MediaAssetGrid() {
   const { actor, isFetching: actorFetching } = useActor();
@@ -27,7 +34,9 @@ export default function MediaAssetGrid() {
   const deleteAsset = useDeleteMediaAsset();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState<MediaAsset | null>(null);
-  const [imageLoadErrors, setImageLoadErrors] = useState<Set<string>>(new Set());
+  const [imageLoadErrors, setImageLoadErrors] = useState<Set<string>>(
+    new Set(),
+  );
   const [blobUrls, setBlobUrls] = useState<Map<string, string>>(new Map());
 
   // Create blob URLs from persistent canister storage data
@@ -35,61 +44,71 @@ export default function MediaAssetGrid() {
     if (!assets) return;
 
     const newBlobUrls = new Map<string, string>();
-    
-    assets.forEach((asset) => {
+
+    for (const asset of assets) {
       if (isImageMimeType(asset.mimeType) && asset.data) {
         const blobUrl = createBlobUrlFromData(asset.data, asset.mimeType);
         newBlobUrls.set(asset.id.toString(), blobUrl);
       }
-    });
+    }
 
     setBlobUrls(newBlobUrls);
 
-    // Cleanup function to revoke old blob URLs
+    // Cleanup function to revoke blob URLs created in this effect run
     return () => {
-      blobUrls.forEach((url) => URL.revokeObjectURL(url));
+      for (const url of newBlobUrls.values()) {
+        URL.revokeObjectURL(url);
+      }
     };
   }, [assets]);
 
   const handleCopyId = (assetId: bigint) => {
     navigator.clipboard.writeText(assetId.toString());
-    toast.success('ID asset berhasil disalin');
+    toast.success("ID asset berhasil disalin");
   };
 
   const handleDeleteClick = (asset: MediaAsset) => {
-    console.log('[MediaAssetGrid] Delete clicked for asset:', asset.id);
-    console.log('[MediaAssetGrid] Actor available:', !!actor);
-    console.log('[MediaAssetGrid] Identity available:', !!identity);
-    
+    console.log("[MediaAssetGrid] Delete clicked for asset:", asset.id);
+    console.log("[MediaAssetGrid] Actor available:", !!actor);
+    console.log("[MediaAssetGrid] Identity available:", !!identity);
+
     // Validate actor is ready
     if (!actor) {
-      console.error('[MediaAssetGrid] Actor not available');
-      toast.error('Sistem belum siap. Silakan tunggu sebentar dan coba lagi.');
+      console.error("[MediaAssetGrid] Actor not available");
+      toast.error("Sistem belum siap. Silakan tunggu sebentar dan coba lagi.");
       return;
     }
 
     // Validate delegation identity before opening delete dialog
     const validationError = validateDelegationIdentity(identity);
     if (validationError) {
-      console.error('[MediaAssetGrid] Delegation validation failed:', validationError);
+      console.error(
+        "[MediaAssetGrid] Delegation validation failed:",
+        validationError,
+      );
       toast.error(validationError);
       return;
     }
-    
-    console.log('[MediaAssetGrid] All validations passed, opening delete dialog');
+
+    console.log(
+      "[MediaAssetGrid] All validations passed, opening delete dialog",
+    );
     setAssetToDelete(asset);
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteConfirm = () => {
     if (!assetToDelete) return;
-    
-    console.log('[MediaAssetGrid] Confirming delete for asset:', assetToDelete.id);
-    
+
+    console.log(
+      "[MediaAssetGrid] Confirming delete for asset:",
+      assetToDelete.id,
+    );
+
     // Final validation: Check actor is still available
     if (!actor) {
-      console.error('[MediaAssetGrid] Actor not available at confirm');
-      toast.error('Sistem belum siap. Silakan tunggu sebentar dan coba lagi.');
+      console.error("[MediaAssetGrid] Actor not available at confirm");
+      toast.error("Sistem belum siap. Silakan tunggu sebentar dan coba lagi.");
       setDeleteDialogOpen(false);
       setAssetToDelete(null);
       return;
@@ -98,24 +117,29 @@ export default function MediaAssetGrid() {
     // Final validation: Validate delegation identity again before actual delete
     const validationError = validateDelegationIdentity(identity);
     if (validationError) {
-      console.error('[MediaAssetGrid] Delegation validation failed at confirm:', validationError);
+      console.error(
+        "[MediaAssetGrid] Delegation validation failed at confirm:",
+        validationError,
+      );
       toast.error(validationError);
       setDeleteDialogOpen(false);
       setAssetToDelete(null);
       return;
     }
-    
-    console.log('[MediaAssetGrid] All final validations passed, executing delete mutation');
-    
+
+    console.log(
+      "[MediaAssetGrid] All final validations passed, executing delete mutation",
+    );
+
     // Execute delete mutation - the authenticated actor will be used
     deleteAsset.mutate(assetToDelete.id, {
       onSuccess: () => {
-        console.log('[MediaAssetGrid] Delete successful, closing dialog');
+        console.log("[MediaAssetGrid] Delete successful, closing dialog");
         setDeleteDialogOpen(false);
         setAssetToDelete(null);
       },
       onError: (error) => {
-        console.error('[MediaAssetGrid] Delete failed:', error);
+        console.error("[MediaAssetGrid] Delete failed:", error);
         setDeleteDialogOpen(false);
         setAssetToDelete(null);
       },
@@ -123,7 +147,7 @@ export default function MediaAssetGrid() {
   };
 
   const handleImageError = (assetId: string) => {
-    console.error('[MediaAssetGrid] Image load error for asset ID:', assetId);
+    console.error("[MediaAssetGrid] Image load error for asset ID:", assetId);
     setImageLoadErrors((prev) => new Set(prev).add(assetId));
   };
 
@@ -132,15 +156,16 @@ export default function MediaAssetGrid() {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {[...Array(8)].map((_, i) => (
-          <Skeleton key={i} className="aspect-square" />
+          // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton placeholders never reorder
+          <Skeleton key={`skeleton-${i}`} className="aspect-square" />
         ))}
       </div>
     );
   }
 
   // Show error state if there's an error (but not auth errors which return empty array)
-  if (error && !error.message?.includes('Actor not available')) {
-    console.error('[MediaAssetGrid] Error loading media assets:', error);
+  if (error && !error.message?.includes("Actor not available")) {
+    console.error("[MediaAssetGrid] Error loading media assets:", error);
     return (
       <div className="text-center py-8 text-red-500">
         Gagal memuat media. Silakan coba lagi.
@@ -167,7 +192,7 @@ export default function MediaAssetGrid() {
           const isPdf = isPdfMimeType(asset.mimeType);
           const assetIdStr = asset.id.toString();
           const hasLoadError = imageLoadErrors.has(assetIdStr);
-          const imageUrl = blobUrls.get(assetIdStr) || '';
+          const imageUrl = blobUrls.get(assetIdStr) || "";
 
           return (
             <div key={assetIdStr} className="border rounded-lg overflow-hidden">
@@ -192,7 +217,9 @@ export default function MediaAssetGrid() {
                     <Car className="h-16 w-16 mx-auto mb-2" />
                     <p className="text-sm font-medium">{asset.filename}</p>
                     <p className="text-xs">
-                      {hasLoadError ? 'Gagal memuat gambar' : 'File tidak didukung'}
+                      {hasLoadError
+                        ? "Gagal memuat gambar"
+                        : "File tidak didukung"}
                     </p>
                   </div>
                 )}
@@ -200,7 +227,10 @@ export default function MediaAssetGrid() {
 
               {/* Asset Actions Section */}
               <div className="p-3 bg-white border-t">
-                <p className="text-sm font-medium truncate mb-2" title={asset.filename}>
+                <p
+                  className="text-sm font-medium truncate mb-2"
+                  title={asset.filename}
+                >
                   {asset.filename}
                 </p>
                 <div className="flex flex-col gap-2">
@@ -221,7 +251,9 @@ export default function MediaAssetGrid() {
                     className="w-full"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    {deleteAsset.isPending && assetToDelete?.id === asset.id ? 'Menghapus...' : 'Hapus'}
+                    {deleteAsset.isPending && assetToDelete?.id === asset.id
+                      ? "Menghapus..."
+                      : "Hapus"}
                   </Button>
                 </div>
               </div>
@@ -236,15 +268,17 @@ export default function MediaAssetGrid() {
           <AlertDialogHeader>
             <AlertDialogTitle>Konfirmasi Hapus</AlertDialogTitle>
             <AlertDialogDescription>
-              Apakah Anda yakin ingin menghapus file "{assetToDelete?.filename}"? 
-              Tindakan ini tidak dapat dibatalkan.
+              Apakah Anda yakin ingin menghapus file "{assetToDelete?.filename}
+              "? Tindakan ini tidak dapat dibatalkan.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              setDeleteDialogOpen(false);
-              setAssetToDelete(null);
-            }}>
+            <AlertDialogCancel
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setAssetToDelete(null);
+              }}
+            >
               Batal
             </AlertDialogCancel>
             <AlertDialogAction

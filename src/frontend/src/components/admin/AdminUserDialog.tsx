@@ -1,69 +1,102 @@
-import { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
-import { useCreateAdminUser, useUpdateAdminUser } from '../../hooks/useAdminUsers';
-import { toast } from 'sonner';
-import type { AdminUser } from '../../types/local';
-import { Principal } from '@dfinity/principal';
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Principal } from "@dfinity/principal";
+import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { type AdminRecord, UserRole } from "../../backend";
+import {
+  useCreateAdminUser,
+  useUpdateAdminUser,
+} from "../../hooks/useAdminUsers";
+import { useInternetIdentity } from "../../hooks/useInternetIdentity";
 
 interface AdminUserDialogProps {
   open: boolean;
   onClose: () => void;
-  user: AdminUser | null;
+  user: AdminRecord | null;
 }
 
-export default function AdminUserDialog({ open, onClose, user }: AdminUserDialogProps) {
+export default function AdminUserDialog({
+  open,
+  onClose,
+  user,
+}: AdminUserDialogProps) {
   const isEdit = user !== null;
   const createUser = useCreateAdminUser();
   const updateUser = useUpdateAdminUser();
+  const { identity } = useInternetIdentity();
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    principalId: '',
-  });
+  const [principalInput, setPrincipalInput] = useState("");
+  const [role, setRole] = useState<UserRole>(UserRole.admin);
+  const [principalError, setPrincipalError] = useState("");
 
   useEffect(() => {
     if (user) {
-      setFormData({
-        name: user.name,
-        email: user.email,
-        principalId: user.principal.toString(),
-      });
+      setPrincipalInput(user.principal.toString());
+      setRole(user.role);
+      setPrincipalError("");
     } else {
-      setFormData({
-        name: '',
-        email: '',
-        principalId: '',
-      });
+      setPrincipalInput("");
+      setRole(UserRole.admin);
+      setPrincipalError("");
     }
-  }, [user, open]);
+  }, [user]);
+
+  const validatePrincipal = (value: string): boolean => {
+    try {
+      Principal.fromText(value);
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPrincipalError("");
 
     try {
-      const userData: AdminUser = {
-        principal: isEdit ? user.principal : Principal.fromText(formData.principalId),
-        name: formData.name,
-        email: formData.email,
-        role: 'admin',
-        createdAt: user?.createdAt || BigInt(Date.now() * 1000000),
-      };
-
       if (isEdit) {
-        await updateUser.mutateAsync(userData);
-        toast.success('Admin user berhasil diperbarui');
+        await updateUser.mutateAsync({
+          principal: user.principal,
+          role,
+        });
+        toast.success("Role admin berhasil diperbarui");
       } else {
-        await createUser.mutateAsync(userData);
-        toast.success('Admin user berhasil ditambahkan');
+        if (!principalInput.trim()) {
+          setPrincipalError("Principal ID wajib diisi");
+          return;
+        }
+        if (!validatePrincipal(principalInput.trim())) {
+          setPrincipalError("Format Principal ID tidak valid");
+          return;
+        }
+        const targetPrincipal = Principal.fromText(principalInput.trim());
+        await createUser.mutateAsync({
+          principal: targetPrincipal,
+          role,
+        });
+        toast.success("Admin user berhasil ditambahkan");
       }
       onClose();
-    } catch (error) {
-      toast.error('Gagal menyimpan admin user');
+    } catch (error: any) {
+      console.error("Form submission error:", error);
+      toast.error(error?.message || "Terjadi kesalahan");
     }
   };
 
@@ -74,57 +107,80 @@ export default function AdminUserDialog({ open, onClose, user }: AdminUserDialog
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {isEdit ? 'Edit Admin User' : 'Tambah Admin User Baru'}
+            {isEdit ? "Edit Role Admin" : "Tambah Admin User Baru"}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nama</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
-            />
-          </div>
-
-          {!isEdit && (
+          {isEdit ? (
+            <div className="space-y-2">
+              <Label>Principal ID</Label>
+              <div className="text-sm font-mono bg-muted px-3 py-2 rounded-md break-all text-muted-foreground">
+                {user.principal.toString()}
+              </div>
+            </div>
+          ) : (
             <div className="space-y-2">
               <Label htmlFor="principalId">Principal ID</Label>
               <Input
                 id="principalId"
-                value={formData.principalId}
-                onChange={(e) => setFormData({ ...formData, principalId: e.target.value })}
-                required
-                placeholder="xxxxx-xxxxx-xxxxx-xxxxx-xxx"
+                value={principalInput}
+                onChange={(e) => {
+                  setPrincipalInput(e.target.value);
+                  setPrincipalError("");
+                }}
+                placeholder="Masukkan Principal ID (contoh: aaaaa-aa)"
+                className={principalError ? "border-destructive" : ""}
               />
+              {principalError && (
+                <p className="text-sm text-destructive">{principalError}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Principal ID dari Internet Identity pengguna yang akan dijadikan
+                admin
+              </p>
             </div>
           )}
 
           <div className="space-y-2">
-            <Label>Role</Label>
-            <div className="text-sm text-muted-foreground">super_admin (fixed)</div>
+            <Label htmlFor="role">Role</Label>
+            <Select
+              value={role}
+              onValueChange={(val) => setRole(val as UserRole)}
+            >
+              <SelectTrigger id="role">
+                <SelectValue placeholder="Pilih role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={UserRole.admin}>Admin</SelectItem>
+                <SelectItem value={UserRole.super_admin}>
+                  Super Admin
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
+          {!isEdit && identity && (
+            <div className="text-xs text-muted-foreground bg-muted/50 px-3 py-2 rounded-md">
+              <span className="font-medium">Principal Anda:</span>{" "}
+              <span className="font-mono break-all">
+                {identity.getPrincipal().toString()}
+              </span>
+            </div>
+          )}
+
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isPending}
+            >
               Batal
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isEdit ? 'Perbarui' : 'Simpan'}
+              {isEdit ? "Perbarui" : "Simpan"}
             </Button>
           </div>
         </form>

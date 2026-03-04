@@ -1,6 +1,14 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 interface TopPagesChartProps {
   data: Array<[string, bigint]> | undefined;
@@ -45,15 +53,15 @@ export default function TopPagesChart({ data, isLoading }: TopPagesChartProps) {
         const urlObj = new URL(url);
         displayUrl = urlObj.pathname;
         if (displayUrl.length > 30) {
-          displayUrl = displayUrl.substring(0, 27) + '...';
+          displayUrl = `${displayUrl.substring(0, 27)}...`;
         }
       } catch {
         // If URL parsing fails, just truncate the string
         if (displayUrl.length > 30) {
-          displayUrl = displayUrl.substring(0, 27) + '...';
+          displayUrl = `${displayUrl.substring(0, 27)}...`;
         }
       }
-      
+
       return {
         page: displayUrl,
         views: Number(count),
@@ -73,32 +81,32 @@ export default function TopPagesChart({ data, isLoading }: TopPagesChartProps) {
           <BarChart data={chartData} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis type="number" tick={{ fontSize: 12 }} />
-            <YAxis 
-              type="category" 
-              dataKey="page" 
+            <YAxis
+              type="category"
+              dataKey="page"
               tick={{ fontSize: 11 }}
               width={120}
             />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'hsl(var(--background))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '6px'
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "hsl(var(--background))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "6px",
               }}
-              formatter={(value: number, name: string, props: any) => [
-                value,
-                'Views',
-              ]}
-              labelFormatter={(label: string, payload: any) => {
-                if (payload && payload[0]) {
-                  return payload[0].payload.fullUrl;
+              formatter={(value: number) => [value, "Views"]}
+              labelFormatter={(label: string, payload: unknown[]) => {
+                const first = payload?.[0] as
+                  | { payload?: { fullUrl?: string } }
+                  | undefined;
+                if (first?.payload?.fullUrl) {
+                  return first.payload.fullUrl;
                 }
                 return label;
               }}
             />
-            <Bar 
-              dataKey="views" 
-              fill="hsl(var(--primary))" 
+            <Bar
+              dataKey="views"
+              fill="hsl(var(--primary))"
               name="Page Views"
               radius={[0, 4, 4, 0]}
             />

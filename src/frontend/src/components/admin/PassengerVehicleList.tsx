@@ -1,17 +1,3 @@
-import { useState } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useGetAllVehicles, useDeleteVehicle, useToggleVehiclePublishStatus } from '@/hooks/useVehicles';
-import type { Vehicle } from '@/types/local';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,14 +7,34 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Switch } from '@/components/ui/switch';
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  useDeleteVehicle,
+  useGetAllVehicles,
+  useToggleVehiclePublishStatus,
+} from "@/hooks/useVehicles";
+import type { Vehicle } from "@/types/local";
+import { Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
 
 interface PassengerVehicleListProps {
   onEdit: (vehicle: Vehicle) => void;
 }
 
-export default function PassengerVehicleList({ onEdit }: PassengerVehicleListProps) {
+export default function PassengerVehicleList({
+  onEdit,
+}: PassengerVehicleListProps) {
   const { data: vehicles, isLoading } = useGetAllVehicles();
   const deleteVehicle = useDeleteVehicle();
   const togglePublishStatus = useToggleVehiclePublishStatus();
@@ -42,7 +48,7 @@ export default function PassengerVehicleList({ onEdit }: PassengerVehicleListPro
 
   const handleDeleteConfirm = () => {
     if (vehicleToDelete) {
-      deleteVehicle.mutate(vehicleToDelete.id, {
+      deleteVehicle.mutate(Number(vehicleToDelete.id), {
         onSuccess: () => {
           setDeleteDialogOpen(false);
           setVehicleToDelete(null);
@@ -52,7 +58,7 @@ export default function PassengerVehicleList({ onEdit }: PassengerVehicleListPro
   };
 
   const handleTogglePublish = (vehicleId: bigint) => {
-    togglePublishStatus.mutate(vehicleId);
+    togglePublishStatus.mutate(Number(vehicleId));
   };
 
   if (isLoading) {
@@ -87,11 +93,13 @@ export default function PassengerVehicleList({ onEdit }: PassengerVehicleListPro
         <TableBody>
           {vehicles.map((vehicle) => (
             <TableRow key={vehicle.id.toString()}>
-              <TableCell className="font-medium">{vehicle.vehicleName}</TableCell>
+              <TableCell className="font-medium">
+                {vehicle.vehicleName}
+              </TableCell>
               <TableCell>
-                {new Intl.NumberFormat('id-ID', {
-                  style: 'currency',
-                  currency: 'IDR',
+                {new Intl.NumberFormat("id-ID", {
+                  style: "currency",
+                  currency: "IDR",
                   minimumFractionDigits: 0,
                 }).format(Number(vehicle.basePrice))}
               </TableCell>
@@ -103,7 +111,7 @@ export default function PassengerVehicleList({ onEdit }: PassengerVehicleListPro
                     disabled={togglePublishStatus.isPending}
                   />
                   <span className="text-sm">
-                    {vehicle.publishStatus ? 'Dipublikasi' : 'Draft'}
+                    {vehicle.publishStatus ? "Dipublikasi" : "Draft"}
                   </span>
                 </div>
               </TableCell>
@@ -136,11 +144,13 @@ export default function PassengerVehicleList({ onEdit }: PassengerVehicleListPro
           <AlertDialogHeader>
             <AlertDialogTitle>Konfirmasi Hapus</AlertDialogTitle>
             <AlertDialogDescription>
-              Apakah Anda yakin ingin menghapus kendaraan "{vehicleToDelete?.vehicleName}"?
+              Apakah Anda yakin ingin menghapus kendaraan "
+              {vehicleToDelete?.vehicleName}"?
               <br />
               <br />
-              <strong>Peringatan:</strong> Menghapus kendaraan ini juga akan menghapus semua data terkait
-              termasuk varian, warna, gambar, spesifikasi, dan fitur.
+              <strong>Peringatan:</strong> Menghapus kendaraan ini juga akan
+              menghapus semua data terkait termasuk varian, warna, gambar,
+              spesifikasi, dan fitur.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

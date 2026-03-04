@@ -1,13 +1,13 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useActor } from './useActor';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useActor } from "./useActor";
 
 export function useGetProductLikeCount(vehicleId: bigint) {
   const { actor, isFetching } = useActor();
 
   return useQuery<bigint>({
-    queryKey: ['productLikeCount', vehicleId.toString()],
+    queryKey: ["productLikeCount", vehicleId.toString()],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error("Actor not available");
       // Backend method missing - return 0
       return BigInt(0);
     },
@@ -19,9 +19,9 @@ export function useGetProductShareCount(vehicleId: bigint) {
   const { actor, isFetching } = useActor();
 
   return useQuery<bigint>({
-    queryKey: ['productShareCount', vehicleId.toString()],
+    queryKey: ["productShareCount", vehicleId.toString()],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) throw new Error("Actor not available");
       // Backend method missing - return 0
       return BigInt(0);
     },
@@ -34,13 +34,15 @@ export function useLikeProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (vehicleId: bigint) => {
-      if (!actor) throw new Error('Actor not available');
+    mutationFn: async (_vehicleId: bigint) => {
+      if (!actor) throw new Error("Actor not available");
       // Backend method missing - stub
-      console.warn('likeProduct not implemented in backend');
+      console.warn("likeProduct not implemented in backend");
     },
     onSuccess: (_, vehicleId) => {
-      queryClient.invalidateQueries({ queryKey: ['productLikeCount', vehicleId.toString()] });
+      queryClient.invalidateQueries({
+        queryKey: ["productLikeCount", vehicleId.toString()],
+      });
     },
   });
 }
@@ -50,13 +52,15 @@ export function useShareProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (vehicleId: bigint) => {
-      if (!actor) throw new Error('Actor not available');
+    mutationFn: async (_vehicleId: bigint) => {
+      if (!actor) throw new Error("Actor not available");
       // Backend method missing - stub
-      console.warn('shareProduct not implemented in backend');
+      console.warn("shareProduct not implemented in backend");
     },
     onSuccess: (_, vehicleId) => {
-      queryClient.invalidateQueries({ queryKey: ['productShareCount', vehicleId.toString()] });
+      queryClient.invalidateQueries({
+        queryKey: ["productShareCount", vehicleId.toString()],
+      });
     },
   });
 }

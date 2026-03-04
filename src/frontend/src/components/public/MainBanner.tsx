@@ -1,25 +1,41 @@
-import { useGetWebsiteSettings } from '@/hooks/useWebsiteSettings';
-import { useGetMediaAssetById } from '@/hooks/useMediaAssets';
-import { createBlobUrlFromData } from '@/utils/blobUrl';
-import { useEffect, useState } from 'react';
+import { useInternetIdentity } from "@/hooks/useInternetIdentity";
+import { useGetMediaAssetById } from "@/hooks/useMediaAssets";
+import { useGetWebsiteSettings } from "@/hooks/useWebsiteSettings";
+import { createBlobUrlFromData } from "@/utils/blobUrl";
+import { useEffect, useState } from "react";
 
 export default function MainBanner() {
   const { data: settings } = useGetWebsiteSettings();
-  const { data: bannerAsset } = useGetMediaAssetById(settings?.mainBannerImageId);
+  const { identity } = useInternetIdentity();
+
+  // Only attempt to load media asset if user is authenticated
+  // (getMediaAssetById requires #user permission)
+  const isAuthenticated = !!identity;
+  const bannerImageId = isAuthenticated
+    ? (settings?.mainBannerImageId ?? null)
+    : null;
+  const { data: bannerAsset } = useGetMediaAssetById(bannerImageId);
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (bannerAsset?.data) {
-      const url = createBlobUrlFromData(bannerAsset.data, bannerAsset.mimeType);
-      setBannerUrl(url);
-      return () => URL.revokeObjectURL(url);
+      try {
+        const url = createBlobUrlFromData(
+          bannerAsset.data,
+          bannerAsset.mimeType,
+        );
+        setBannerUrl(url);
+        return () => URL.revokeObjectURL(url);
+      } catch {
+        setBannerUrl(null);
+      }
     } else {
       setBannerUrl(null);
     }
   }, [bannerAsset]);
 
-  // Use custom banner if available, otherwise fallback to static asset
-  const imageSrc = bannerUrl || '/assets/generated/main-banner.dim_1920x600.png';
+  const imageSrc =
+    bannerUrl || "/assets/generated/main-banner.dim_1920x600.png";
 
   return (
     <section className="relative w-full h-[400px] md:h-[600px] overflow-hidden">
@@ -30,11 +46,11 @@ export default function MainBanner() {
       />
       <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
         <div className="text-center text-white px-4">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4">
-            Mitsubishi Motors
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 drop-shadow-lg">
+            {settings?.siteName || "Mitsubishi Srikandi Subang"}
           </h1>
-          <p className="text-xl md:text-2xl">
-            Kendaraan Terpercaya untuk Keluarga dan Bisnis Anda
+          <p className="text-lg md:text-2xl drop-shadow-md">
+            Dealer Resmi Mitsubishi di Subang
           </p>
         </div>
       </div>

@@ -1,5 +1,5 @@
-import { useGetAllVehicleCatalogs } from '@/hooks/usePublicData';
-import VehicleCard from '@/components/public/VehicleCard';
+import VehicleCard from "@/components/public/VehicleCard";
+import { useGetAllVehicleCatalogs } from "@/hooks/usePublicData";
 
 export default function MobilKeluargaPage() {
   const { data: catalogs, isLoading } = useGetAllVehicleCatalogs();
@@ -9,7 +9,9 @@ export default function MobilKeluargaPage() {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-12 pb-20 md:pb-12">
-        <div className="text-center text-gray-500">Memuat data kendaraan...</div>
+        <div className="text-center text-gray-500">
+          Memuat data kendaraan...
+        </div>
       </div>
     );
   }

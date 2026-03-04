@@ -1,19 +1,23 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useGetAllMediaAssets } from '@/hooks/useMediaAssets';
-import type { MediaAsset } from '@/types/local';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { createBlobUrlFromData } from '@/utils/blobUrl';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useGetAllMediaAssets } from "@/hooks/useMediaAssets";
+import type { MediaAsset } from "@/types/local";
+import { createBlobUrlFromData } from "@/utils/blobUrl";
+import { useEffect, useState } from "react";
 
 interface BannerImagePickerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (imageId: bigint) => void;
   value?: bigint;
-  bannerType: 'main' | 'cta';
+  bannerType: "main" | "cta";
 }
 
 export default function BannerImagePicker({
@@ -24,20 +28,19 @@ export default function BannerImagePicker({
   bannerType,
 }: BannerImagePickerProps) {
   const { data: allAssets, isLoading } = useGetAllMediaAssets();
-  const [selectedId, setSelectedId] = useState<string>(value?.toString() || '');
+  const [selectedId, setSelectedId] = useState<string>(value?.toString() || "");
 
   // Update selected ID when value prop changes
   useEffect(() => {
-    console.log('[BannerImagePicker] Value prop changed:', value);
-    setSelectedId(value?.toString() || '');
+    console.log("[BannerImagePicker] Value prop changed:", value);
+    setSelectedId(value?.toString() || "");
   }, [value]);
 
   // Filter images (only show image types)
-  const imageAssets = allAssets?.filter((asset) =>
-    asset.mimeType.startsWith('image/')
-  ) || [];
+  const imageAssets =
+    allAssets?.filter((asset) => asset.mimeType.startsWith("image/")) || [];
 
-  console.log('[BannerImagePicker] Rendering with:', {
+  console.log("[BannerImagePicker] Rendering with:", {
     bannerType,
     value: value?.toString(),
     selectedId,
@@ -46,13 +49,13 @@ export default function BannerImagePicker({
 
   const handleSelect = () => {
     if (selectedId) {
-      console.log('[BannerImagePicker] Selecting image:', selectedId);
+      console.log("[BannerImagePicker] Selecting image:", selectedId);
       onSelect(BigInt(selectedId));
     }
   };
 
   const handleValueChange = (newValue: string) => {
-    console.log('[BannerImagePicker] Radio selection changed:', newValue);
+    console.log("[BannerImagePicker] Radio selection changed:", newValue);
     setSelectedId(newValue);
   };
 
@@ -61,7 +64,7 @@ export default function BannerImagePicker({
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            Pilih {bannerType === 'main' ? 'Main Banner' : 'CTA Banner'}
+            Pilih {bannerType === "main" ? "Main Banner" : "CTA Banner"}
           </DialogTitle>
         </DialogHeader>
 
@@ -73,51 +76,56 @@ export default function BannerImagePicker({
           </div>
         ) : imageAssets.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            Belum ada gambar yang tersedia. Silakan upload gambar terlebih dahulu di Media Manager.
+            Belum ada gambar yang tersedia. Silakan upload gambar terlebih
+            dahulu di Media Manager.
           </div>
         ) : (
           <div className="space-y-4">
             <RadioGroup value={selectedId} onValueChange={handleValueChange}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {imageAssets.map((asset) => {
-                  const imageUrl = createBlobUrlFromData(asset.data, asset.mimeType);
+                  const imageUrl = createBlobUrlFromData(
+                    asset.data,
+                    asset.mimeType,
+                  );
                   const assetIdString = asset.id.toString();
 
                   return (
-                    <div
+                    <label
                       key={assetIdString}
-                      className={`border rounded-lg p-3 cursor-pointer transition-all ${
+                      htmlFor={`asset-${assetIdString}`}
+                      className={`block border rounded-lg p-3 cursor-pointer transition-all ${
                         selectedId === assetIdString
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:border-gray-300"
                       }`}
-                      onClick={() => handleValueChange(assetIdString)}
                     >
                       <div className="flex items-start gap-3">
-                        <RadioGroupItem value={assetIdString} id={`asset-${assetIdString}`} />
+                        <RadioGroupItem
+                          value={assetIdString}
+                          id={`asset-${assetIdString}`}
+                        />
                         <div className="flex-1">
-                          <Label
-                            htmlFor={`asset-${assetIdString}`}
-                            className="cursor-pointer"
-                          >
-                            <div className="space-y-2">
-                              <img
-                                src={imageUrl}
-                                alt={asset.filename}
-                                className="w-full h-32 object-cover rounded"
-                                onLoad={() => URL.revokeObjectURL(imageUrl)}
-                              />
-                              <div className="text-sm">
-                                <p className="font-medium truncate">{asset.filename}</p>
-                                <p className="text-xs text-gray-500">
-                                  ID: {assetIdString} • {(Number(asset.size) / 1024).toFixed(1)} KB
-                                </p>
-                              </div>
+                          <div className="space-y-2">
+                            <img
+                              src={imageUrl}
+                              alt={asset.filename}
+                              className="w-full h-32 object-cover rounded"
+                              onLoad={() => URL.revokeObjectURL(imageUrl)}
+                            />
+                            <div className="text-sm">
+                              <p className="font-medium truncate">
+                                {asset.filename}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                ID: {assetIdString} •{" "}
+                                {(Number(asset.size) / 1024).toFixed(1)} KB
+                              </p>
                             </div>
-                          </Label>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </label>
                   );
                 })}
               </div>

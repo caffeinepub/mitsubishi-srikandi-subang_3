@@ -1,14 +1,14 @@
-import { useEffect } from 'react';
-import { useLocation } from '@tanstack/react-router';
-import { useActor } from './useActor';
+import { useLocation } from "@tanstack/react-router";
+import { useEffect } from "react";
 import {
-  getOrCreateSessionId,
-  detectDeviceType,
   detectBrowser,
-  isBot,
-  isAdminRoute,
+  detectDeviceType,
   getClientIP,
-} from '../utils/visitorTracking';
+  getOrCreateSessionId,
+  isAdminRoute,
+  isBot,
+} from "../utils/visitorTracking";
+import { useActor } from "./useActor";
 
 /**
  * Legacy React hook for visitor tracking.
@@ -19,9 +19,12 @@ export function useVisitorTracking() {
   const location = useLocation();
   const { actor } = useActor();
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: deprecated hook, intentional deps
   useEffect(() => {
     // This hook is now deprecated - tracking happens in PublicLayout
     // Keeping this empty to avoid duplicate tracking calls
-    console.log('[useVisitorTracking] Hook is deprecated, tracking handled by PublicLayout');
+    console.log(
+      "[useVisitorTracking] Hook is deprecated, tracking handled by PublicLayout",
+    );
   }, [location.pathname, actor]);
 }

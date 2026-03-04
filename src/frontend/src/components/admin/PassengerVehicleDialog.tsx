@@ -1,17 +1,17 @@
-import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import type { Vehicle } from '@/types/local';
-import { useCreateVehicle, useUpdateVehicle } from '@/hooks/useVehicles';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useCreateVehicle, useUpdateVehicle } from "@/hooks/useVehicles";
+import type { Vehicle } from "@/types/local";
+import { useEffect, useState } from "react";
 
 interface PassengerVehicleDialogProps {
   open: boolean;
@@ -25,9 +25,9 @@ export default function PassengerVehicleDialog({
   vehicle,
 }: PassengerVehicleDialogProps) {
   const [formData, setFormData] = useState({
-    vehicleName: '',
-    description: '',
-    basePrice: '',
+    vehicleName: "",
+    description: "",
+    basePrice: "",
   });
 
   const createVehicle = useCreateVehicle();
@@ -36,18 +36,18 @@ export default function PassengerVehicleDialog({
   useEffect(() => {
     if (vehicle) {
       setFormData({
-        vehicleName: vehicle.vehicleName || '',
-        description: vehicle.description || '',
-        basePrice: vehicle.basePrice ? vehicle.basePrice.toString() : '',
+        vehicleName: vehicle.vehicleName || "",
+        description: vehicle.description || "",
+        basePrice: vehicle.basePrice ? vehicle.basePrice.toString() : "",
       });
     } else {
       setFormData({
-        vehicleName: '',
-        description: '',
-        basePrice: '',
+        vehicleName: "",
+        description: "",
+        basePrice: "",
       });
     }
-  }, [vehicle, open]);
+  }, [vehicle]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +82,7 @@ export default function PassengerVehicleDialog({
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
-            {vehicle ? 'Edit Kendaraan' : 'Tambah Kendaraan Baru'}
+            {vehicle ? "Edit Kendaraan" : "Tambah Kendaraan Baru"}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -136,7 +136,7 @@ export default function PassengerVehicleDialog({
               Batal
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Menyimpan...' : 'Simpan'}
+              {isLoading ? "Menyimpan..." : "Simpan"}
             </Button>
           </DialogFooter>
         </form>

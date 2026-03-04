@@ -1,38 +1,41 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import { useGetAllAdminUsers, useDeleteAdminUser } from '../../hooks/useAdminUsers';
-import AdminUserList from '../../components/admin/AdminUserList';
-import AdminUserDialog from '../../components/admin/AdminUserDialog';
-import { toast } from 'sonner';
-import type { AdminUser } from '../../types/local';
-import { Principal } from '@dfinity/principal';
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import type { AdminRecord } from "../../backend";
+import AdminUserDialog from "../../components/admin/AdminUserDialog";
+import AdminUserList from "../../components/admin/AdminUserList";
+import {
+  useDeleteAdminUser,
+  useGetAllAdminUsers,
+} from "../../hooks/useAdminUsers";
 
 export default function AdminUsersPage() {
-  const { data: users, isLoading } = useGetAllAdminUsers();
+  const { data: users, isLoading, refetch } = useGetAllAdminUsers();
   const deleteUser = useDeleteAdminUser();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminRecord | null>(null);
 
-  const handleEdit = (user: AdminUser) => {
+  const handleEdit = (user: AdminRecord) => {
     setSelectedUser(user);
     setDialogOpen(true);
   };
 
   const handleDelete = async (principalId: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus admin user ini?')) return;
+    if (!confirm("Apakah Anda yakin ingin menghapus admin user ini?")) return;
 
     try {
-      await deleteUser.mutateAsync(Principal.fromText(principalId));
-      toast.success('Admin user berhasil dihapus');
-    } catch (error) {
-      toast.error('Gagal menghapus admin user');
+      await deleteUser.mutateAsync(principalId);
+      toast.success("Admin user berhasil dihapus");
+    } catch (error: any) {
+      toast.error(error?.message || "Gagal menghapus admin user");
     }
   };
 
   const handleCloseDialog = () => {
     setDialogOpen(false);
     setSelectedUser(null);
+    refetch();
   };
 
   return (
@@ -40,9 +43,7 @@ export default function AdminUsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Admin Users</h1>
-          <p className="text-muted-foreground">
-            Kelola pengguna admin
-          </p>
+          <p className="text-muted-foreground">Kelola pengguna admin</p>
         </div>
         <Button onClick={() => setDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />

@@ -1,5 +1,5 @@
-import { Pencil, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -7,17 +7,20 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useGetAllTestimonials } from '@/hooks/useTestimonials';
-import type { Testimonial } from '@/types/local';
+} from "@/components/ui/table";
+import { useGetAllTestimonials } from "@/hooks/useTestimonials";
+import type { Testimonial } from "@/types/local";
+import { Pencil, Trash2 } from "lucide-react";
 
 interface TestimonialListProps {
   onEdit: (testimonial: Testimonial) => void;
   onDelete: (testimonial: Testimonial) => void;
 }
 
-export default function TestimonialList({ onEdit, onDelete }: TestimonialListProps) {
+export default function TestimonialList({
+  onEdit,
+  onDelete,
+}: TestimonialListProps) {
   const { data: testimonials, isLoading } = useGetAllTestimonials();
 
   if (isLoading) {
@@ -51,11 +54,13 @@ export default function TestimonialList({ onEdit, onDelete }: TestimonialListPro
       <TableBody>
         {testimonials.map((testimonial) => (
           <TableRow key={testimonial.id.toString()}>
-            <TableCell className="font-medium">{testimonial.customerName}</TableCell>
-            <TableCell className="max-w-md truncate">{testimonial.content}</TableCell>
-            <TableCell>
-              {'⭐'.repeat(Number(testimonial.rating))}
+            <TableCell className="font-medium">
+              {testimonial.customerName}
             </TableCell>
+            <TableCell className="max-w-md truncate">
+              {testimonial.content}
+            </TableCell>
+            <TableCell>{"⭐".repeat(Number(testimonial.rating))}</TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-2">
                 <Button

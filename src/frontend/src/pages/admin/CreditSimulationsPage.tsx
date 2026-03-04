@@ -1,13 +1,22 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useGetAllCreditSimulations } from '../../hooks/useCreditSimulations';
-import { format } from 'date-fns';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { format } from "date-fns";
+import { useGetAllCreditSimulations } from "../../hooks/useCreditSimulations";
 
 export default function CreditSimulationsPage() {
   const { data: simulations, isLoading } = useGetAllCreditSimulations();
 
-  const sortedSimulations = simulations ? [...simulations].sort((a, b) => Number(b.timestamp - a.timestamp)) : [];
+  const sortedSimulations = simulations
+    ? [...simulations].sort((a, b) => Number(b.timestamp - a.timestamp))
+    : [];
 
   return (
     <div className="space-y-6">
@@ -25,8 +34,8 @@ export default function CreditSimulationsPage() {
         <CardContent>
           {isLoading ? (
             <div className="space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
+              {["s1", "s2", "s3", "s4", "s5"].map((key) => (
+                <Skeleton key={key} className="h-12 w-full" />
               ))}
             </div>
           ) : (
@@ -44,16 +53,24 @@ export default function CreditSimulationsPage() {
                   sortedSimulations.map((sim) => (
                     <TableRow key={sim.id.toString()}>
                       <TableCell>{sim.vehicleId.toString()}</TableCell>
-                      <TableCell>Rp {Number(sim.amount).toLocaleString('id-ID')}</TableCell>
+                      <TableCell>
+                        Rp {Number(sim.amount).toLocaleString("id-ID")}
+                      </TableCell>
                       <TableCell>{sim.term.toString()} bulan</TableCell>
                       <TableCell>
-                        {format(new Date(Number(sim.timestamp) / 1000000), 'dd/MM/yyyy HH:mm')}
+                        {format(
+                          new Date(Number(sim.timestamp) / 1000000),
+                          "dd/MM/yyyy HH:mm",
+                        )}
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                    <TableCell
+                      colSpan={4}
+                      className="text-center text-muted-foreground"
+                    >
                       Tidak ada data
                     </TableCell>
                   </TableRow>
