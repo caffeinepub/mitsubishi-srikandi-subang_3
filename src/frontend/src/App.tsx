@@ -34,6 +34,7 @@ import MobilNiagaCategoryPage from "./pages/public/MobilNiagaCategoryPage";
 import MobilNiagaDetailPage from "./pages/public/MobilNiagaDetailPage";
 import MobilNiagaPage from "./pages/public/MobilNiagaPage";
 import PromoPage from "./pages/public/PromoPage";
+import SearchPage from "./pages/public/SearchPage";
 import SimulasiKreditPage from "./pages/public/SimulasiKreditPage";
 import TestimoniPage from "./pages/public/TestimoniPage";
 
@@ -267,6 +268,19 @@ const simulasiKreditRoute = createRoute({
   ),
 });
 
+const searchRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/search",
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: (search.q as string) ?? "",
+  }),
+  component: () => (
+    <PublicLayout>
+      <SearchPage />
+    </PublicLayout>
+  ),
+});
+
 const routeTree = rootRoute.addChildren([
   berandaRoute,
   loginRoute,
@@ -281,6 +295,7 @@ const routeTree = rootRoute.addChildren([
   blogDetailRoute,
   kontakRoute,
   simulasiKreditRoute,
+  searchRoute,
   adminRoute.addChildren([
     dashboardRoute,
     adminPassengerVehiclesRoute,

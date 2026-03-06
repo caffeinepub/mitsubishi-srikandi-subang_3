@@ -1,3 +1,4 @@
+import { useGetWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import { Link } from "@tanstack/react-router";
 import { Calculator, Menu, MessageCircle, Phone } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -6,6 +7,13 @@ export default function BottomCTABar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const { data: settings } = useGetWebsiteSettings();
+
+  const phone = settings?.contactPhone || "0852-1234-0778";
+  const waNumber = settings?.contactWhatsapp
+    ? settings.contactWhatsapp.replace(/\D/g, "")
+    : "6285212340778";
+  const waLink = `https://wa.me/${waNumber}?text=Hai..%20Saya%20tertarik%20dengan%20produk%20mobil%20Mitsubishi..`;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -70,7 +78,7 @@ export default function BottomCTABar() {
         <button
           type="button"
           onClick={() => {
-            window.location.href = "tel:0260123456";
+            window.location.href = `tel:${phone}`;
           }}
           className="flex-1 h-full flex flex-col items-center justify-center bg-[#C90010] text-white hover:bg-[#A00008] transition-colors"
         >
@@ -79,7 +87,7 @@ export default function BottomCTABar() {
         </button>
         <button
           type="button"
-          onClick={() => window.open("https://wa.me/6281234567890", "_blank")}
+          onClick={() => window.open(waLink, "_blank")}
           className="flex-1 h-full flex flex-col items-center justify-center bg-[#398E3D] text-white hover:bg-[#2d7230] transition-colors"
         >
           <MessageCircle size={18} />

@@ -33,7 +33,7 @@ export default function HeroSection({ pathname }: HeroSectionProps) {
       return {
         title: "Mobil Niaga",
         icon: Truck,
-        bg: "#F1C40F",
+        bg: "#F6C20B",
         subtext:
           "Memilih Mitsubishi FUSO adalah keputusan tepat yang akan menjadikan usaha berkembang pesat.",
       };
@@ -42,7 +42,7 @@ export default function HeroSection({ pathname }: HeroSectionProps) {
       return {
         title: "Light Duty",
         icon: Truck,
-        bg: "#F1C40F",
+        bg: "#F6C20B",
         subtext:
           "Kendaraan Ringan dengan efisiensi tinggi, cocok untuk distribusi urban dan pengiriman barang ringan hingga menengah.",
       };
@@ -51,7 +51,7 @@ export default function HeroSection({ pathname }: HeroSectionProps) {
       return {
         title: "Medium Duty",
         icon: Truck,
-        bg: "#F1C40F",
+        bg: "#F6C20B",
         subtext:
           "Kendaraan niaga kelas menengah yang tangguh, andal untuk pengiriman jarak jauh dan beban berat.",
       };
@@ -60,7 +60,7 @@ export default function HeroSection({ pathname }: HeroSectionProps) {
       return {
         title: "Tractor Head",
         icon: Truck,
-        bg: "#F1C40F",
+        bg: "#F6C20B",
         subtext:
           "Solusi ideal untuk truk trailer, kuat, efisien, dan siap menaklukkan perjalanan panjang.",
       };
@@ -119,7 +119,7 @@ export default function HeroSection({ pathname }: HeroSectionProps) {
 
   return (
     <div
-      className="h-auto py-8 flex items-center justify-center"
+      className="h-[150px] md:h-[250px] flex items-center justify-center"
       style={{ backgroundColor: config.bg }}
     >
       <div className="container mx-auto px-4 flex flex-col items-center justify-center text-center space-y-3">

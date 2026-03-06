@@ -1,3 +1,4 @@
+import { useGetWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -5,6 +6,9 @@ import { useEffect, useRef, useState } from "react";
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { data: settings } = useGetWebsiteSettings();
+
+  const siteName = settings?.siteName || "Mitsubishi Srikandi Subang";
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -44,7 +48,7 @@ export default function Navbar() {
               className="h-10"
             />
             <span className="text-white font-bold text-base md:text-lg">
-              Mitsubishi Srikandi Subang
+              {siteName}
             </span>
           </Link>
 

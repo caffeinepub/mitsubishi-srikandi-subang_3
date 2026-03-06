@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useContactForm } from "@/hooks/useContactForm";
+import { useGetWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -20,6 +21,20 @@ export default function KontakPage() {
   });
 
   const contactMutation = useContactForm();
+  const { data: settings } = useGetWebsiteSettings();
+
+  // Dynamic values with fallbacks
+  const phone = settings?.contactPhone || "0852-1234-0778";
+  const email = settings?.contactEmail || "fuadmitsubishi2025@gmail.com";
+  const address =
+    settings?.dealerAddress ||
+    "Jl. Otto Iskandardinata No.314, Subang Jawa Barat 41211";
+  const operationalHours =
+    settings?.operationalHours || "Senin - Sabtu, 08:30 - 16:00";
+  const waNumber = settings?.contactWhatsapp
+    ? settings.contactWhatsapp.replace(/\D/g, "")
+    : "6285212340778";
+  const waLink = `https://wa.me/${waNumber}?text=Hai..%20Saya%20tertarik%20dengan%20produk%20mobil%20Mitsubishi..`;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +76,7 @@ export default function KontakPage() {
               <Label htmlFor="name">Nama *</Label>
               <Input
                 id="name"
+                data-ocid="kontak.input"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
@@ -148,6 +164,7 @@ export default function KontakPage() {
             </div>
             <Button
               type="submit"
+              data-ocid="kontak.submit_button"
               className="w-full bg-[#C90010] hover:bg-[#A00008]"
               disabled={contactMutation.isPending}
             >
@@ -162,35 +179,41 @@ export default function KontakPage() {
             <h2 className="text-2xl font-bold mb-6">Info Dealer</h2>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
-                <Phone className="text-[#C90010] mt-1" size={20} />
+                <Phone className="text-[#C90010] mt-1 shrink-0" size={20} />
                 <div>
                   <div className="font-medium">Telepon</div>
-                  <div className="text-gray-600">0260-123456</div>
+                  <a
+                    href={`tel:${phone}`}
+                    className="text-gray-600 hover:text-[#C90010] transition-colors"
+                  >
+                    {phone}
+                  </a>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
-                <Mail className="text-[#C90010] mt-1" size={20} />
+                <Mail className="text-[#C90010] mt-1 shrink-0" size={20} />
                 <div>
                   <div className="font-medium">Email</div>
-                  <div className="text-gray-600">info@mitsubishisubang.com</div>
+                  <a
+                    href={`mailto:${email}`}
+                    className="text-gray-600 hover:text-[#C90010] transition-colors break-all"
+                  >
+                    {email}
+                  </a>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
-                <MapPin className="text-[#C90010] mt-1" size={20} />
+                <MapPin className="text-[#C90010] mt-1 shrink-0" size={20} />
                 <div>
                   <div className="font-medium">Alamat</div>
-                  <div className="text-gray-600">
-                    Jl. Raya Subang No. 123, Subang, Jawa Barat
-                  </div>
+                  <div className="text-gray-600">{address}</div>
                 </div>
               </div>
               <div className="flex items-start space-x-3">
-                <Clock className="text-[#C90010] mt-1" size={20} />
+                <Clock className="text-[#C90010] mt-1 shrink-0" size={20} />
                 <div>
                   <div className="font-medium">Jam Operasional</div>
-                  <div className="text-gray-600">
-                    Senin - Sabtu: 08:00 - 17:00
-                  </div>
+                  <div className="text-gray-600">{operationalHours}</div>
                 </div>
               </div>
             </div>
@@ -199,18 +222,15 @@ export default function KontakPage() {
           <div>
             <h2 className="text-2xl font-bold mb-6">Sales Consultant</h2>
             <div className="bg-gray-50 rounded-lg p-6 text-center">
-              <img
-                src="/assets/generated/sales-consultant.dim_400x400.png"
-                alt="Sales Consultant"
-                className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
-              />
-              <h3 className="text-xl font-bold mb-2">Budi Santoso</h3>
+              <div className="w-32 h-32 rounded-full mx-auto mb-4 bg-[#C90010] flex items-center justify-center">
+                <span className="text-white text-4xl font-bold">F</span>
+              </div>
+              <h3 className="text-xl font-bold mb-2">Fuad Mitsubishi</h3>
               <p className="text-gray-600 mb-4">Sales Consultant</p>
               <Button
+                data-ocid="kontak.primary_button"
                 className="w-full bg-[#398E3D] hover:bg-[#2d7230]"
-                onClick={() =>
-                  window.open("https://wa.me/6281234567890", "_blank")
-                }
+                onClick={() => window.open(waLink, "_blank")}
               >
                 <MessageCircle className="mr-2" size={20} />
                 Hubungi via WhatsApp
@@ -220,8 +240,17 @@ export default function KontakPage() {
 
           <div>
             <h2 className="text-2xl font-bold mb-6">Lokasi Kami</h2>
-            <div className="bg-gray-200 rounded-lg h-64 flex items-center justify-center">
-              <p className="text-gray-500">Google Maps Embed</p>
+            <div className="rounded-lg overflow-hidden h-64 w-full">
+              <iframe
+                src="https://www.google.com/maps?q=-6.5518470,107.7754491&z=17&output=embed"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Lokasi Mitsubishi Srikandi Subang"
+              />
             </div>
           </div>
         </div>
