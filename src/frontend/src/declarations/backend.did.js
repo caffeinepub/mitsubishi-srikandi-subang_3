@@ -156,6 +156,11 @@ export const idlService = IDL.Service({
   'getBannerImages' : IDL.Func([], [IDL.Vec(BannerImage)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
+  'getDailyVisitorTrend' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Int, IDL.Nat))],
+      ['query'],
+    ),
   'getMediaAssetByBlobId' : IDL.Func(
       [IDL.Text],
       [IDL.Opt(MediaAsset)],
@@ -165,7 +170,13 @@ export const idlService = IDL.Service({
   'getMediaAssets' : IDL.Func([], [IDL.Vec(MediaAsset)], ['query']),
   'getMyRole' : IDL.Func([], [IDL.Opt(UserRole)], []),
   'getOnlineUsers' : IDL.Func([], [IDL.Nat], ['query']),
+  'getPublicVisitorStats' : IDL.Func([], [VisitorStats], ['query']),
   'getStableVisitorStats' : IDL.Func([], [VisitorStats], ['query']),
+  'getTopPageViews' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))],
+      ['query'],
+    ),
   'getTotalPageViews' : IDL.Func([], [IDL.Nat], ['query']),
   'getTotalVisitors' : IDL.Func([], [IDL.Nat], ['query']),
   'getUserProfile' : IDL.Func(
@@ -358,6 +369,11 @@ export const idlFactory = ({ IDL }) => {
     'getBannerImages' : IDL.Func([], [IDL.Vec(BannerImage)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
+    'getDailyVisitorTrend' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Int, IDL.Nat))],
+        ['query'],
+      ),
     'getMediaAssetByBlobId' : IDL.Func(
         [IDL.Text],
         [IDL.Opt(MediaAsset)],
@@ -367,7 +383,13 @@ export const idlFactory = ({ IDL }) => {
     'getMediaAssets' : IDL.Func([], [IDL.Vec(MediaAsset)], ['query']),
     'getMyRole' : IDL.Func([], [IDL.Opt(UserRole)], []),
     'getOnlineUsers' : IDL.Func([], [IDL.Nat], ['query']),
+    'getPublicVisitorStats' : IDL.Func([], [VisitorStats], ['query']),
     'getStableVisitorStats' : IDL.Func([], [VisitorStats], ['query']),
+    'getTopPageViews' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))],
+        ['query'],
+      ),
     'getTotalPageViews' : IDL.Func([], [IDL.Nat], ['query']),
     'getTotalVisitors' : IDL.Func([], [IDL.Nat], ['query']),
     'getUserProfile' : IDL.Func(

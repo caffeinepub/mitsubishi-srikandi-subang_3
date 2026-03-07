@@ -8,9 +8,14 @@ export function useGetAllVehicleCatalogs() {
   return useQuery<VehicleCatalog[]>({
     queryKey: ["vehicleCatalogs"],
     queryFn: async () => {
-      if (!actor) throw new Error("Actor not available");
-      // Backend method missing - return empty array
-      return [] as VehicleCatalog[];
+      if (!actor) return [] as VehicleCatalog[];
+      try {
+        // Backend method missing - return empty array
+        return [] as VehicleCatalog[];
+      } catch (err) {
+        console.warn("[useGetAllVehicleCatalogs] Failed:", err);
+        return [] as VehicleCatalog[];
+      }
     },
     enabled: !!actor && !isFetching,
   });

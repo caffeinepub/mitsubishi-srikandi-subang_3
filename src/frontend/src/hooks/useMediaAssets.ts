@@ -11,7 +11,12 @@ export function useGetAllMediaAssets() {
     queryKey: ["mediaAssets"],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllMediaAssets();
+      try {
+        return await actor.getAllMediaAssets();
+      } catch (err) {
+        console.warn("[useGetAllMediaAssets] Failed to fetch:", err);
+        return [];
+      }
     },
     enabled: !!actor && !isFetching,
   });

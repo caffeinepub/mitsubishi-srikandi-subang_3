@@ -13,8 +13,13 @@ export function useGetWebsiteSettings() {
       if (!actor) return null;
       try {
         return await actor.getWebsiteSettings();
-      } catch {
-        return null;
+      } catch (err) {
+        console.warn("[useGetWebsiteSettings] Failed, retrying once...", err);
+        try {
+          return await actor.getWebsiteSettings();
+        } catch {
+          return null;
+        }
       }
     },
     enabled: !!actor && !isFetching,

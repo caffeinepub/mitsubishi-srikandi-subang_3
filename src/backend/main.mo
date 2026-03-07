@@ -10,7 +10,9 @@ import Int "mo:core/Int";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
   include MixinStorage();
 
@@ -57,6 +59,8 @@ actor {
 
   let visitorSessions = Map.empty<Text, VisitorSession>();
   let visits = Map.empty<Text, Visit>();
+  let pageViewsMap = Map.empty<Text, Nat>();
+  let dailySessionSet = Map.empty<Text, Bool>();
 
   var visitorStats : VisitorStats = {
     totalVisitors = 0;
@@ -439,6 +443,12 @@ actor {
     (timestamp >= (nowNanos - monthNanos));
   };
 
+  func isThisYear(timestamp : Int, now : Int) : Bool {
+    let nowNanos = now;
+    let yearNanos = 365 * 24 * 60 * 60 * 1_000_000_000;
+    (timestamp >= (nowNanos - yearNanos));
+  };
+
   func cleanupExpiredSessionsInternal() {
     let currentTime = Time.now();
     let timeout = 5 * 60 * 1_000_000_000;
@@ -517,27 +527,41 @@ actor {
     };
     visitorSessions.add(sessionId, updatedSession);
 
-    cleanupExpiredSessionsInternal();
-    updateDailyStats(currentTime);
+    let currentViewCount = switch (pageViewsMap.get(pageUrl)) {
+      case (?count) { count };
+      case (null) { 0 };
+    };
+    pageViewsMap.add(pageUrl, currentViewCount + 1);
 
-    visitorStats := await recalculateStats();
+    let dayKey = Int.abs(currentTime / (24 * 60 * 60 * 1_000_000_000)).toText();
+    let dedupKey = sessionId # "-" # dayKey;
+    let isNewSession = switch (dailySessionSet.get(dedupKey)) {
+      case (null) {
+        dailySessionSet.add(dedupKey, true);
+        true;
+      };
+      case (?_) { false };
+    };
+    updateDailyStats(currentTime, isNewSession);
+
+    visitorStats := recalculateStats();
   };
 
-  func updateDailyStats(timestamp : Int) {
+  func updateDailyStats(timestamp : Int, isNewSession : Bool) {
     let day = Int.abs((timestamp / (24 * 60 * 60 * 1_000_000_000)) * (24 * 60 * 60 * 1_000_000_000));
     switch (dailyStats.get(day)) {
       case (?existingStats) {
         let updatedStats = {
           existingStats with
-          visitors = existingStats.visitors + 1;
           pageViews = existingStats.pageViews + 1;
+          visitors = if (isNewSession) { existingStats.visitors + 1 } else { existingStats.visitors };
         };
         dailyStats.add(day, updatedStats);
       };
       case (null) {
         let newStats = {
           date = day;
-          visitors = 1;
+          visitors = if (isNewSession) { 1 } else { 0 };
           pageViews = 1;
         };
         dailyStats.add(day, newStats);
@@ -552,7 +576,7 @@ actor {
     cleanupExpiredSessionsInternal();
   };
 
-  func recalculateStats() : async VisitorStats {
+  func recalculateStats() : VisitorStats {
     let currentTime = Time.now();
 
     let todayVisitors = visitorSessions.values().toArray().filter(
@@ -571,8 +595,18 @@ actor {
       func(session) { isThisMonth(session.firstVisit, currentTime) }
     ).size();
 
+    let thisYearVisitors = visitorSessions.values().toArray().filter(
+      func(session) { isThisYear(session.firstVisit, currentTime) }
+    ).size();
+
     let pageViewsToday = visits.values().toArray().filter(
       func(visit) { isToday(visit.visitedAt, currentTime) }
+    ).size();
+
+    let onlineCount = visitorSessions.values().toArray().filter(
+      func(session) {
+        currentTime - session.lastActivity <= 5 * 60 * 1_000_000_000
+      }
     ).size();
 
     {
@@ -581,7 +615,10 @@ actor {
       visitorsYesterday = yesterdayVisitors;
       visitorsThisWeek = thisWeekVisitors;
       visitorsThisMonth = thisMonthVisitors;
+      visitorsThisYear = thisYearVisitors;
+      onlineNow = onlineCount;
       pageViewsToday;
+      totalVisitors = visitorSessions.size();
     };
   };
 
@@ -618,6 +655,28 @@ actor {
       Runtime.trap("Unauthorized: Only admins can view visitor statistics");
     };
     visitorStats;
+  };
+
+  public query func getPublicVisitorStats() : async VisitorStats {
+    visitorStats;
+  };
+
+  public query func getDailyVisitorTrend() : async [(Int, Nat)] {
+    let currentTime = Time.now();
+    let trendList = dailyStats.toArray().filter(
+      func((day, _)) { day >= (currentTime - 30 * 24 * 60 * 60 * 1_000_000_000) }
+    );
+
+    trendList.map(func((timestamp, stats)) { (timestamp, stats.visitors) });
+  };
+
+  public query func getTopPageViews() : async [(Text, Nat)] {
+    let sorted = pageViewsMap.toArray();
+    let len = if (sorted.size() < 10) { sorted.size() } else { 10 };
+    Array.tabulate<(Text, Nat)>(
+      len,
+      func(i) { sorted[i] }
+    );
   };
 
   public shared ({ caller }) func periodicCleanup() : async () {

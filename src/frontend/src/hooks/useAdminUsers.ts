@@ -12,7 +12,12 @@ export function useGetAllAdminUsers() {
     queryKey: ["adminUsers"],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAdmins();
+      try {
+        return await actor.getAdmins();
+      } catch (err) {
+        console.warn("[useGetAllAdminUsers] Failed to fetch:", err);
+        return [];
+      }
     },
     enabled: !!actor && !isFetching,
   });

@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { ThemeProvider } from "next-themes";
 import AuthGuard from "./components/AuthGuard";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import AdminLayout from "./layouts/AdminLayout";
 import PublicLayout from "./layouts/PublicLayout";
 import LoginPage from "./pages/LoginPage";
@@ -42,7 +43,14 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 10,
+      retry: 1,
+      retryDelay: 1000,
+      throwOnError: false,
       refetchOnWindowFocus: false,
+    },
+    mutations: {
+      throwOnError: false,
     },
   },
 });
@@ -323,7 +331,9 @@ declare module "@tanstack/react-router" {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <ErrorBoundary>
+        <RouterProvider router={router} />
+      </ErrorBoundary>
     </QueryClientProvider>
   );
 }

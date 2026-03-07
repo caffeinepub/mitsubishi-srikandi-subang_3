@@ -108,12 +108,15 @@ export interface backendInterface {
     getBannerImages(): Promise<Array<BannerImage>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole__1>;
+    getDailyVisitorTrend(): Promise<Array<[bigint, bigint]>>;
     getMediaAssetByBlobId(blobId: string): Promise<MediaAsset | null>;
     getMediaAssetById(id: bigint): Promise<MediaAsset | null>;
     getMediaAssets(): Promise<Array<MediaAsset>>;
     getMyRole(): Promise<UserRole | null>;
     getOnlineUsers(): Promise<bigint>;
+    getPublicVisitorStats(): Promise<VisitorStats>;
     getStableVisitorStats(): Promise<VisitorStats>;
+    getTopPageViews(): Promise<Array<[string, bigint]>>;
     getTotalPageViews(): Promise<bigint>;
     getTotalVisitors(): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;

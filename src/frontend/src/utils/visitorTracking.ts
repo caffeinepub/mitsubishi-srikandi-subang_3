@@ -1,5 +1,9 @@
 // Visitor tracking utility functions
 
+const SESSION_ID_KEY = "visitor_session_id";
+const SESSION_LAST_ACTIVE_KEY = "visitor_last_active";
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+
 export function generateSessionId(): string {
   // Generate UUID v4
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
@@ -10,19 +14,28 @@ export function generateSessionId(): string {
 }
 
 export function getOrCreateSessionId(): string {
-  const storageKey = "visitor_session_id";
+  const now = Date.now();
 
-  // Try to get existing session ID from localStorage (persists across tabs)
-  let sessionId = localStorage.getItem(storageKey);
+  const existingSessionId = localStorage.getItem(SESSION_ID_KEY);
+  const lastActiveStr = localStorage.getItem(SESSION_LAST_ACTIVE_KEY);
+  const lastActive = lastActiveStr ? Number.parseInt(lastActiveStr, 10) : 0;
 
-  if (!sessionId) {
-    // Generate new session ID if none exists
+  // Check if session has expired (30 min inactivity)
+  const isExpired = !existingSessionId || now - lastActive > SESSION_TIMEOUT_MS;
+
+  let sessionId: string;
+  if (isExpired) {
+    // Generate new session ID on expiry or first visit
     sessionId = generateSessionId();
-    localStorage.setItem(storageKey, sessionId);
-    console.log("[Visitor Tracking] Created new session ID:", sessionId);
+    localStorage.setItem(SESSION_ID_KEY, sessionId);
+    console.log("[Visitor Tracking] New session started:", sessionId);
   } else {
-    console.log("[Visitor Tracking] Using existing session ID:", sessionId);
+    sessionId = existingSessionId!;
+    console.log("[Visitor Tracking] Resuming session:", sessionId);
   }
+
+  // Always update lastActive timestamp
+  localStorage.setItem(SESSION_LAST_ACTIVE_KEY, now.toString());
 
   return sessionId;
 }

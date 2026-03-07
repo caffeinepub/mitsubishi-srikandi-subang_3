@@ -8,9 +8,14 @@ export function useGetAllCommercialVehicleCategories() {
   return useQuery<CommercialVehicleCategory[]>({
     queryKey: ["commercialVehicleCategories"],
     queryFn: async () => {
-      if (!actor) throw new Error("Actor not available");
-      // Backend method missing - return empty array
-      return [] as CommercialVehicleCategory[];
+      if (!actor) return [] as CommercialVehicleCategory[];
+      try {
+        // Backend method missing - return empty array
+        return [] as CommercialVehicleCategory[];
+      } catch (err) {
+        console.warn("[useGetAllCommercialVehicleCategories] Failed:", err);
+        return [] as CommercialVehicleCategory[];
+      }
     },
     enabled: !!actor && !isFetching,
   });
@@ -23,8 +28,13 @@ export function useGetCommercialVehicleCategory(categoryId: bigint | null) {
     queryKey: ["commercialVehicleCategory", categoryId?.toString()],
     queryFn: async () => {
       if (!actor || !categoryId) return null;
-      // Backend method missing - return null
-      return null;
+      try {
+        // Backend method missing - return null
+        return null;
+      } catch (err) {
+        console.warn("[useGetCommercialVehicleCategory] Failed:", err);
+        return null;
+      }
     },
     enabled: !!actor && !isFetching && categoryId !== null,
   });

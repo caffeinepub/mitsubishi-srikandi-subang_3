@@ -13,26 +13,31 @@ interface AdminStats {
   dailyVisitors: number;
 }
 
+const ZERO_STATS: AdminStats = {
+  totalVehicles: 0,
+  totalPassengerVehicles: 0,
+  totalCommercialVehicles: 0,
+  totalContacts: 0,
+  totalLeads: 0,
+  totalBlogPosts: 0,
+  totalMediaAssets: 0,
+  totalVisitors: 0,
+  dailyVisitors: 0,
+};
+
 export function useGetAdminStats() {
   const { actor, isFetching } = useActor();
 
   return useQuery<AdminStats>({
     queryKey: ["adminStats"],
     queryFn: async () => {
-      if (!actor) throw new Error("Actor not available");
-
-      // Backend methods missing - return default stats
-      return {
-        totalVehicles: 0,
-        totalPassengerVehicles: 0,
-        totalCommercialVehicles: 0,
-        totalContacts: 0,
-        totalLeads: 0,
-        totalBlogPosts: 0,
-        totalMediaAssets: 0,
-        totalVisitors: 0,
-        dailyVisitors: 0,
-      };
+      if (!actor) return ZERO_STATS;
+      try {
+        return ZERO_STATS;
+      } catch (err) {
+        console.warn("[useGetAdminStats] Failed:", err);
+        return ZERO_STATS;
+      }
     },
     enabled: !!actor && !isFetching,
   });

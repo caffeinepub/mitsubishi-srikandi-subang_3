@@ -208,12 +208,15 @@ export interface backendInterface {
     getBannerImages(): Promise<Array<BannerImage>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole__1>;
+    getDailyVisitorTrend(): Promise<Array<[bigint, bigint]>>;
     getMediaAssetByBlobId(blobId: string): Promise<MediaAsset | null>;
     getMediaAssetById(id: bigint): Promise<MediaAsset | null>;
     getMediaAssets(): Promise<Array<MediaAsset>>;
     getMyRole(): Promise<UserRole | null>;
     getOnlineUsers(): Promise<bigint>;
+    getPublicVisitorStats(): Promise<VisitorStats>;
     getStableVisitorStats(): Promise<VisitorStats>;
+    getTopPageViews(): Promise<Array<[string, bigint]>>;
     getTotalPageViews(): Promise<bigint>;
     getTotalVisitors(): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
@@ -527,6 +530,20 @@ export class Backend implements backendInterface {
             return from_candid_UserRole__1_n21(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getDailyVisitorTrend(): Promise<Array<[bigint, bigint]>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getDailyVisitorTrend();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getDailyVisitorTrend();
+            return result;
+        }
+    }
     async getMediaAssetByBlobId(arg0: string): Promise<MediaAsset | null> {
         if (this.processError) {
             try {
@@ -597,6 +614,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getPublicVisitorStats(): Promise<VisitorStats> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getPublicVisitorStats();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getPublicVisitorStats();
+            return result;
+        }
+    }
     async getStableVisitorStats(): Promise<VisitorStats> {
         if (this.processError) {
             try {
@@ -608,6 +639,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getStableVisitorStats();
+            return result;
+        }
+    }
+    async getTopPageViews(): Promise<Array<[string, bigint]>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getTopPageViews();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getTopPageViews();
             return result;
         }
     }

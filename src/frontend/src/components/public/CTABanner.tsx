@@ -1,3 +1,4 @@
+import SafeImage from "@/components/SafeImage";
 import { useActor } from "@/hooks/useActor";
 import { useGetWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import { createBlobUrlFromData } from "@/utils/blobUrl";
@@ -43,7 +44,12 @@ export default function CTABanner() {
   return (
     <section className="w-full my-0">
       <div className="container px-0">
-        <img src={imageSrc} alt="CTA Banner" className="w-full h-auto" />
+        <SafeImage
+          src={imageSrc}
+          alt="CTA Banner"
+          className="w-full h-auto"
+          placeholderClassName="w-full h-[200px] bg-gray-100"
+        />
       </div>
     </section>
   );

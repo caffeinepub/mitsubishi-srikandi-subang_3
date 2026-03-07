@@ -1,3 +1,4 @@
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -196,7 +197,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto bg-white">
-        <div className="container mx-auto p-6">{children}</div>
+        <div className="container mx-auto p-6">
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </div>
       </main>
     </div>
   );

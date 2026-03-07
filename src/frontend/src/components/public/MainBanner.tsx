@@ -1,10 +1,13 @@
+import SafeImage from "@/components/SafeImage";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useActor } from "@/hooks/useActor";
 import { useGetWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import { createBlobUrlFromData } from "@/utils/blobUrl";
 import { useEffect, useState } from "react";
 
 export default function MainBanner() {
-  const { data: settings } = useGetWebsiteSettings();
+  const { data: settings, isLoading: settingsLoading } =
+    useGetWebsiteSettings();
   const { actor, isFetching } = useActor();
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
 
@@ -38,15 +41,20 @@ export default function MainBanner() {
     };
   }, [bannerImageId, actor, isFetching]);
 
+  if (settingsLoading) {
+    return <Skeleton className="w-full h-[150px] md:h-[600px]" />;
+  }
+
   const imageSrc =
     bannerUrl || "/assets/generated/main-banner.dim_1920x600.png";
 
   return (
     <section className="relative w-full h-[150px] md:h-[600px] overflow-hidden">
-      <img
+      <SafeImage
         src={imageSrc}
         alt="Main Banner"
         className="w-full h-full object-cover object-center"
+        placeholderClassName="w-full h-full bg-[#C90010]"
       />
       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
         <div className="text-center text-white px-4">
