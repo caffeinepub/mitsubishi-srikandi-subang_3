@@ -17,7 +17,7 @@ const ZERO_STATS: VisitorStats = {
 let _lastKnownStats: VisitorStats = ZERO_STATS;
 
 export function useGetVisitorStats(options?: { refetchInterval?: number }) {
-  const { actor, isFetching } = useActor();
+  const { actor } = useActor();
 
   return useQuery<VisitorStats>({
     queryKey: ["visitorStats"],
@@ -34,7 +34,7 @@ export function useGetVisitorStats(options?: { refetchInterval?: number }) {
         return _lastKnownStats;
       }
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor,
     refetchInterval: options?.refetchInterval ?? 30000,
     // Keep stale data visible during refetch — never flash zeros
     staleTime: 25000,
@@ -45,7 +45,7 @@ export function useGetVisitorStats(options?: { refetchInterval?: number }) {
 let _lastKnownTrend: Array<[bigint, bigint]> = [];
 
 export function useGetVisitorTrend() {
-  const { actor, isFetching } = useActor();
+  const { actor } = useActor();
 
   return useQuery<Array<[bigint, bigint]>>({
     queryKey: ["visitorTrend"],
@@ -60,7 +60,7 @@ export function useGetVisitorTrend() {
         return _lastKnownTrend;
       }
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor,
     refetchInterval: 30000,
     staleTime: 25000,
   });
@@ -70,7 +70,7 @@ export function useGetVisitorTrend() {
 let _lastKnownPageViews: Array<[string, bigint]> = [];
 
 export function useGetPageViews() {
-  const { actor, isFetching } = useActor();
+  const { actor } = useActor();
 
   return useQuery<Array<[string, bigint]>>({
     queryKey: ["pageViews"],
@@ -85,7 +85,7 @@ export function useGetPageViews() {
         return _lastKnownPageViews;
       }
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor,
     refetchInterval: 30000,
     staleTime: 25000,
   });

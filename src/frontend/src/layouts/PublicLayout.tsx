@@ -4,7 +4,6 @@ import Footer from "@/components/public/Footer";
 import HeroSection from "@/components/public/HeroSection";
 import Navbar from "@/components/public/Navbar";
 import { useActor } from "@/hooks/useActor";
-import { useInternetIdentity } from "@/hooks/useInternetIdentity";
 import {
   detectBrowser,
   detectDeviceType,
@@ -23,7 +22,6 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
   const location = useLocation();
   const pathname = location.pathname;
   const { actor } = useActor();
-  const { isInitializing } = useInternetIdentity();
 
   // Don't show HeroSection on homepage
   const showHeroSection = pathname !== "/";
@@ -31,7 +29,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
   // Track visitor on every page navigation
   // biome-ignore lint/correctness/useExhaustiveDependencies: location.pathname triggers re-run intentionally
   useEffect(() => {
-    if (!actor || isInitializing) return;
+    if (!actor) return;
     if (isAdminRoute(pathname)) return;
     if (isBot()) return;
 
@@ -58,7 +56,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
       .catch(() => {
         // silently ignore tracking errors — never break the UI
       });
-  }, [location.pathname, pathname, actor, isInitializing]);
+  }, [location.pathname, pathname, actor]);
 
   return (
     <div className="min-h-screen flex flex-col pb-[50px]">

@@ -10,9 +10,7 @@ import Int "mo:core/Int";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
-import Migration "migration";
 
-(with migration = Migration.run)
 actor {
   include MixinStorage();
 
@@ -671,7 +669,13 @@ actor {
   };
 
   public query func getTopPageViews() : async [(Text, Nat)] {
-    let sorted = pageViewsMap.toArray();
+    let sorted = pageViewsMap.toArray().sort(
+      func(a : (Text, Nat), b : (Text, Nat)) : { #less; #equal; #greater } {
+        if (a.1 > b.1) { #less } else if (a.1 < b.1) { #greater } else {
+          #equal;
+        };
+      }
+    );
     let len = if (sorted.size() < 10) { sorted.size() } else { 10 };
     Array.tabulate<(Text, Nat)>(
       len,
