@@ -10,6 +10,7 @@ import {
 import { ThemeProvider } from "next-themes";
 import AuthGuard from "./components/AuthGuard";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ActorProvider } from "./contexts/ActorContext";
 import AdminLayout from "./layouts/AdminLayout";
 import PublicLayout from "./layouts/PublicLayout";
 import LoginPage from "./pages/LoginPage";
@@ -332,7 +333,9 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
-        <RouterProvider router={router} />
+        <ActorProvider>
+          <RouterProvider router={router} />
+        </ActorProvider>
       </ErrorBoundary>
     </QueryClientProvider>
   );

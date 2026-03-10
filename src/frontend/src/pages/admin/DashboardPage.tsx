@@ -13,12 +13,12 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
-import { useActor } from "../../hooks/useActor";
+import { useActorContext } from "../../contexts/ActorContext";
 import { useAdminStats } from "../../hooks/useAdminStats";
 
 export default function DashboardPage() {
+  const { actor, actorFetching } = useActorContext();
   const { data: stats, isLoading } = useAdminStats();
-  const { actor, isFetching: actorFetching } = useActor();
 
   const [whoAmIResult, setWhoAmIResult] = useState<string | null>(null);
   const [whoAmILoading, setWhoAmILoading] = useState(false);
@@ -152,7 +152,7 @@ export default function DashboardPage() {
           </p>
           <Button
             onClick={handleWhoAmI}
-            disabled={whoAmILoading || actorFetching || !actor}
+            disabled={whoAmILoading || !actor || actorFetching}
             variant="outline"
             size="sm"
           >
@@ -204,7 +204,7 @@ export default function DashboardPage() {
           <Button
             data-ocid="dashboard.force_super_admin.button"
             onClick={handleForceSetSuperAdmin}
-            disabled={forceAdminLoading || actorFetching || !actor}
+            disabled={forceAdminLoading || !actor || actorFetching}
             variant="destructive"
             size="sm"
           >
