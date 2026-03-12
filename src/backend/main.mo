@@ -14,6 +14,43 @@ import MixinStorage "blob-storage/Mixin";
 actor {
   include MixinStorage();
 
+  // V1: old type matching the existing canister stable var — used only for migration
+  type WebsiteSettingsV1 = {
+    siteName : Text;
+    contactPhone : Text;
+    contactWhatsapp : Text;
+    contactEmail : Text;
+    dealerAddress : Text;
+    operationalHours : Text;
+    facebookUrl : Text;
+    instagramUrl : Text;
+    tiktokUrl : Text;
+    youtubeUrl : Text;
+    mainBannerImageId : ?Nat;
+    ctaBannerImageId : ?Nat;
+    lastUpdated : Int;
+  };
+
+  public type WebsiteSettings = {
+    siteName : Text;
+    contactPhone : Text;
+    contactWhatsapp : Text;
+    contactEmail : Text;
+    dealerAddress : Text;
+    operationalHours : Text;
+    facebookUrl : Text;
+    instagramUrl : Text;
+    tiktokUrl : Text;
+    youtubeUrl : Text;
+    mainBannerImageId : ?Nat;
+    ctaBannerImageId : ?Nat;
+    lastUpdated : Int;
+    salesConsultantName : ?Text;
+    salesConsultantPhotoId : ?Nat;
+    footerAboutText : ?Text;
+  };
+
+
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
@@ -34,7 +71,9 @@ actor {
   let bannerImages = Map.empty<Nat, BannerImage>();
   let metaStore = Map.empty<Text, MetaEntry>();
 
-  var websiteSettings : WebsiteSettings = {
+  // Old stable var — kept so Motoko can deserialize existing canister state on upgrade.
+  // After postupgrade runs, websiteSettings_v2 is the source of truth.
+  stable var websiteSettings : WebsiteSettingsV1 = {
     siteName = "";
     contactPhone = "";
     contactWhatsapp = "";
@@ -48,6 +87,29 @@ actor {
     mainBannerImageId = null;
     ctaBannerImageId = null;
     lastUpdated = -1;
+  };
+
+  // New stable var holding extended settings. Null until first postupgrade migration.
+  stable var websiteSettings_v2 : ?WebsiteSettings = null;
+
+  // In-memory working copy used by all runtime functions.
+  var _websiteSettingsRuntime : WebsiteSettings = {
+    siteName = "";
+    contactPhone = "";
+    contactWhatsapp = "";
+    contactEmail = "";
+    dealerAddress = "";
+    operationalHours = "";
+    facebookUrl = "";
+    instagramUrl = "";
+    tiktokUrl = "";
+    youtubeUrl = "";
+    mainBannerImageId = null;
+    ctaBannerImageId = null;
+    lastUpdated = -1;
+    salesConsultantName = null;
+    salesConsultantPhotoId = null;
+    footerAboutText = null;
   };
 
   let productLikes = Map.empty<Nat, ProductLike>();
@@ -307,21 +369,7 @@ actor {
     data : Blob;
   };
 
-  public type WebsiteSettings = {
-    siteName : Text;
-    contactPhone : Text;
-    contactWhatsapp : Text;
-    contactEmail : Text;
-    dealerAddress : Text;
-    operationalHours : Text;
-    facebookUrl : Text;
-    instagramUrl : Text;
-    tiktokUrl : Text;
-    youtubeUrl : Text;
-    mainBannerImageId : ?Nat;
-    ctaBannerImageId : ?Nat;
-    lastUpdated : Int;
-  };
+
 
   public type UserProfile = {
     name : Text;
@@ -878,11 +926,11 @@ actor {
       };
       case (null) { Runtime.trap("Unauthorized: not an admin") };
     };
-    websiteSettings := { newSettings with lastUpdated = Time.now() };
+    _websiteSettingsRuntime := { newSettings with lastUpdated = Time.now() };
   };
 
   public query func getWebsiteSettings() : async WebsiteSettings {
-    websiteSettings;
+    _websiteSettingsRuntime;
   };
 
   public shared ({ caller }) func getAdmins() : async [AdminRecord] {
@@ -998,6 +1046,45 @@ actor {
         };
         adminStore := Array.empty<(Principal, AdminRecord)>().concat([(caller, newAdmin)]);
         "Created new super admin " # caller.toText();
+      };
+    };
+  };
+
+  // --- Stable upgrade hooks for WebsiteSettings migration ---
+
+  system func preupgrade() {
+    // Persist the runtime settings into the v2 stable var before upgrade
+    websiteSettings_v2 := ?_websiteSettingsRuntime;
+  };
+
+  system func postupgrade() {
+    switch (websiteSettings_v2) {
+      case (?saved) {
+        // Already migrated — restore from v2 stable var
+        _websiteSettingsRuntime := saved;
+      };
+      case (null) {
+        // First upgrade: migrate from old V1 stable var
+        _websiteSettingsRuntime := {
+          siteName = websiteSettings.siteName;
+          contactPhone = websiteSettings.contactPhone;
+          contactWhatsapp = websiteSettings.contactWhatsapp;
+          contactEmail = websiteSettings.contactEmail;
+          dealerAddress = websiteSettings.dealerAddress;
+          operationalHours = websiteSettings.operationalHours;
+          facebookUrl = websiteSettings.facebookUrl;
+          instagramUrl = websiteSettings.instagramUrl;
+          tiktokUrl = websiteSettings.tiktokUrl;
+          youtubeUrl = websiteSettings.youtubeUrl;
+          mainBannerImageId = websiteSettings.mainBannerImageId;
+          ctaBannerImageId = websiteSettings.ctaBannerImageId;
+          lastUpdated = websiteSettings.lastUpdated;
+          salesConsultantName = null;
+          salesConsultantPhotoId = null;
+          footerAboutText = null;
+        };
+        // Mark as migrated
+        websiteSettings_v2 := ?_websiteSettingsRuntime;
       };
     };
   };

@@ -21,6 +21,9 @@ export interface WebsiteSettings {
     facebookUrl: string;
     contactPhone: string;
     tiktokUrl: string;
+    salesConsultantName?: string;
+    salesConsultantPhotoId?: bigint;
+    footerAboutText?: string;
 }
 export interface MediaAsset {
     id: bigint;

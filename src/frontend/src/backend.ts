@@ -103,6 +103,9 @@ export interface WebsiteSettings {
     facebookUrl: string;
     contactPhone: string;
     tiktokUrl: string;
+    salesConsultantName?: string;
+    salesConsultantPhotoId?: bigint;
+    footerAboutText?: string;
 }
 export interface MediaAsset {
     id: bigint;
@@ -965,6 +968,9 @@ function from_candid_record_n26(_uploadFile: (file: ExternalBlob) => Promise<Uin
     facebookUrl: string;
     contactPhone: string;
     tiktokUrl: string;
+    salesConsultantName?: [] | [string];
+    salesConsultantPhotoId?: [] | [bigint];
+    footerAboutText?: [] | [string];
 }): {
     mainBannerImageId?: bigint;
     dealerAddress: string;
@@ -979,6 +985,9 @@ function from_candid_record_n26(_uploadFile: (file: ExternalBlob) => Promise<Uin
     facebookUrl: string;
     contactPhone: string;
     tiktokUrl: string;
+    salesConsultantName?: string;
+    salesConsultantPhotoId?: bigint;
+    footerAboutText?: string;
 } {
     return {
         mainBannerImageId: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.mainBannerImageId)),
@@ -993,7 +1002,10 @@ function from_candid_record_n26(_uploadFile: (file: ExternalBlob) => Promise<Uin
         youtubeUrl: value.youtubeUrl,
         facebookUrl: value.facebookUrl,
         contactPhone: value.contactPhone,
-        tiktokUrl: value.tiktokUrl
+        tiktokUrl: value.tiktokUrl,
+        salesConsultantName: value.salesConsultantName ? record_opt_to_undefined(value.salesConsultantName.length === 0 ? [] : [value.salesConsultantName[0]]) : undefined,
+        salesConsultantPhotoId: value.salesConsultantPhotoId ? record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.salesConsultantPhotoId as [] | [bigint])) : undefined,
+        footerAboutText: value.footerAboutText ? record_opt_to_undefined(value.footerAboutText.length === 0 ? [] : [value.footerAboutText[0]]) : undefined,
     };
 }
 function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -1078,6 +1090,9 @@ function to_candid_record_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8
     facebookUrl: string;
     contactPhone: string;
     tiktokUrl: string;
+    salesConsultantName?: string;
+    salesConsultantPhotoId?: bigint;
+    footerAboutText?: string;
 }): {
     mainBannerImageId: [] | [bigint];
     dealerAddress: string;
@@ -1092,6 +1107,9 @@ function to_candid_record_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8
     facebookUrl: string;
     contactPhone: string;
     tiktokUrl: string;
+    salesConsultantName: [] | [string];
+    salesConsultantPhotoId: [] | [bigint];
+    footerAboutText: [] | [string];
 } {
     return {
         mainBannerImageId: value.mainBannerImageId ? candid_some(value.mainBannerImageId) : candid_none(),
@@ -1106,7 +1124,10 @@ function to_candid_record_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         youtubeUrl: value.youtubeUrl,
         facebookUrl: value.facebookUrl,
         contactPhone: value.contactPhone,
-        tiktokUrl: value.tiktokUrl
+        tiktokUrl: value.tiktokUrl,
+        salesConsultantName: value.salesConsultantName ? candid_some(value.salesConsultantName) : candid_none(),
+        salesConsultantPhotoId: value.salesConsultantPhotoId ? candid_some(value.salesConsultantPhotoId) : candid_none(),
+        footerAboutText: value.footerAboutText ? candid_some(value.footerAboutText) : candid_none(),
     };
 }
 function to_candid_variant_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
