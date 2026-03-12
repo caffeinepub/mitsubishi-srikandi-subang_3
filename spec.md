@@ -2,42 +2,31 @@
 
 ## Current State
 
-Sistem menggunakan satu IC Canister dengan stable storage — secara arsitektur sudah merupakan single production database. Tidak ada `DATABASE_DRAFT`, `DATABASE_DEV`, atau multi-database lainnya. Semua collection (visitorSessions, visitorStats, dailyStats, pageViewsMap, mediaAssets, websiteSettings, dll.) tersimpan dalam stable variables di canister yang sama.
-
-**Masalah yang ditemukan:**
-
-1. `getTopPageViews` di backend memerlukan autentikasi admin (`#admin` permission), tapi digunakan di `VisitorStatsPage` via `useGetPageViews` yang hanya mengecek `!!actor` — gagal untuk anonymous actor dan menyebabkan stats selalu 0.
-
-2. `useAdminStats` masih gated dengan `!!actor && !isFetching` — flag `isFetching` dari `useActor` bisa menyebabkan query tidak pernah jalan.
-
-3. `getDailyVisitorTrend` adalah public query tapi `useGetVisitorTrend` memanggil via actor yang authenticated — jika actor gagal init, trend data tidak muncul.
-
-4. `visitorStats` di backend adalah var biasa (bukan stable) — nilainya reset ke default setelah canister restart/upgrade. Perlu dijadikan stable.
-
-5. `visitorSessions`, `visits`, `pageViewsMap`, `dailyStats`, `dailySessionSet` menggunakan `Map.empty` — di Motoko/Caffeine backend, Map dari `mo:core/Map` sudah persistent (stable) secara default di dalam actor stable context, tapi `var visitorStats` tidak.
+The `/admin/pengaturan` page exists at `src/frontend/src/pages/admin/WebsiteSettingsPage.tsx`. It has an unstructured layout with sections: Banner Images (main + CTA side by side), Informasi Situs, Informasi Kontak, Media Sosial, and Konten Tambahan (sales consultant + footer text). The `WebsiteSettings` interface in `backend.d.ts` is missing two fields: `mainBannerVideoId` and `mainBannerImageId2`.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Tidak ada tambahan collection atau endpoint baru
-- Buat `getTopPageViews` menjadi public query (tidak memerlukan auth) agar bisa diakses dari frontend tanpa authenticated actor
-- Buat `getDailyVisitorTrend` tetap public (sudah public, pertahankan)
+- `mainBannerVideoId?: bigint` to `WebsiteSettings` in `backend.d.ts`
+- `mainBannerImageId2?: bigint` to `WebsiteSettings` in `backend.d.ts`
+- State variables and Media Manager pickers for `mainBannerVideoId` and `mainBannerImageId2` in `WebsiteSettingsPage.tsx`
 
 ### Modify
-- Backend: ubah `getTopPageViews` dari admin-only menjadi public query
-- Frontend `useVisitorStats.ts`: pastikan semua hooks hanya bergantung pada `!!actor` (hapus `isFetching` guard)
-- Frontend `useAdminStats.ts`: hapus `!isFetching` dari enabled condition
-- Frontend `PublicLayout.tsx`: pastikan tracking tidak blocked oleh kondisi apapun selain `isAdminRoute` dan `isBot`
-- Semua hook stats menggunakan cache failsafe agar tidak flash ke 0
+- `WebsiteSettingsPage.tsx`: Reorganize the entire form into 5 labeled card sections in the exact order specified:
+  1. MAIN BANNER (Video Banner, Image 1, Image 2)
+  2. CTA BANNER
+  3. SALES PROFILE (Foto Sales Consultant, Nama Sales Consultant)
+  4. INFORMASI SITUS (footerAboutText, siteName, operationalHours, contactPhone, contactWhatsapp, contactEmail, dealerAddress)
+  5. MEDIA SOSIAL (facebookUrl, instagramUrl, tiktokUrl, youtubeUrl)
+- Save button remains at the bottom, calls `updateWebsiteSettings()` with all fields including the two new ones
 
 ### Remove
-- Guard `!isFetching` dari `useAdminStats`
-- Auth requirement dari `getTopPageViews` (jadikan public query)
+- Old unordered layout (Banner Images side-by-side grid, Informasi Kontak as separate section)
 
 ## Implementation Plan
 
-1. Update `src/backend/main.mo`: ubah `getTopPageViews` menjadi `public query func` (tanpa caller auth check)
-2. Update `src/frontend/src/hooks/useAdminStats.ts`: hapus `!isFetching` dari `enabled`
-3. Update `src/frontend/src/hooks/useVisitorStats.ts`: pastikan semua hooks hanya gated `!!actor`, tidak ada kondisi tambahan
-4. Update `src/frontend/src/backend.d.ts`: pastikan `getTopPageViews` signature tidak butuh auth (tetap sama di frontend karena actor anonymous juga bisa call public query)
-5. Validate build
+1. Extend `backend.d.ts` WebsiteSettings with `mainBannerVideoId?: bigint` and `mainBannerImageId2?: bigint`
+2. Rewrite `WebsiteSettingsPage.tsx` with 5 card sections in exact field order
+3. Add state + pickers for `mainBannerVideoId` and `mainBannerImageId2`
+4. Include all fields in the `updateWebsiteSettings()` call on submit
+5. Validate and build

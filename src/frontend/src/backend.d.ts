@@ -9,6 +9,8 @@ export interface None {
 export type Option<T> = Some<T> | None;
 export interface WebsiteSettings {
     mainBannerImageId?: bigint;
+    mainBannerVideoId?: bigint;
+    mainBannerImageId2?: bigint;
     dealerAddress: string;
     operationalHours: string;
     lastUpdated: bigint;

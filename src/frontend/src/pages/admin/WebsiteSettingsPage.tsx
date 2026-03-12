@@ -13,20 +13,148 @@ import {
 } from "@/hooks/useWebsiteSettings";
 import { createBlobUrlFromData } from "@/utils/blobUrl";
 import { validateDelegationIdentity } from "@/utils/validation";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+// ─── Reusable media picker field ────────────────────────────────────────────
+interface MediaPickerFieldProps {
+  label: string;
+  assetId: bigint | undefined;
+  onSelect: (id: bigint) => void;
+  onClear: () => void;
+  pickerOpen: boolean;
+  setPickerOpen: (open: boolean) => void;
+  buttonOcid: string;
+  disabled?: boolean;
+}
+
+function MediaPickerField({
+  label,
+  assetId,
+  onSelect,
+  onClear,
+  pickerOpen,
+  setPickerOpen,
+  buttonOcid,
+  disabled,
+}: MediaPickerFieldProps) {
+  const { data: asset, isLoading } = useGetMediaAssetById(assetId ?? null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (asset?.data) {
+      const url = createBlobUrlFromData(asset.data, asset.mimeType);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    setPreviewUrl(null);
+  }, [asset]);
+
+  return (
+    <>
+      <div className="space-y-2">
+        <Label>{label}</Label>
+        {isLoading ? (
+          <Skeleton className="w-full h-32" />
+        ) : previewUrl ? (
+          <div className="border rounded-lg overflow-hidden">
+            <img
+              src={previewUrl}
+              alt={label}
+              className="h-32 w-full object-cover"
+            />
+          </div>
+        ) : (
+          <div className="border-2 border-dashed rounded-lg h-32 flex items-center justify-center text-muted-foreground text-sm">
+            Belum ada media dipilih
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            data-ocid={buttonOcid}
+            onClick={() => setPickerOpen(true)}
+            disabled={disabled}
+          >
+            Pilih Media
+          </Button>
+          {assetId && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              onClick={onClear}
+              disabled={disabled}
+            >
+              Hapus
+            </Button>
+          )}
+        </div>
+        {assetId && (
+          <p className="text-xs text-muted-foreground">
+            ID: {assetId.toString()}
+          </p>
+        )}
+      </div>
+
+      <BannerImagePicker
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        onSelect={(imageId) => {
+          onSelect(imageId);
+          setPickerOpen(false);
+        }}
+        value={assetId}
+        bannerType="main"
+      />
+    </>
+  );
+}
+
+// ─── Section card wrapper ────────────────────────────────────────────────────
+function SectionCard({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-border p-6 space-y-5">
+      <h2 className="text-lg font-semibold text-foreground tracking-tight">
+        {title}
+      </h2>
+      {children}
+    </div>
+  );
+}
+
+// ─── Main page ───────────────────────────────────────────────────────────────
 export default function WebsiteSettingsPage() {
   const { identity } = useInternetIdentity();
   const { data: settings, isLoading } = useGetWebsiteSettings();
   const updateSettings = useUpdateWebsiteSettings();
 
+  // Media picker open states
+  const [videoBannerPickerOpen, setVideoBannerPickerOpen] = useState(false);
   const [mainBannerPickerOpen, setMainBannerPickerOpen] = useState(false);
+  const [mainBanner2PickerOpen, setMainBanner2PickerOpen] = useState(false);
   const [ctaBannerPickerOpen, setCtaBannerPickerOpen] = useState(false);
   const [consultantPhotoPickerOpen, setConsultantPhotoPickerOpen] =
     useState(false);
 
+  // Media asset IDs
+  const [mainBannerVideoId, setMainBannerVideoId] = useState<
+    bigint | undefined
+  >(undefined);
   const [mainBannerImageId, setMainBannerImageId] = useState<
+    bigint | undefined
+  >(undefined);
+  const [mainBannerImageId2, setMainBannerImageId2] = useState<
     bigint | undefined
   >(undefined);
   const [ctaBannerImageId, setCtaBannerImageId] = useState<bigint | undefined>(
@@ -36,6 +164,7 @@ export default function WebsiteSettingsPage() {
     bigint | undefined
   >(undefined);
 
+  // Text fields
   const [formData, setFormData] = useState({
     siteName: "",
     contactPhone: "",
@@ -51,59 +180,7 @@ export default function WebsiteSettingsPage() {
     footerAboutText: "",
   });
 
-  const mainBannerIdForQuery = mainBannerImageId ?? null;
-  const ctaBannerIdForQuery = ctaBannerImageId ?? null;
-  const consultantPhotoIdForQuery = salesConsultantPhotoId ?? null;
-
-  const { data: mainBannerAsset, isLoading: mainBannerLoading } =
-    useGetMediaAssetById(mainBannerIdForQuery);
-  const { data: ctaBannerAsset, isLoading: ctaBannerLoading } =
-    useGetMediaAssetById(ctaBannerIdForQuery);
-  const { data: consultantPhotoAsset, isLoading: consultantPhotoLoading } =
-    useGetMediaAssetById(consultantPhotoIdForQuery);
-
-  const [mainBannerUrl, setMainBannerUrl] = useState<string | null>(null);
-  const [ctaBannerUrl, setCtaBannerUrl] = useState<string | null>(null);
-  const [consultantPhotoUrl, setConsultantPhotoUrl] = useState<string | null>(
-    null,
-  );
-
-  useEffect(() => {
-    if (mainBannerAsset?.data) {
-      const url = createBlobUrlFromData(
-        mainBannerAsset.data,
-        mainBannerAsset.mimeType,
-      );
-      setMainBannerUrl(url);
-      return () => URL.revokeObjectURL(url);
-    }
-    setMainBannerUrl(null);
-  }, [mainBannerAsset]);
-
-  useEffect(() => {
-    if (ctaBannerAsset?.data) {
-      const url = createBlobUrlFromData(
-        ctaBannerAsset.data,
-        ctaBannerAsset.mimeType,
-      );
-      setCtaBannerUrl(url);
-      return () => URL.revokeObjectURL(url);
-    }
-    setCtaBannerUrl(null);
-  }, [ctaBannerAsset]);
-
-  useEffect(() => {
-    if (consultantPhotoAsset?.data) {
-      const url = createBlobUrlFromData(
-        consultantPhotoAsset.data,
-        consultantPhotoAsset.mimeType,
-      );
-      setConsultantPhotoUrl(url);
-      return () => URL.revokeObjectURL(url);
-    }
-    setConsultantPhotoUrl(null);
-  }, [consultantPhotoAsset]);
-
+  // Populate from loaded settings
   useEffect(() => {
     if (settings) {
       setFormData({
@@ -120,11 +197,17 @@ export default function WebsiteSettingsPage() {
         salesConsultantName: settings.salesConsultantName ?? "",
         footerAboutText: settings.footerAboutText ?? "",
       });
+      setMainBannerVideoId(settings.mainBannerVideoId ?? undefined);
       setMainBannerImageId(settings.mainBannerImageId ?? undefined);
+      setMainBannerImageId2(settings.mainBannerImageId2 ?? undefined);
       setCtaBannerImageId(settings.ctaBannerImageId ?? undefined);
       setSalesConsultantPhotoId(settings.salesConsultantPhotoId ?? undefined);
     }
   }, [settings]);
+
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,7 +229,9 @@ export default function WebsiteSettingsPage() {
       instagramUrl: formData.instagramUrl,
       tiktokUrl: formData.tiktokUrl,
       youtubeUrl: formData.youtubeUrl,
+      mainBannerVideoId: mainBannerVideoId,
       mainBannerImageId: mainBannerImageId,
+      mainBannerImageId2: mainBannerImageId2,
       ctaBannerImageId: ctaBannerImageId,
       lastUpdated: BigInt(Date.now()) * BigInt(1_000_000),
       salesConsultantName: formData.salesConsultantName || undefined,
@@ -164,414 +249,268 @@ export default function WebsiteSettingsPage() {
     }
   };
 
-  const handleInputChange = (field: keyof typeof formData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-96 w-full" />
+        <Skeleton className="h-9 w-56" />
+        <Skeleton className="h-64 w-full rounded-xl" />
+        <Skeleton className="h-40 w-full rounded-xl" />
+        <Skeleton className="h-48 w-full rounded-xl" />
       </div>
     );
   }
 
+  const isPending = updateSettings.isPending;
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Pengaturan Website</h1>
-
-      <div className="bg-white p-6 rounded-lg shadow space-y-6">
-        {/* Banner Images Section */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Banner Images</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Main Banner */}
-            <div className="space-y-2">
-              <Label>Main Banner</Label>
-              {mainBannerLoading ? (
-                <Skeleton className="w-full h-32" />
-              ) : mainBannerUrl ? (
-                <div className="border rounded-lg overflow-hidden">
-                  <img
-                    src={mainBannerUrl}
-                    alt="Main Banner Preview"
-                    className="w-full h-32 object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="border-2 border-dashed rounded-lg h-32 flex items-center justify-center text-gray-400 text-sm">
-                  Belum ada banner dipilih
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  data-ocid="settings.main_banner.button"
-                  onClick={() => setMainBannerPickerOpen(true)}
-                >
-                  Pilih Banner
-                </Button>
-                {mainBannerImageId && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-500 hover:text-red-700"
-                    onClick={() => setMainBannerImageId(undefined)}
-                  >
-                    Hapus
-                  </Button>
-                )}
-              </div>
-              {mainBannerImageId && (
-                <p className="text-xs text-gray-500">
-                  ID: {mainBannerImageId.toString()}
-                </p>
-              )}
-            </div>
-
-            {/* CTA Banner */}
-            <div className="space-y-2">
-              <Label>CTA Banner</Label>
-              {ctaBannerLoading ? (
-                <Skeleton className="w-full h-32" />
-              ) : ctaBannerUrl ? (
-                <div className="border rounded-lg overflow-hidden">
-                  <img
-                    src={ctaBannerUrl}
-                    alt="CTA Banner Preview"
-                    className="w-full h-32 object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="border-2 border-dashed rounded-lg h-32 flex items-center justify-center text-gray-400 text-sm">
-                  Belum ada banner dipilih
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  data-ocid="settings.cta_banner.button"
-                  onClick={() => setCtaBannerPickerOpen(true)}
-                >
-                  Pilih Banner
-                </Button>
-                {ctaBannerImageId && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-500 hover:text-red-700"
-                    onClick={() => setCtaBannerImageId(undefined)}
-                  >
-                    Hapus
-                  </Button>
-                )}
-              </div>
-              {ctaBannerImageId && (
-                <p className="text-xs text-gray-500">
-                  ID: {ctaBannerImageId.toString()}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Settings Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Site Info */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Informasi Situs</h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="siteName">Nama Situs</Label>
-                <Input
-                  id="siteName"
-                  data-ocid="settings.site_name.input"
-                  value={formData.siteName}
-                  onChange={(e) =>
-                    handleInputChange("siteName", e.target.value)
-                  }
-                  placeholder="Contoh: Mitsubishi Srikandi Subang"
-                  disabled={updateSettings.isPending}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="operationalHours">Jam Operasional</Label>
-                <Input
-                  id="operationalHours"
-                  data-ocid="settings.operational_hours.input"
-                  value={formData.operationalHours}
-                  onChange={(e) =>
-                    handleInputChange("operationalHours", e.target.value)
-                  }
-                  placeholder="Contoh: Senin - Sabtu: 08:30 - 16:00"
-                  disabled={updateSettings.isPending}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Contact Info */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Informasi Kontak</h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="contactPhone">Nomor Telepon</Label>
-                <Input
-                  id="contactPhone"
-                  data-ocid="settings.contact_phone.input"
-                  value={formData.contactPhone}
-                  onChange={(e) =>
-                    handleInputChange("contactPhone", e.target.value)
-                  }
-                  placeholder="Contoh: 0852-1234-0778"
-                  disabled={updateSettings.isPending}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="contactWhatsapp">Nomor WhatsApp</Label>
-                <Input
-                  id="contactWhatsapp"
-                  data-ocid="settings.contact_whatsapp.input"
-                  value={formData.contactWhatsapp}
-                  onChange={(e) =>
-                    handleInputChange("contactWhatsapp", e.target.value)
-                  }
-                  placeholder="Contoh: 6285212340778"
-                  disabled={updateSettings.isPending}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="contactEmail">Email</Label>
-                <Input
-                  id="contactEmail"
-                  data-ocid="settings.contact_email.input"
-                  type="email"
-                  value={formData.contactEmail}
-                  onChange={(e) =>
-                    handleInputChange("contactEmail", e.target.value)
-                  }
-                  placeholder="Contoh: info@mitsubishi-subang.com"
-                  disabled={updateSettings.isPending}
-                />
-              </div>
-            </div>
-            <div className="space-y-2 mt-4">
-              <Label htmlFor="dealerAddress">Alamat Dealer</Label>
-              <Textarea
-                id="dealerAddress"
-                data-ocid="settings.dealer_address.textarea"
-                value={formData.dealerAddress}
-                onChange={(e) =>
-                  handleInputChange("dealerAddress", e.target.value)
-                }
-                rows={3}
-                placeholder="Contoh: Jl. Otto Iskandardinata No.314, Subang, Jawa Barat 41211"
-                disabled={updateSettings.isPending}
-              />
-            </div>
-          </div>
-
-          {/* Social Media */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Media Sosial</h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="facebookUrl">Facebook URL</Label>
-                <Input
-                  id="facebookUrl"
-                  data-ocid="settings.facebook_url.input"
-                  value={formData.facebookUrl}
-                  onChange={(e) =>
-                    handleInputChange("facebookUrl", e.target.value)
-                  }
-                  placeholder="https://facebook.com/..."
-                  disabled={updateSettings.isPending}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="instagramUrl">Instagram URL</Label>
-                <Input
-                  id="instagramUrl"
-                  data-ocid="settings.instagram_url.input"
-                  value={formData.instagramUrl}
-                  onChange={(e) =>
-                    handleInputChange("instagramUrl", e.target.value)
-                  }
-                  placeholder="https://instagram.com/..."
-                  disabled={updateSettings.isPending}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tiktokUrl">TikTok URL</Label>
-                <Input
-                  id="tiktokUrl"
-                  data-ocid="settings.tiktok_url.input"
-                  value={formData.tiktokUrl}
-                  onChange={(e) =>
-                    handleInputChange("tiktokUrl", e.target.value)
-                  }
-                  placeholder="https://tiktok.com/@..."
-                  disabled={updateSettings.isPending}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="youtubeUrl">YouTube URL</Label>
-                <Input
-                  id="youtubeUrl"
-                  data-ocid="settings.youtube_url.input"
-                  value={formData.youtubeUrl}
-                  onChange={(e) =>
-                    handleInputChange("youtubeUrl", e.target.value)
-                  }
-                  placeholder="https://youtube.com/@..."
-                  disabled={updateSettings.isPending}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Sales Consultant & Footer */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Konten Tambahan</h2>
-            <div className="space-y-6">
-              {/* Sales Consultant Name */}
-              <div className="space-y-2">
-                <Label htmlFor="salesConsultantName">
-                  Nama Sales Consultant
-                </Label>
-                <Input
-                  id="salesConsultantName"
-                  data-ocid="settings.sales_consultant_name.input"
-                  value={formData.salesConsultantName}
-                  onChange={(e) =>
-                    handleInputChange("salesConsultantName", e.target.value)
-                  }
-                  placeholder="Contoh: Budi Santoso"
-                  disabled={updateSettings.isPending}
-                />
-              </div>
-
-              {/* Sales Consultant Photo */}
-              <div className="space-y-2">
-                <Label>Foto Sales Consultant</Label>
-                {consultantPhotoLoading ? (
-                  <Skeleton className="w-24 h-24" />
-                ) : consultantPhotoUrl ? (
-                  <div className="border rounded-lg overflow-hidden w-24 h-24">
-                    <img
-                      src={consultantPhotoUrl}
-                      alt="Foto Sales Consultant"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="border-2 border-dashed rounded-lg w-24 h-24 flex items-center justify-center text-gray-400 text-xs text-center p-2">
-                    Belum ada foto
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    data-ocid="settings.consultant_photo.button"
-                    onClick={() => setConsultantPhotoPickerOpen(true)}
-                  >
-                    Pilih Foto
-                  </Button>
-                  {salesConsultantPhotoId && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-red-500 hover:text-red-700"
-                      onClick={() => setSalesConsultantPhotoId(undefined)}
-                    >
-                      Hapus
-                    </Button>
-                  )}
-                </div>
-                {salesConsultantPhotoId && (
-                  <p className="text-xs text-gray-500">
-                    ID: {salesConsultantPhotoId.toString()}
-                  </p>
-                )}
-              </div>
-
-              {/* Footer About Text */}
-              <div className="space-y-2">
-                <Label htmlFor="footerAboutText">
-                  Deskripsi Tentang Kami (Footer)
-                </Label>
-                <Textarea
-                  id="footerAboutText"
-                  data-ocid="settings.footer_about.textarea"
-                  value={formData.footerAboutText}
-                  onChange={(e) =>
-                    handleInputChange("footerAboutText", e.target.value)
-                  }
-                  rows={4}
-                  placeholder="Tulis deskripsi singkat tentang dealer untuk ditampilkan di footer..."
-                  disabled={updateSettings.isPending}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-2">
-            <Button
-              type="submit"
-              data-ocid="settings.submit_button"
-              disabled={updateSettings.isPending}
-              className="min-w-[160px]"
-            >
-              {updateSettings.isPending ? "Menyimpan..." : "Simpan Pengaturan"}
-            </Button>
-          </div>
-        </form>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight">
+          Pengaturan Website
+        </h1>
       </div>
 
-      {/* Banner Pickers */}
-      <BannerImagePicker
-        open={mainBannerPickerOpen}
-        onOpenChange={setMainBannerPickerOpen}
-        onSelect={(imageId) => {
-          setMainBannerImageId(imageId);
-          setMainBannerPickerOpen(false);
-        }}
-        value={mainBannerImageId}
-        bannerType="main"
-      />
+      {/* ── Section 1: MAIN BANNER ── */}
+      <SectionCard title="Main Banner">
+        <MediaPickerField
+          label="Video Banner"
+          assetId={mainBannerVideoId}
+          onSelect={setMainBannerVideoId}
+          onClear={() => setMainBannerVideoId(undefined)}
+          pickerOpen={videoBannerPickerOpen}
+          setPickerOpen={setVideoBannerPickerOpen}
+          buttonOcid="settings.main_banner_video.button"
+          disabled={isPending}
+        />
 
-      <BannerImagePicker
-        open={ctaBannerPickerOpen}
-        onOpenChange={setCtaBannerPickerOpen}
-        onSelect={(imageId) => {
-          setCtaBannerImageId(imageId);
-          setCtaBannerPickerOpen(false);
-        }}
-        value={ctaBannerImageId}
-        bannerType="cta"
-      />
+        <div className="pt-1">
+          <p className="text-sm font-medium text-muted-foreground mb-3">
+            Image Banner
+          </p>
+          <div className="space-y-5">
+            <MediaPickerField
+              label="Image 1"
+              assetId={mainBannerImageId}
+              onSelect={setMainBannerImageId}
+              onClear={() => setMainBannerImageId(undefined)}
+              pickerOpen={mainBannerPickerOpen}
+              setPickerOpen={setMainBannerPickerOpen}
+              buttonOcid="settings.main_banner_image1.button"
+              disabled={isPending}
+            />
+            <MediaPickerField
+              label="Image 2"
+              assetId={mainBannerImageId2}
+              onSelect={setMainBannerImageId2}
+              onClear={() => setMainBannerImageId2(undefined)}
+              pickerOpen={mainBanner2PickerOpen}
+              setPickerOpen={setMainBanner2PickerOpen}
+              buttonOcid="settings.main_banner_image2.button"
+              disabled={isPending}
+            />
+          </div>
+        </div>
+      </SectionCard>
 
-      {/* Consultant Photo Picker */}
-      <BannerImagePicker
-        open={consultantPhotoPickerOpen}
-        onOpenChange={setConsultantPhotoPickerOpen}
-        onSelect={(imageId) => {
-          setSalesConsultantPhotoId(imageId);
-          setConsultantPhotoPickerOpen(false);
-        }}
-        value={salesConsultantPhotoId}
-        bannerType="main"
-      />
-    </div>
+      {/* ── Section 2: CTA BANNER ── */}
+      <SectionCard title="CTA Banner">
+        <MediaPickerField
+          label="CTA Banner"
+          assetId={ctaBannerImageId}
+          onSelect={setCtaBannerImageId}
+          onClear={() => setCtaBannerImageId(undefined)}
+          pickerOpen={ctaBannerPickerOpen}
+          setPickerOpen={setCtaBannerPickerOpen}
+          buttonOcid="settings.cta_banner.button"
+          disabled={isPending}
+        />
+      </SectionCard>
+
+      {/* ── Section 3: SALES PROFILE ── */}
+      <SectionCard title="Sales Profile">
+        <MediaPickerField
+          label="Foto Sales Consultant"
+          assetId={salesConsultantPhotoId}
+          onSelect={setSalesConsultantPhotoId}
+          onClear={() => setSalesConsultantPhotoId(undefined)}
+          pickerOpen={consultantPhotoPickerOpen}
+          setPickerOpen={setConsultantPhotoPickerOpen}
+          buttonOcid="settings.consultant_photo.button"
+          disabled={isPending}
+        />
+        <div className="space-y-2">
+          <Label htmlFor="salesConsultantName">Nama Sales Consultant</Label>
+          <Input
+            id="salesConsultantName"
+            data-ocid="settings.sales_name.input"
+            value={formData.salesConsultantName}
+            onChange={(e) =>
+              handleInputChange("salesConsultantName", e.target.value)
+            }
+            placeholder="Contoh: Budi Santoso"
+            disabled={isPending}
+          />
+        </div>
+      </SectionCard>
+
+      {/* ── Section 4: INFORMASI SITUS ── */}
+      <SectionCard title="Informasi Situs">
+        <div className="space-y-2">
+          <Label htmlFor="footerAboutText">
+            Deskripsi Tentang Kami (Footer)
+          </Label>
+          <Textarea
+            id="footerAboutText"
+            data-ocid="settings.footer_about.textarea"
+            value={formData.footerAboutText}
+            onChange={(e) =>
+              handleInputChange("footerAboutText", e.target.value)
+            }
+            rows={4}
+            placeholder="Tulis deskripsi singkat tentang dealer untuk ditampilkan di footer..."
+            disabled={isPending}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="siteName">Nama Situs</Label>
+          <Input
+            id="siteName"
+            data-ocid="settings.site_name.input"
+            value={formData.siteName}
+            onChange={(e) => handleInputChange("siteName", e.target.value)}
+            placeholder="Contoh: Mitsubishi Srikandi Subang"
+            disabled={isPending}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="operationalHours">Jam Operasional</Label>
+          <Input
+            id="operationalHours"
+            data-ocid="settings.operational_hours.input"
+            value={formData.operationalHours}
+            onChange={(e) =>
+              handleInputChange("operationalHours", e.target.value)
+            }
+            placeholder="Contoh: Senin - Sabtu: 08:30 - 16:00"
+            disabled={isPending}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="contactPhone">Nomor Telepon</Label>
+          <Input
+            id="contactPhone"
+            data-ocid="settings.contact_phone.input"
+            value={formData.contactPhone}
+            onChange={(e) => handleInputChange("contactPhone", e.target.value)}
+            placeholder="Contoh: 0852-1234-0778"
+            disabled={isPending}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="contactWhatsapp">Nomor WhatsApp</Label>
+          <Input
+            id="contactWhatsapp"
+            data-ocid="settings.contact_whatsapp.input"
+            value={formData.contactWhatsapp}
+            onChange={(e) =>
+              handleInputChange("contactWhatsapp", e.target.value)
+            }
+            placeholder="Contoh: 6285212340778"
+            disabled={isPending}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="contactEmail">Email</Label>
+          <Input
+            id="contactEmail"
+            data-ocid="settings.contact_email.input"
+            type="email"
+            value={formData.contactEmail}
+            onChange={(e) => handleInputChange("contactEmail", e.target.value)}
+            placeholder="Contoh: info@mitsubishi-subang.com"
+            disabled={isPending}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="dealerAddress">Alamat Dealer</Label>
+          <Textarea
+            id="dealerAddress"
+            data-ocid="settings.dealer_address.textarea"
+            value={formData.dealerAddress}
+            onChange={(e) => handleInputChange("dealerAddress", e.target.value)}
+            rows={3}
+            placeholder="Contoh: Jl. Otto Iskandardinata No.314, Subang, Jawa Barat 41211"
+            disabled={isPending}
+          />
+        </div>
+      </SectionCard>
+
+      {/* ── Section 5: MEDIA SOSIAL ── */}
+      <SectionCard title="Media Sosial">
+        <div className="space-y-2">
+          <Label htmlFor="facebookUrl">Facebook Url</Label>
+          <Input
+            id="facebookUrl"
+            data-ocid="settings.facebook_url.input"
+            value={formData.facebookUrl}
+            onChange={(e) => handleInputChange("facebookUrl", e.target.value)}
+            placeholder="https://facebook.com/..."
+            disabled={isPending}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="instagramUrl">Instagram Url</Label>
+          <Input
+            id="instagramUrl"
+            data-ocid="settings.instagram_url.input"
+            value={formData.instagramUrl}
+            onChange={(e) => handleInputChange("instagramUrl", e.target.value)}
+            placeholder="https://instagram.com/..."
+            disabled={isPending}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="tiktokUrl">Tiktok Url</Label>
+          <Input
+            id="tiktokUrl"
+            data-ocid="settings.tiktok_url.input"
+            value={formData.tiktokUrl}
+            onChange={(e) => handleInputChange("tiktokUrl", e.target.value)}
+            placeholder="https://tiktok.com/@..."
+            disabled={isPending}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="youtubeUrl">Youtube Url</Label>
+          <Input
+            id="youtubeUrl"
+            data-ocid="settings.youtube_url.input"
+            value={formData.youtubeUrl}
+            onChange={(e) => handleInputChange("youtubeUrl", e.target.value)}
+            placeholder="https://youtube.com/@..."
+            disabled={isPending}
+          />
+        </div>
+      </SectionCard>
+
+      {/* ── Save button ── */}
+      <div className="flex justify-end pb-8">
+        <Button
+          type="submit"
+          data-ocid="settings.submit_button"
+          disabled={isPending}
+          className="min-w-[180px]"
+        >
+          {isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Menyimpan...
+            </>
+          ) : (
+            "Simpan Pengaturan"
+          )}
+        </Button>
+      </div>
+    </form>
   );
 }
