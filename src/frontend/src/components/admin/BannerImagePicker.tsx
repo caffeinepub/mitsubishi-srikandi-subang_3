@@ -8,8 +8,8 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetAllMediaAssets } from "@/hooks/useMediaAssets";
-import type { MediaAsset } from "@/types/local";
 import { createBlobUrlFromData } from "@/utils/blobUrl";
+import { Film } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface BannerImagePickerProps {
@@ -18,6 +18,8 @@ interface BannerImagePickerProps {
   onSelect: (imageId: bigint) => void;
   value?: bigint;
   bannerType: "main" | "cta";
+  /** Filter assets shown in the picker. Default: "image" */
+  mediaType?: "image" | "video";
 }
 
 export default function BannerImagePicker({
@@ -26,46 +28,45 @@ export default function BannerImagePicker({
   onSelect,
   value,
   bannerType,
+  mediaType = "image",
 }: BannerImagePickerProps) {
   const { data: allAssets, isLoading } = useGetAllMediaAssets();
   const [selectedId, setSelectedId] = useState<string>(value?.toString() || "");
 
-  // Update selected ID when value prop changes
   useEffect(() => {
-    console.log("[BannerImagePicker] Value prop changed:", value);
     setSelectedId(value?.toString() || "");
   }, [value]);
 
-  // Filter images (only show image types)
-  const imageAssets =
-    allAssets?.filter((asset) => asset.mimeType.startsWith("image/")) || [];
-
-  console.log("[BannerImagePicker] Rendering with:", {
-    bannerType,
-    value: value?.toString(),
-    selectedId,
-    imageCount: imageAssets.length,
-  });
+  const filteredAssets =
+    allAssets?.filter((asset) =>
+      mediaType === "video"
+        ? asset.mimeType.startsWith("video/")
+        : asset.mimeType.startsWith("image/"),
+    ) || [];
 
   const handleSelect = () => {
     if (selectedId) {
-      console.log("[BannerImagePicker] Selecting image:", selectedId);
       onSelect(BigInt(selectedId));
     }
   };
 
-  const handleValueChange = (newValue: string) => {
-    console.log("[BannerImagePicker] Radio selection changed:", newValue);
-    setSelectedId(newValue);
-  };
+  const pickerTitle =
+    mediaType === "video"
+      ? "Pilih Video Banner"
+      : bannerType === "main"
+        ? "Pilih Main Banner"
+        : "Pilih CTA Banner";
+
+  const emptyMessage =
+    mediaType === "video"
+      ? "Belum ada video yang tersedia. Silakan upload file MP4 terlebih dahulu di Media Manager."
+      : "Belum ada gambar yang tersedia. Silakan upload gambar terlebih dahulu di Media Manager.";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            Pilih {bannerType === "main" ? "Main Banner" : "CTA Banner"}
-          </DialogTitle>
+          <DialogTitle>{pickerTitle}</DialogTitle>
         </DialogHeader>
 
         {isLoading ? (
@@ -74,21 +75,19 @@ export default function BannerImagePicker({
               <Skeleton key={i} className="h-32 w-full" />
             ))}
           </div>
-        ) : imageAssets.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            Belum ada gambar yang tersedia. Silakan upload gambar terlebih
-            dahulu di Media Manager.
-          </div>
+        ) : filteredAssets.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">{emptyMessage}</div>
         ) : (
           <div className="space-y-4">
-            <RadioGroup value={selectedId} onValueChange={handleValueChange}>
+            <RadioGroup value={selectedId} onValueChange={setSelectedId}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {imageAssets.map((asset) => {
-                  const imageUrl = createBlobUrlFromData(
+                {filteredAssets.map((asset) => {
+                  const assetIdString = asset.id.toString();
+                  const isVideo = asset.mimeType.startsWith("video/");
+                  const previewUrl = createBlobUrlFromData(
                     asset.data,
                     asset.mimeType,
                   );
-                  const assetIdString = asset.id.toString();
 
                   return (
                     <label
@@ -107,19 +106,34 @@ export default function BannerImagePicker({
                         />
                         <div className="flex-1">
                           <div className="space-y-2">
-                            <img
-                              src={imageUrl}
-                              alt={asset.filename}
-                              className="w-full h-32 object-cover rounded"
-                              onLoad={() => URL.revokeObjectURL(imageUrl)}
-                            />
+                            {isVideo ? (
+                              <div className="relative w-full h-32 bg-gray-900 rounded overflow-hidden flex items-center justify-center">
+                                <video
+                                  src={previewUrl}
+                                  className="w-full h-full object-cover"
+                                  muted
+                                  preload="metadata"
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                  <Film className="h-8 w-8 text-white" />
+                                </div>
+                              </div>
+                            ) : (
+                              <img
+                                src={previewUrl}
+                                alt={asset.filename}
+                                className="w-full h-32 object-cover rounded"
+                                onLoad={() => URL.revokeObjectURL(previewUrl)}
+                              />
+                            )}
                             <div className="text-sm">
                               <p className="font-medium truncate">
                                 {asset.filename}
                               </p>
                               <p className="text-xs text-gray-500">
-                                ID: {assetIdString} •{" "}
-                                {(Number(asset.size) / 1024).toFixed(1)} KB
+                                ID: {assetIdString} ·{" "}
+                                {(Number(asset.size) / 1024 / 1024).toFixed(2)}{" "}
+                                MB
                               </p>
                             </div>
                           </div>
@@ -136,7 +150,7 @@ export default function BannerImagePicker({
                 Batal
               </Button>
               <Button onClick={handleSelect} disabled={!selectedId}>
-                Pilih Gambar
+                {mediaType === "video" ? "Pilih Video" : "Pilih Gambar"}
               </Button>
             </div>
           </div>

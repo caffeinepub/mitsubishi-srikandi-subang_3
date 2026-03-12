@@ -13,7 +13,7 @@ import {
 } from "@/hooks/useWebsiteSettings";
 import { createBlobUrlFromData } from "@/utils/blobUrl";
 import { validateDelegationIdentity } from "@/utils/validation";
-import { Loader2 } from "lucide-react";
+import { Film, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -27,6 +27,8 @@ interface MediaPickerFieldProps {
   setPickerOpen: (open: boolean) => void;
   buttonOcid: string;
   disabled?: boolean;
+  /** "image" (default) or "video" */
+  mediaType?: "image" | "video";
 }
 
 function MediaPickerField({
@@ -38,9 +40,11 @@ function MediaPickerField({
   setPickerOpen,
   buttonOcid,
   disabled,
+  mediaType = "image",
 }: MediaPickerFieldProps) {
   const { data: asset, isLoading } = useGetMediaAssetById(assetId ?? null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const isVideo = asset?.mimeType.startsWith("video/") ?? false;
 
   useEffect(() => {
     if (asset?.data) {
@@ -59,17 +63,46 @@ function MediaPickerField({
           <Skeleton className="w-full h-32" />
         ) : previewUrl ? (
           <div className="border rounded-lg overflow-hidden">
-            <img
-              src={previewUrl}
-              alt={label}
-              className="h-32 w-full object-cover"
-            />
+            {isVideo ? (
+              <div className="relative w-full h-32 bg-gray-900">
+                <video
+                  src={previewUrl}
+                  className="h-32 w-full object-cover"
+                  muted
+                  preload="metadata"
+                />
+                <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-2 py-0.5 rounded flex items-center gap-1">
+                  <Film className="h-3 w-3" />
+                  {asset?.filename}
+                </div>
+              </div>
+            ) : (
+              <img
+                src={previewUrl}
+                alt={label}
+                className="h-32 w-full object-cover"
+              />
+            )}
           </div>
         ) : (
-          <div className="border-2 border-dashed rounded-lg h-32 flex items-center justify-center text-muted-foreground text-sm">
-            Belum ada media dipilih
+          <div className="border-2 border-dashed rounded-lg h-32 flex flex-col items-center justify-center text-muted-foreground text-sm gap-2">
+            {mediaType === "video" ? (
+              <Film className="h-8 w-8 opacity-40" />
+            ) : null}
+            <span>
+              Belum ada {mediaType === "video" ? "video" : "media"} dipilih
+            </span>
           </div>
         )}
+
+        {/* Asset info */}
+        {assetId && asset && (
+          <p className="text-xs text-muted-foreground">
+            {asset.filename} · {(Number(asset.size) / 1024 / 1024).toFixed(2)}{" "}
+            MB · ID: {assetId.toString()}
+          </p>
+        )}
+
         <div className="flex items-center gap-2">
           <Button
             type="button"
@@ -79,7 +112,7 @@ function MediaPickerField({
             onClick={() => setPickerOpen(true)}
             disabled={disabled}
           >
-            Pilih Media
+            {mediaType === "video" ? "Pilih Video" : "Pilih Media"}
           </Button>
           {assetId && (
             <Button
@@ -94,22 +127,18 @@ function MediaPickerField({
             </Button>
           )}
         </div>
-        {assetId && (
-          <p className="text-xs text-muted-foreground">
-            ID: {assetId.toString()}
-          </p>
-        )}
       </div>
 
       <BannerImagePicker
         open={pickerOpen}
         onOpenChange={setPickerOpen}
-        onSelect={(imageId) => {
-          onSelect(imageId);
+        onSelect={(id) => {
+          onSelect(id);
           setPickerOpen(false);
         }}
         value={assetId}
         bannerType="main"
+        mediaType={mediaType}
       />
     </>
   );
@@ -272,17 +301,29 @@ export default function WebsiteSettingsPage() {
 
       {/* ── Section 1: MAIN BANNER ── */}
       <SectionCard title="Main Banner">
-        <MediaPickerField
-          label="Video Banner"
-          assetId={mainBannerVideoId}
-          onSelect={setMainBannerVideoId}
-          onClear={() => setMainBannerVideoId(undefined)}
-          pickerOpen={videoBannerPickerOpen}
-          setPickerOpen={setVideoBannerPickerOpen}
-          buttonOcid="settings.main_banner_video.button"
-          disabled={isPending}
-        />
+        {/* Video Banner */}
+        <div>
+          <p className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-1.5">
+            <Film className="h-4 w-4" /> Video Banner
+          </p>
+          <MediaPickerField
+            label="Video Banner (MP4)"
+            assetId={mainBannerVideoId}
+            onSelect={setMainBannerVideoId}
+            onClear={() => setMainBannerVideoId(undefined)}
+            pickerOpen={videoBannerPickerOpen}
+            setPickerOpen={setVideoBannerPickerOpen}
+            buttonOcid="settings.main_banner_video.button"
+            disabled={isPending}
+            mediaType="video"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Upload file MP4 maks. 50MB. Video akan ditampilkan di banner utama
+            homepage.
+          </p>
+        </div>
 
+        {/* Image Banner */}
         <div className="pt-1">
           <p className="text-sm font-medium text-muted-foreground mb-3">
             Image Banner
@@ -297,6 +338,7 @@ export default function WebsiteSettingsPage() {
               setPickerOpen={setMainBannerPickerOpen}
               buttonOcid="settings.main_banner_image1.button"
               disabled={isPending}
+              mediaType="image"
             />
             <MediaPickerField
               label="Image 2"
@@ -307,6 +349,7 @@ export default function WebsiteSettingsPage() {
               setPickerOpen={setMainBanner2PickerOpen}
               buttonOcid="settings.main_banner_image2.button"
               disabled={isPending}
+              mediaType="image"
             />
           </div>
         </div>
@@ -323,6 +366,7 @@ export default function WebsiteSettingsPage() {
           setPickerOpen={setCtaBannerPickerOpen}
           buttonOcid="settings.cta_banner.button"
           disabled={isPending}
+          mediaType="image"
         />
       </SectionCard>
 
@@ -337,6 +381,7 @@ export default function WebsiteSettingsPage() {
           setPickerOpen={setConsultantPhotoPickerOpen}
           buttonOcid="settings.consultant_photo.button"
           disabled={isPending}
+          mediaType="image"
         />
         <div className="space-y-2">
           <Label htmlFor="salesConsultantName">Nama Sales Consultant</Label>

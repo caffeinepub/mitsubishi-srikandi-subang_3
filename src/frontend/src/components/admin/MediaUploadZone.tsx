@@ -24,8 +24,15 @@ const ACCEPTED_TYPES = [
   "image/gif",
   "image/webp",
   "application/pdf",
+  "video/mp4",
 ];
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+
+function getMaxSize(mimeType: string): number {
+  return mimeType.startsWith("video/") ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+}
 
 export default function MediaUploadZone({
   onUploadSuccess,
@@ -39,10 +46,12 @@ export default function MediaUploadZone({
 
   const validateFile = useCallback((file: File): string | null => {
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      return `Tipe file tidak didukung: ${file.type}. Gunakan JPG, PNG, GIF, WebP, atau PDF.`;
+      return `Tipe file tidak didukung: ${file.type}. Gunakan JPG, PNG, WebP, PDF, atau MP4.`;
     }
-    if (file.size > MAX_FILE_SIZE) {
-      return `Ukuran file terlalu besar: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maksimal 10MB.`;
+    const maxSize = getMaxSize(file.type);
+    if (file.size > maxSize) {
+      const maxMB = maxSize / 1024 / 1024;
+      return `Ukuran file terlalu besar: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maksimal ${maxMB}MB.`;
     }
     return null;
   }, []);
@@ -84,7 +93,6 @@ export default function MediaUploadZone({
   };
 
   const uploadSingleFile = async (uploadFile: UploadFile, index: number) => {
-    // Validate identity
     const validationError = validateDelegationIdentity(identity);
     if (validationError) {
       setFiles((prev) =>
@@ -95,7 +103,6 @@ export default function MediaUploadZone({
       return;
     }
 
-    // Check actor readiness
     if (!actor || actorFetching) {
       setFiles((prev) =>
         prev.map((f, i) =>
@@ -181,6 +188,7 @@ export default function MediaUploadZone({
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click();
         }}
+        data-ocid="media.dropzone"
         className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
           isDragging
             ? "border-primary bg-primary/5"
@@ -195,7 +203,7 @@ export default function MediaUploadZone({
           atau klik untuk memilih file
         </p>
         <p className="text-xs text-gray-400 mt-2">
-          JPG, PNG, GIF, WebP, PDF — Maks. 10MB per file
+          JPG, PNG, WebP, PDF — Maks. 10MB | MP4 — Maks. 50MB
         </p>
         <input
           ref={fileInputRef}
@@ -220,7 +228,11 @@ export default function MediaUploadZone({
                   {uploadFile.file.name}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {(uploadFile.file.size / 1024).toFixed(1)} KB
+                  {uploadFile.file.type.startsWith("video/")
+                    ? "Video"
+                    : "Gambar"}
+                  {" · "}
+                  {(uploadFile.file.size / 1024 / 1024).toFixed(2)} MB
                 </p>
                 {uploadFile.status === "uploading" && (
                   <Progress value={uploadFile.progress} className="mt-1 h-1" />
@@ -277,6 +289,7 @@ export default function MediaUploadZone({
                 size="sm"
                 onClick={uploadAll}
                 disabled={uploadAsset.isPending}
+                data-ocid="media.upload_button"
               >
                 {uploadAsset.isPending ? "Mengupload..." : "Upload Semua"}
               </Button>
