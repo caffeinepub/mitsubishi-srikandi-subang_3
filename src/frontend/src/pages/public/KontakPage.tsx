@@ -1,12 +1,31 @@
+import type { backendInterface } from "@/backend";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useActor } from "@/hooks/useActor";
 import { useContactForm } from "@/hooks/useContactForm";
 import { useGetWebsiteSettings } from "@/hooks/useWebsiteSettings";
+import { createBlobUrlFromData } from "@/utils/blobUrl";
 import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+
+type PublicActor = backendInterface & {
+  getPublicMediaAssetById?: (
+    id: bigint,
+  ) => Promise<{ data: Uint8Array; mimeType: string } | null>;
+};
+
+function fetchPublicMedia(
+  actor: PublicActor,
+  id: bigint,
+): Promise<{ data: Uint8Array; mimeType: string } | null> {
+  if (typeof actor.getPublicMediaAssetById === "function") {
+    return actor.getPublicMediaAssetById(id);
+  }
+  return actor.getMediaAssetById(id);
+}
 
 export default function KontakPage() {
   const [formData, setFormData] = useState({
@@ -22,6 +41,10 @@ export default function KontakPage() {
 
   const contactMutation = useContactForm();
   const { data: settings } = useGetWebsiteSettings();
+  const { actor } = useActor();
+  const [consultantPhotoUrl, setConsultantPhotoUrl] = useState<string | null>(
+    null,
+  );
 
   // Dynamic values with fallbacks
   const phone = settings?.contactPhone || "0852-1234-0778";
@@ -35,6 +58,36 @@ export default function KontakPage() {
     ? settings.contactWhatsapp.replace(/\D/g, "")
     : "6285212340778";
   const waLink = `https://wa.me/${waNumber}?text=Hai..%20Saya%20tertarik%20dengan%20produk%20mobil%20Mitsubishi..`;
+
+  const consultantName = settings?.salesConsultantName || "Sales Consultant";
+  const consultantPhotoId = settings?.salesConsultantPhotoId ?? null;
+  const consultantInitial = consultantName.charAt(0).toUpperCase();
+
+  // Load consultant photo
+  useEffect(() => {
+    if (!consultantPhotoId || !actor) {
+      setConsultantPhotoUrl(null);
+      return;
+    }
+    let cancelled = false;
+    fetchPublicMedia(actor as PublicActor, consultantPhotoId)
+      .then((asset) => {
+        if (cancelled || !asset?.data) return;
+        try {
+          setConsultantPhotoUrl(
+            createBlobUrlFromData(asset.data, asset.mimeType),
+          );
+        } catch {
+          setConsultantPhotoUrl(null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setConsultantPhotoUrl(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [consultantPhotoId, actor]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -222,10 +275,22 @@ export default function KontakPage() {
           <div>
             <h2 className="text-2xl font-bold mb-6">Sales Consultant</h2>
             <div className="bg-gray-50 rounded-lg p-6 text-center">
-              <div className="w-32 h-32 rounded-full mx-auto mb-4 bg-[#C90010] flex items-center justify-center">
-                <span className="text-white text-4xl font-bold">F</span>
+              <div className="w-32 h-32 rounded-full mx-auto mb-4 overflow-hidden">
+                {consultantPhotoUrl ? (
+                  <img
+                    src={consultantPhotoUrl}
+                    alt={consultantName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-[#C90010] flex items-center justify-center">
+                    <span className="text-white text-4xl font-bold">
+                      {consultantInitial}
+                    </span>
+                  </div>
+                )}
               </div>
-              <h3 className="text-xl font-bold mb-2">Fuad Mitsubishi</h3>
+              <h3 className="text-xl font-bold mb-2">{consultantName}</h3>
               <p className="text-gray-600 mb-4">Sales Consultant</p>
               <Button
                 data-ocid="kontak.primary_button"

@@ -25,10 +25,14 @@ const ACCEPTED_TYPES = [
   "image/webp",
   "application/pdf",
   "video/mp4",
+  "video/webm",
+  "video/quicktime",
 ];
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
-const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+// Internal limit is 60MB to avoid browser multipart rounding errors.
+// UI displays "50MB" which is the recommended max for users.
+const MAX_VIDEO_SIZE = 60 * 1024 * 1024; // 60MB internal
 
 function getMaxSize(mimeType: string): number {
   return mimeType.startsWith("video/") ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
@@ -46,12 +50,15 @@ export default function MediaUploadZone({
 
   const validateFile = useCallback((file: File): string | null => {
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      return `Tipe file tidak didukung: ${file.type}. Gunakan JPG, PNG, WebP, PDF, atau MP4.`;
+      return `Tipe file tidak didukung: ${file.type}. Gunakan JPG, PNG, WebP, PDF, MP4, WebM, atau MOV.`;
     }
     const maxSize = getMaxSize(file.type);
     if (file.size > maxSize) {
-      const maxMB = maxSize / 1024 / 1024;
-      return `Ukuran file terlalu besar: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maksimal ${maxMB}MB.`;
+      // Show 50MB as the user-visible limit for video
+      const displayMax = file.type.startsWith("video/")
+        ? 50
+        : maxSize / 1024 / 1024;
+      return `Ukuran file terlalu besar: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maksimal ${displayMax}MB.`;
     }
     return null;
   }, []);
@@ -203,13 +210,13 @@ export default function MediaUploadZone({
           atau klik untuk memilih file
         </p>
         <p className="text-xs text-gray-400 mt-2">
-          JPG, PNG, WebP, PDF — Maks. 10MB | MP4 — Maks. 50MB
+          JPG, PNG, WebP, PDF — Maks. 10MB | MP4, WebM, MOV — Maks. 50MB
         </p>
         <input
           ref={fileInputRef}
           type="file"
           multiple
-          accept={ACCEPTED_TYPES.join(",")}
+          accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,video/mp4,video/webm,video/quicktime,.mov"
           onChange={handleFileInput}
           className="hidden"
         />

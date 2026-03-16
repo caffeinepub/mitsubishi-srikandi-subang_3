@@ -26,6 +26,7 @@ export interface WebsiteSettings {
     salesConsultantName?: string;
     salesConsultantPhotoId?: bigint;
     footerAboutText?: string;
+    homepageBannerMode?: string;
 }
 export interface MediaAsset {
     id: bigint;
@@ -126,6 +127,7 @@ export interface backendInterface {
     getTotalVisitors(): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getVisitorStats(): Promise<VisitorStats>;
+    getPublicMediaAssetById(id: bigint): Promise<MediaAsset | null>;
     getWebsiteSettings(): Promise<WebsiteSettings>;
     isCallerAdmin(): Promise<boolean>;
     periodicCleanup(): Promise<void>;

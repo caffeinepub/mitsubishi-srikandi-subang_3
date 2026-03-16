@@ -92,6 +92,9 @@ export interface WebsiteSettings {
   'salesConsultantName' : [] | [string],
   'salesConsultantPhotoId' : [] | [bigint],
   'footerAboutText' : [] | [string],
+  'mainBannerImageId2' : [] | [bigint],
+  'mainBannerVideoId' : [] | [bigint],
+  'homepageBannerMode' : [] | [string],
 }
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,

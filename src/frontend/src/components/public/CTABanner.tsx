@@ -1,24 +1,40 @@
+import type { backendInterface } from "@/backend";
 import SafeImage from "@/components/SafeImage";
 import { useActor } from "@/hooks/useActor";
 import { useGetWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import { createBlobUrlFromData } from "@/utils/blobUrl";
 import { useEffect, useState } from "react";
 
+type PublicActor = backendInterface & {
+  getPublicMediaAssetById?: (
+    id: bigint,
+  ) => Promise<{ data: Uint8Array; mimeType: string } | null>;
+};
+
+function fetchPublicMedia(
+  actor: PublicActor,
+  id: bigint,
+): Promise<{ data: Uint8Array; mimeType: string } | null> {
+  if (typeof actor.getPublicMediaAssetById === "function") {
+    return actor.getPublicMediaAssetById(id);
+  }
+  return actor.getMediaAssetById(id);
+}
+
 export default function CTABanner() {
   const { data: settings } = useGetWebsiteSettings();
-  const { actor, isFetching } = useActor();
+  const { actor } = useActor();
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
 
   const bannerImageId = settings?.ctaBannerImageId ?? null;
 
   useEffect(() => {
-    if (!bannerImageId || !actor || isFetching) {
+    if (!bannerImageId || !actor) {
       return;
     }
 
     let cancelled = false;
-    actor
-      .getMediaAssetById(bannerImageId)
+    fetchPublicMedia(actor as PublicActor, bannerImageId)
       .then((asset) => {
         if (cancelled) return;
         if (asset?.data) {
@@ -37,7 +53,7 @@ export default function CTABanner() {
     return () => {
       cancelled = true;
     };
-  }, [bannerImageId, actor, isFetching]);
+  }, [bannerImageId, actor]);
 
   const imageSrc = bannerUrl || "/assets/uploads/CTA_Banner-1.png";
 

@@ -8,8 +8,8 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetAllMediaAssets } from "@/hooks/useMediaAssets";
-import { createBlobUrlFromData } from "@/utils/blobUrl";
-import { Film } from "lucide-react";
+import { createBlobUrlFromData, isPdfMimeType } from "@/utils/blobUrl";
+import { FileText, Film } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface BannerImagePickerProps {
@@ -19,7 +19,7 @@ interface BannerImagePickerProps {
   value?: bigint;
   bannerType: "main" | "cta";
   /** Filter assets shown in the picker. Default: "image" */
-  mediaType?: "image" | "video";
+  mediaType?: "image" | "video" | "pdf" | "all";
 }
 
 export default function BannerImagePicker({
@@ -38,11 +38,12 @@ export default function BannerImagePicker({
   }, [value]);
 
   const filteredAssets =
-    allAssets?.filter((asset) =>
-      mediaType === "video"
-        ? asset.mimeType.startsWith("video/")
-        : asset.mimeType.startsWith("image/"),
-    ) || [];
+    allAssets?.filter((asset) => {
+      if (mediaType === "all") return true;
+      if (mediaType === "video") return asset.mimeType.startsWith("video/");
+      if (mediaType === "pdf") return isPdfMimeType(asset.mimeType);
+      return asset.mimeType.startsWith("image/");
+    }) || [];
 
   const handleSelect = () => {
     if (selectedId) {
@@ -53,14 +54,18 @@ export default function BannerImagePicker({
   const pickerTitle =
     mediaType === "video"
       ? "Pilih Video Banner"
-      : bannerType === "main"
-        ? "Pilih Main Banner"
-        : "Pilih CTA Banner";
+      : mediaType === "pdf"
+        ? "Pilih File PDF"
+        : bannerType === "main"
+          ? "Pilih Main Banner"
+          : "Pilih CTA Banner";
 
   const emptyMessage =
     mediaType === "video"
-      ? "Belum ada video yang tersedia. Silakan upload file MP4 terlebih dahulu di Media Manager."
-      : "Belum ada gambar yang tersedia. Silakan upload gambar terlebih dahulu di Media Manager.";
+      ? "Belum ada video yang tersedia. Silakan upload file MP4/WebM terlebih dahulu di Media Manager."
+      : mediaType === "pdf"
+        ? "Belum ada file PDF. Silakan upload PDF terlebih dahulu di Media Manager."
+        : "Belum ada gambar yang tersedia. Silakan upload gambar terlebih dahulu di Media Manager.";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -84,6 +89,7 @@ export default function BannerImagePicker({
                 {filteredAssets.map((asset) => {
                   const assetIdString = asset.id.toString();
                   const isVideo = asset.mimeType.startsWith("video/");
+                  const isPdf = isPdfMimeType(asset.mimeType);
                   const previewUrl = createBlobUrlFromData(
                     asset.data,
                     asset.mimeType,
@@ -106,7 +112,16 @@ export default function BannerImagePicker({
                         />
                         <div className="flex-1">
                           <div className="space-y-2">
-                            {isVideo ? (
+                            {isPdf ? (
+                              <div className="w-full h-24 bg-red-50 rounded flex items-center justify-center">
+                                <div className="text-center">
+                                  <FileText className="h-10 w-10 mx-auto text-red-500" />
+                                  <p className="text-xs text-red-600 font-semibold mt-1">
+                                    PDF
+                                  </p>
+                                </div>
+                              </div>
+                            ) : isVideo ? (
                               <div className="relative w-full h-32 bg-gray-900 rounded overflow-hidden flex items-center justify-center">
                                 <video
                                   src={previewUrl}
@@ -131,7 +146,6 @@ export default function BannerImagePicker({
                                 {asset.filename}
                               </p>
                               <p className="text-xs text-gray-500">
-                                ID: {assetIdString} ·{" "}
                                 {(Number(asset.size) / 1024 / 1024).toFixed(2)}{" "}
                                 MB
                               </p>
@@ -150,7 +164,11 @@ export default function BannerImagePicker({
                 Batal
               </Button>
               <Button onClick={handleSelect} disabled={!selectedId}>
-                {mediaType === "video" ? "Pilih Video" : "Pilih Gambar"}
+                {mediaType === "video"
+                  ? "Pilih Video"
+                  : mediaType === "pdf"
+                    ? "Pilih PDF"
+                    : "Pilih Gambar"}
               </Button>
             </div>
           </div>

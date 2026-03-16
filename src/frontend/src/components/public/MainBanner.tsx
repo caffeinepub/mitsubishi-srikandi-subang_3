@@ -1,3 +1,4 @@
+import type { backendInterface } from "@/backend";
 import SafeImage from "@/components/SafeImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useActor } from "@/hooks/useActor";
@@ -5,10 +6,26 @@ import { useGetWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import { createBlobUrlFromData } from "@/utils/blobUrl";
 import { useEffect, useRef, useState } from "react";
 
+type PublicActor = backendInterface & {
+  getPublicMediaAssetById?: (
+    id: bigint,
+  ) => Promise<{ data: Uint8Array; mimeType: string } | null>;
+};
+
+function fetchPublicMedia(
+  actor: PublicActor,
+  id: bigint,
+): Promise<{ data: Uint8Array; mimeType: string } | null> {
+  if (typeof actor.getPublicMediaAssetById === "function") {
+    return actor.getPublicMediaAssetById(id);
+  }
+  return actor.getMediaAssetById(id);
+}
+
 export default function MainBanner() {
   const { data: settings, isLoading: settingsLoading } =
     useGetWebsiteSettings();
-  const { actor, isFetching } = useActor();
+  const { actor } = useActor();
 
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
@@ -23,13 +40,12 @@ export default function MainBanner() {
 
   // Load video asset
   useEffect(() => {
-    if (!videoId || !actor || isFetching) {
+    if (!videoId || !actor) {
       setVideoUrl(null);
       return;
     }
     let cancelled = false;
-    actor
-      .getMediaAssetById(videoId)
+    fetchPublicMedia(actor as PublicActor, videoId)
       .then((asset) => {
         if (cancelled || !asset?.data) return;
         try {
@@ -44,17 +60,16 @@ export default function MainBanner() {
     return () => {
       cancelled = true;
     };
-  }, [videoId, actor, isFetching]);
+  }, [videoId, actor]);
 
   // Load image 1
   useEffect(() => {
-    if (!imageId || !actor || isFetching) {
+    if (!imageId || !actor) {
       setBannerUrl(null);
       return;
     }
     let cancelled = false;
-    actor
-      .getMediaAssetById(imageId)
+    fetchPublicMedia(actor as PublicActor, imageId)
       .then((asset) => {
         if (cancelled || !asset?.data) return;
         try {
@@ -69,17 +84,16 @@ export default function MainBanner() {
     return () => {
       cancelled = true;
     };
-  }, [imageId, actor, isFetching]);
+  }, [imageId, actor]);
 
   // Load image 2
   useEffect(() => {
-    if (!imageId2 || !actor || isFetching) {
+    if (!imageId2 || !actor) {
       setBanner2Url(null);
       return;
     }
     let cancelled = false;
-    actor
-      .getMediaAssetById(imageId2)
+    fetchPublicMedia(actor as PublicActor, imageId2)
       .then((asset) => {
         if (cancelled || !asset?.data) return;
         try {
@@ -94,13 +108,31 @@ export default function MainBanner() {
     return () => {
       cancelled = true;
     };
-  }, [imageId2, actor, isFetching]);
+  }, [imageId2, actor]);
 
-  // Determine display mode
-  const hasVideo = !!videoId && !!videoUrl;
-  const hasImage1 = !!bannerUrl;
+  // Determine display mode based on homepageBannerMode
+  const mode = settings?.homepageBannerMode ?? "1 image";
+
+  const resolveMode = () => {
+    if (mode === "video") {
+      if (videoUrl) return "video";
+      if (bannerUrl) return "static";
+      return "empty";
+    }
+    if (mode === "2 image") {
+      if (bannerUrl && banner2Url) return "slider";
+      if (bannerUrl) return "static";
+      if (videoUrl) return "video";
+      return "empty";
+    }
+    // "1 image" or default
+    if (bannerUrl) return "static";
+    return "empty";
+  };
+
+  const displayMode = resolveMode();
   const sliderImages = [bannerUrl, banner2Url].filter(Boolean) as string[];
-  const isSlider = !hasVideo && sliderImages.length > 1;
+  const isSlider = displayMode === "slider";
 
   // Slider auto-advance
   useEffect(() => {
@@ -143,11 +175,11 @@ export default function MainBanner() {
   return (
     <section className="relative w-full h-[150px] md:h-[600px] overflow-hidden">
       {/* VIDEO MODE */}
-      {hasVideo && (
+      {displayMode === "video" && (
         <>
           <video
             key={videoUrl}
-            src={videoUrl}
+            src={videoUrl!}
             autoPlay
             muted
             loop
@@ -159,8 +191,8 @@ export default function MainBanner() {
         </>
       )}
 
-      {/* IMAGE SLIDER MODE (2 images) */}
-      {!hasVideo && isSlider && (
+      {/* SLIDER MODE (2 images) */}
+      {displayMode === "slider" && (
         <>
           <div
             className={`absolute inset-0 transition-all duration-500 ${
@@ -181,19 +213,23 @@ export default function MainBanner() {
         </>
       )}
 
-      {/* STATIC IMAGE MODE (1 image or fallback) */}
-      {!hasVideo && !isSlider && (
+      {/* STATIC IMAGE MODE */}
+      {displayMode === "static" && (
         <>
           <SafeImage
-            src={
-              hasImage1
-                ? bannerUrl!
-                : "/assets/generated/main-banner.dim_1920x600.png"
-            }
+            src={bannerUrl!}
             alt="Main Banner"
             className="absolute inset-0 w-full h-full object-cover object-center"
             placeholderClassName="w-full h-full bg-[#C90010]"
           />
+          {overlayText}
+        </>
+      )}
+
+      {/* EMPTY FALLBACK */}
+      {displayMode === "empty" && (
+        <>
+          <div className="absolute inset-0 bg-black" />
           {overlayText}
         </>
       )}

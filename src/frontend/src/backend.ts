@@ -108,6 +108,9 @@ export interface WebsiteSettings {
     salesConsultantName?: string;
     salesConsultantPhotoId?: bigint;
     footerAboutText?: string;
+    mainBannerImageId2?: bigint;
+    mainBannerVideoId?: bigint;
+    homepageBannerMode?: string;
 }
 export interface MediaAsset {
     id: bigint;
@@ -973,6 +976,9 @@ function from_candid_record_n26(_uploadFile: (file: ExternalBlob) => Promise<Uin
     salesConsultantName?: [] | [string];
     salesConsultantPhotoId?: [] | [bigint];
     footerAboutText?: [] | [string];
+    mainBannerImageId2?: [] | [bigint];
+    mainBannerVideoId?: [] | [bigint];
+    homepageBannerMode?: [] | [string];
 }): {
     mainBannerImageId?: bigint;
     dealerAddress: string;
@@ -990,6 +996,9 @@ function from_candid_record_n26(_uploadFile: (file: ExternalBlob) => Promise<Uin
     salesConsultantName?: string;
     salesConsultantPhotoId?: bigint;
     footerAboutText?: string;
+    mainBannerImageId2?: bigint;
+    mainBannerVideoId?: bigint;
+    homepageBannerMode?: string;
 } {
     return {
         mainBannerImageId: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.mainBannerImageId)),
@@ -1008,6 +1017,9 @@ function from_candid_record_n26(_uploadFile: (file: ExternalBlob) => Promise<Uin
         salesConsultantName: value.salesConsultantName ? record_opt_to_undefined(value.salesConsultantName.length === 0 ? [] : [value.salesConsultantName[0]]) : undefined,
         salesConsultantPhotoId: value.salesConsultantPhotoId ? record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.salesConsultantPhotoId as [] | [bigint])) : undefined,
         footerAboutText: value.footerAboutText ? record_opt_to_undefined(value.footerAboutText.length === 0 ? [] : [value.footerAboutText[0]]) : undefined,
+        mainBannerImageId2: value.mainBannerImageId2 ? record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.mainBannerImageId2 as [] | [bigint])) : undefined,
+        mainBannerVideoId: value.mainBannerVideoId ? record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.mainBannerVideoId as [] | [bigint])) : undefined,
+        homepageBannerMode: value.homepageBannerMode ? record_opt_to_undefined(value.homepageBannerMode.length === 0 ? [] : [value.homepageBannerMode[0]]) : undefined,
     };
 }
 function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -1095,6 +1107,9 @@ function to_candid_record_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8
     salesConsultantName?: string;
     salesConsultantPhotoId?: bigint;
     footerAboutText?: string;
+    mainBannerImageId2?: bigint;
+    mainBannerVideoId?: bigint;
+    homepageBannerMode?: string;
 }): {
     mainBannerImageId: [] | [bigint];
     dealerAddress: string;
@@ -1112,6 +1127,9 @@ function to_candid_record_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8
     salesConsultantName: [] | [string];
     salesConsultantPhotoId: [] | [bigint];
     footerAboutText: [] | [string];
+    mainBannerImageId2: [] | [bigint];
+    mainBannerVideoId: [] | [bigint];
+    homepageBannerMode: [] | [string];
 } {
     return {
         mainBannerImageId: value.mainBannerImageId ? candid_some(value.mainBannerImageId) : candid_none(),
@@ -1130,6 +1148,9 @@ function to_candid_record_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         salesConsultantName: value.salesConsultantName ? candid_some(value.salesConsultantName) : candid_none(),
         salesConsultantPhotoId: value.salesConsultantPhotoId ? candid_some(value.salesConsultantPhotoId) : candid_none(),
         footerAboutText: value.footerAboutText ? candid_some(value.footerAboutText) : candid_none(),
+        mainBannerImageId2: value.mainBannerImageId2 ? candid_some(value.mainBannerImageId2) : candid_none(),
+        mainBannerVideoId: value.mainBannerVideoId ? candid_some(value.mainBannerVideoId) : candid_none(),
+        homepageBannerMode: value.homepageBannerMode ? candid_some(value.homepageBannerMode) : candid_none(),
     };
 }
 function to_candid_variant_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {

@@ -3,6 +3,7 @@ import BannerImagePicker from "@/components/admin/BannerImagePicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useInternetIdentity } from "@/hooks/useInternetIdentity";
@@ -27,8 +28,7 @@ interface MediaPickerFieldProps {
   setPickerOpen: (open: boolean) => void;
   buttonOcid: string;
   disabled?: boolean;
-  /** "image" (default) or "video" */
-  mediaType?: "image" | "video";
+  mediaType?: "image" | "video" | "all";
 }
 
 function MediaPickerField({
@@ -95,7 +95,6 @@ function MediaPickerField({
           </div>
         )}
 
-        {/* Asset info */}
         {assetId && asset && (
           <p className="text-xs text-muted-foreground">
             {asset.filename} · {(Number(asset.size) / 1024 / 1024).toFixed(2)}{" "}
@@ -138,7 +137,7 @@ function MediaPickerField({
         }}
         value={assetId}
         bannerType="main"
-        mediaType={mediaType}
+        mediaType={mediaType === "all" ? "all" : mediaType}
       />
     </>
   );
@@ -169,21 +168,21 @@ export default function WebsiteSettingsPage() {
   const updateSettings = useUpdateWebsiteSettings();
 
   // Media picker open states
-  const [videoBannerPickerOpen, setVideoBannerPickerOpen] = useState(false);
   const [mainBannerPickerOpen, setMainBannerPickerOpen] = useState(false);
   const [mainBanner2PickerOpen, setMainBanner2PickerOpen] = useState(false);
+  const [videoBannerPickerOpen, setVideoBannerPickerOpen] = useState(false);
   const [ctaBannerPickerOpen, setCtaBannerPickerOpen] = useState(false);
   const [consultantPhotoPickerOpen, setConsultantPhotoPickerOpen] =
     useState(false);
 
   // Media asset IDs
-  const [mainBannerVideoId, setMainBannerVideoId] = useState<
-    bigint | undefined
-  >(undefined);
   const [mainBannerImageId, setMainBannerImageId] = useState<
     bigint | undefined
   >(undefined);
   const [mainBannerImageId2, setMainBannerImageId2] = useState<
+    bigint | undefined
+  >(undefined);
+  const [mainBannerVideoId, setMainBannerVideoId] = useState<
     bigint | undefined
   >(undefined);
   const [ctaBannerImageId, setCtaBannerImageId] = useState<bigint | undefined>(
@@ -192,6 +191,10 @@ export default function WebsiteSettingsPage() {
   const [salesConsultantPhotoId, setSalesConsultantPhotoId] = useState<
     bigint | undefined
   >(undefined);
+
+  // Banner mode
+  const [homepageBannerMode, setHomepageBannerMode] =
+    useState<string>("1 image");
 
   // Text fields
   const [formData, setFormData] = useState({
@@ -226,11 +229,12 @@ export default function WebsiteSettingsPage() {
         salesConsultantName: settings.salesConsultantName ?? "",
         footerAboutText: settings.footerAboutText ?? "",
       });
-      setMainBannerVideoId(settings.mainBannerVideoId ?? undefined);
       setMainBannerImageId(settings.mainBannerImageId ?? undefined);
       setMainBannerImageId2(settings.mainBannerImageId2 ?? undefined);
+      setMainBannerVideoId(settings.mainBannerVideoId ?? undefined);
       setCtaBannerImageId(settings.ctaBannerImageId ?? undefined);
       setSalesConsultantPhotoId(settings.salesConsultantPhotoId ?? undefined);
+      setHomepageBannerMode(settings.homepageBannerMode ?? "1 image");
     }
   }, [settings]);
 
@@ -258,14 +262,15 @@ export default function WebsiteSettingsPage() {
       instagramUrl: formData.instagramUrl,
       tiktokUrl: formData.tiktokUrl,
       youtubeUrl: formData.youtubeUrl,
-      mainBannerVideoId: mainBannerVideoId,
       mainBannerImageId: mainBannerImageId,
       mainBannerImageId2: mainBannerImageId2,
+      mainBannerVideoId: mainBannerVideoId,
       ctaBannerImageId: ctaBannerImageId,
       lastUpdated: BigInt(Date.now()) * BigInt(1_000_000),
       salesConsultantName: formData.salesConsultantName || undefined,
       salesConsultantPhotoId: salesConsultantPhotoId,
       footerAboutText: formData.footerAboutText || undefined,
+      homepageBannerMode: homepageBannerMode,
     };
 
     try {
@@ -301,30 +306,8 @@ export default function WebsiteSettingsPage() {
 
       {/* ── Section 1: MAIN BANNER ── */}
       <SectionCard title="Main Banner">
-        {/* Video Banner */}
-        <div>
-          <p className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-1.5">
-            <Film className="h-4 w-4" /> Video Banner
-          </p>
-          <MediaPickerField
-            label="Video Banner (MP4)"
-            assetId={mainBannerVideoId}
-            onSelect={setMainBannerVideoId}
-            onClear={() => setMainBannerVideoId(undefined)}
-            pickerOpen={videoBannerPickerOpen}
-            setPickerOpen={setVideoBannerPickerOpen}
-            buttonOcid="settings.main_banner_video.button"
-            disabled={isPending}
-            mediaType="video"
-          />
-          <p className="text-xs text-muted-foreground mt-1">
-            Upload file MP4 maks. 50MB. Video akan ditampilkan di banner utama
-            homepage.
-          </p>
-        </div>
-
         {/* Image Banner */}
-        <div className="pt-1">
+        <div>
           <p className="text-sm font-medium text-muted-foreground mb-3">
             Image Banner
           </p>
@@ -352,6 +335,82 @@ export default function WebsiteSettingsPage() {
               mediaType="image"
             />
           </div>
+        </div>
+
+        {/* Video Banner */}
+        <div className="pt-1">
+          <p className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-1.5">
+            <Film className="h-4 w-4" /> Video Banner
+          </p>
+          <MediaPickerField
+            label="Video Banner (MP4)"
+            assetId={mainBannerVideoId}
+            onSelect={setMainBannerVideoId}
+            onClear={() => setMainBannerVideoId(undefined)}
+            pickerOpen={videoBannerPickerOpen}
+            setPickerOpen={setVideoBannerPickerOpen}
+            buttonOcid="settings.main_banner_video.button"
+            disabled={isPending}
+            mediaType="video"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Upload file MP4 maks. 50MB di Media Manager, lalu pilih di sini.
+          </p>
+        </div>
+
+        {/* Banner Mode */}
+        <div className="pt-1 border-t">
+          <p className="text-sm font-medium mb-3">Banner Mode</p>
+          <p className="text-xs text-muted-foreground mb-3">
+            Pilih jenis banner yang ditampilkan di homepage. Semua field media
+            tetap tersimpan.
+          </p>
+          <RadioGroup
+            value={homepageBannerMode}
+            onValueChange={setHomepageBannerMode}
+            disabled={isPending}
+            className="space-y-2"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem
+                value="1 image"
+                id="mode-1image"
+                data-ocid="settings.banner_mode_1image.radio"
+              />
+              <Label
+                htmlFor="mode-1image"
+                className="cursor-pointer font-normal"
+              >
+                Image Statis — tampilkan Image 1 saja
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem
+                value="2 image"
+                id="mode-2image"
+                data-ocid="settings.banner_mode_2image.radio"
+              />
+              <Label
+                htmlFor="mode-2image"
+                className="cursor-pointer font-normal"
+              >
+                Image Slider — slide Image 1 & Image 2
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem
+                value="video"
+                id="mode-video"
+                data-ocid="settings.banner_mode_video.radio"
+              />
+              <Label
+                htmlFor="mode-video"
+                className="cursor-pointer font-normal"
+              >
+                Video Banner — tampilkan video
+              </Label>
+            </div>
+          </RadioGroup>
         </div>
       </SectionCard>
 

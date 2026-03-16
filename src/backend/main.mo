@@ -31,6 +31,27 @@ actor {
     lastUpdated : Int;
   };
 
+  // Base type used for stable storage — must NOT change fields to preserve upgrade compatibility
+  type WebsiteSettingsBase = {
+    siteName : Text;
+    contactPhone : Text;
+    contactWhatsapp : Text;
+    contactEmail : Text;
+    dealerAddress : Text;
+    operationalHours : Text;
+    facebookUrl : Text;
+    instagramUrl : Text;
+    tiktokUrl : Text;
+    youtubeUrl : Text;
+    mainBannerImageId : ?Nat;
+    ctaBannerImageId : ?Nat;
+    lastUpdated : Int;
+    salesConsultantName : ?Text;
+    salesConsultantPhotoId : ?Nat;
+    footerAboutText : ?Text;
+  };
+
+  // Full public API type — includes the 3 new fields stored in separate stable vars
   public type WebsiteSettings = {
     siteName : Text;
     contactPhone : Text;
@@ -48,6 +69,9 @@ actor {
     salesConsultantName : ?Text;
     salesConsultantPhotoId : ?Nat;
     footerAboutText : ?Text;
+    mainBannerImageId2 : ?Nat;
+    mainBannerVideoId : ?Nat;
+    homepageBannerMode : ?Text;
   };
 
 
@@ -90,10 +114,19 @@ actor {
   };
 
   // New stable var holding extended settings. Null until first postupgrade migration.
-  stable var websiteSettings_v2 : ?WebsiteSettings = null;
+  stable var websiteSettings_v2 : ?WebsiteSettingsBase = null;
+
+  // Extra stable vars for fields added after v2 (separate to keep upgrade compatibility)
+  stable var ws_ext_mainBannerImageId2 : ?Nat = null;
+  stable var ws_ext_mainBannerVideoId : ?Nat = null;
+  stable var ws_ext_homepageBannerMode : Text = "1 image";
+
+  // Stable storage for media assets — persists across canister upgrades
+  stable var stableMediaAssets : [MediaAsset] = [];
+  stable var stableMediaAssetIdCounter : Nat = 1;
 
   // In-memory working copy used by all runtime functions.
-  var _websiteSettingsRuntime : WebsiteSettings = {
+  var _websiteSettingsRuntime : WebsiteSettingsBase = {
     siteName = "";
     contactPhone = "";
     contactWhatsapp = "";
@@ -916,6 +949,12 @@ actor {
     bannerImages.values().toArray();
   };
 
+
+  // Public query — no auth required — allows anonymous visitors to load media assets for display
+  public query func getPublicMediaAssetById(id : Nat) : async ?MediaAsset {
+    mediaAssets.get(id);
+  };
+
   public shared ({ caller }) func updateWebsiteSettings(newSettings : WebsiteSettings) : async () {
     switch (findAdminRecord(caller)) {
       case (?(_, admin)) {
@@ -926,11 +965,41 @@ actor {
       };
       case (null) { Runtime.trap("Unauthorized: not an admin") };
     };
-    _websiteSettingsRuntime := { newSettings with lastUpdated = Time.now() };
+    // Save base fields to stable runtime var
+    _websiteSettingsRuntime := {
+      siteName = newSettings.siteName;
+      contactPhone = newSettings.contactPhone;
+      contactWhatsapp = newSettings.contactWhatsapp;
+      contactEmail = newSettings.contactEmail;
+      dealerAddress = newSettings.dealerAddress;
+      operationalHours = newSettings.operationalHours;
+      facebookUrl = newSettings.facebookUrl;
+      instagramUrl = newSettings.instagramUrl;
+      tiktokUrl = newSettings.tiktokUrl;
+      youtubeUrl = newSettings.youtubeUrl;
+      mainBannerImageId = newSettings.mainBannerImageId;
+      ctaBannerImageId = newSettings.ctaBannerImageId;
+      lastUpdated = Time.now();
+      salesConsultantName = newSettings.salesConsultantName;
+      salesConsultantPhotoId = newSettings.salesConsultantPhotoId;
+      footerAboutText = newSettings.footerAboutText;
+    };
+    // Save extra fields to their own stable vars
+    ws_ext_mainBannerImageId2 := newSettings.mainBannerImageId2;
+    ws_ext_mainBannerVideoId := newSettings.mainBannerVideoId;
+    ws_ext_homepageBannerMode := switch (newSettings.homepageBannerMode) {
+      case (?m) { m };
+      case (null) { "1 image" };
+    };
   };
 
   public query func getWebsiteSettings() : async WebsiteSettings {
-    _websiteSettingsRuntime;
+    {
+      _websiteSettingsRuntime with
+      mainBannerImageId2 = ws_ext_mainBannerImageId2;
+      mainBannerVideoId = ws_ext_mainBannerVideoId;
+      homepageBannerMode = ?ws_ext_homepageBannerMode;
+    }
   };
 
   public shared ({ caller }) func getAdmins() : async [AdminRecord] {
@@ -1055,6 +1124,9 @@ actor {
   system func preupgrade() {
     // Persist the runtime settings into the v2 stable var before upgrade
     websiteSettings_v2 := ?_websiteSettingsRuntime;
+    // Persist media assets to stable storage
+    stableMediaAssets := mediaAssets.values().toArray();
+    stableMediaAssetIdCounter := mediaAssetIdCounter;
   };
 
   system func postupgrade() {
@@ -1087,5 +1159,10 @@ actor {
         websiteSettings_v2 := ?_websiteSettingsRuntime;
       };
     };
+    // Restore media assets from stable storage
+    for (asset in stableMediaAssets.vals()) {
+      mediaAssets.add(asset.id, asset);
+    };
+    mediaAssetIdCounter := stableMediaAssetIdCounter;
   };
 };

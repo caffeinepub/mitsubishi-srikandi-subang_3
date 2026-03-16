@@ -7,9 +7,6 @@ export default function MediaManagerPage() {
   const queryClient = useQueryClient();
 
   const handleUploadSuccess = () => {
-    console.log(
-      "[MediaManagerPage] Upload successful - invalidating mediaAssets cache",
-    );
     queryClient.invalidateQueries({ queryKey: ["mediaAssets"] });
   };
 
@@ -17,7 +14,9 @@ export default function MediaManagerPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Media Manager</h1>
-        <p className="text-muted-foreground">Kelola file media untuk website</p>
+        <p className="text-muted-foreground">
+          Kelola file media untuk website — Gambar, Video, dan Brosur PDF
+        </p>
       </div>
 
       <Card>
@@ -29,14 +28,7 @@ export default function MediaManagerPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Media Library</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <MediaAssetGrid />
-        </CardContent>
-      </Card>
+      <MediaAssetGrid />
     </div>
   );
 }

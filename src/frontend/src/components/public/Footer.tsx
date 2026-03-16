@@ -42,6 +42,9 @@ export default function Footer() {
   const instagramUrl = settings?.instagramUrl || "https://instagram.com";
   const tiktokUrl = settings?.tiktokUrl || "https://tiktok.com";
   const youtubeUrl = settings?.youtubeUrl || "https://youtube.com";
+  const footerAboutText =
+    settings?.footerAboutText ||
+    "Dealer resmi Mitsubishi di Subang, Jawa Barat. Melayani penjualan mobil keluarga dan niaga dengan layanan terbaik.";
 
   return (
     <footer className="bg-[#262729] text-white">
@@ -55,8 +58,7 @@ export default function Footer() {
               className="h-16 mb-4"
             />
             <p className="text-white text-sm leading-relaxed">
-              Dealer resmi Mitsubishi di Subang, Jawa Barat. Melayani penjualan
-              mobil keluarga dan niaga dengan layanan terbaik.
+              {footerAboutText}
             </p>
           </div>
 

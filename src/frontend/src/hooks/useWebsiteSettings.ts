@@ -40,7 +40,8 @@ export function useUpdateWebsiteSettings() {
         actor.updateWebsiteSettings(settings),
       );
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      queryClient.setQueryData(["websiteSettings"], variables);
       queryClient.invalidateQueries({ queryKey: ["websiteSettings"] });
     },
   });
