@@ -541,7 +541,7 @@ actor {
   };
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user)) and not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only users can view profiles");
     };
     userProfiles.get(caller);
@@ -555,7 +555,7 @@ actor {
   };
 
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user)) and not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
     userProfiles.add(caller, profile);
@@ -798,7 +798,7 @@ actor {
     data : Blob,
     fileSize : Nat,
   ) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user)) and not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only authenticated users can upload media assets");
     };
 
@@ -847,21 +847,21 @@ actor {
   };
 
   public query ({ caller }) func getAllMediaAssets() : async [MediaAsset] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user)) and not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only authenticated users can view media assets");
     };
     mediaAssets.values().toArray();
   };
 
   public query ({ caller }) func getMediaAssetById(id : Nat) : async ?MediaAsset {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user)) and not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only authenticated users can view media assets");
     };
     mediaAssets.get(id);
   };
 
   public query ({ caller }) func getMediaAssetByBlobId(blobId : Text) : async ?MediaAsset {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user)) and not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only authenticated users can view media assets");
     };
 
@@ -901,7 +901,7 @@ actor {
   };
 
   public shared ({ caller }) func deleteMediaAsset(id : Nat) : async Bool {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user)) and not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only authenticated users can delete media assets");
     };
 
@@ -936,13 +936,6 @@ actor {
     mediaAssets.values().toArray().filter(
       func(asset) { asset.uploadedAt >= startDate and asset.uploadedAt <= endDate }
     );
-  };
-
-  public query ({ caller }) func getMediaAssets() : async [MediaAsset] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can view media assets");
-    };
-    mediaAssets.values().toArray();
   };
 
   public query func getBannerImages() : async [BannerImage] {
