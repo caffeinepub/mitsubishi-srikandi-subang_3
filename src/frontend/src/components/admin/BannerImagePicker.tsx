@@ -17,7 +17,7 @@ interface BannerImagePickerProps {
   onOpenChange: (open: boolean) => void;
   onSelect: (imageId: bigint) => void;
   value?: bigint;
-  bannerType: "main" | "cta";
+  bannerType?: "main" | "cta";
   /** Filter assets shown in the picker. Default: "image" */
   mediaType?: "image" | "video" | "pdf" | "all";
 }
@@ -27,7 +27,7 @@ export default function BannerImagePicker({
   onOpenChange,
   onSelect,
   value,
-  bannerType,
+  bannerType = "main",
   mediaType = "image",
 }: BannerImagePickerProps) {
   const { data: allAssets, isLoading } = useGetAllMediaAssets();
@@ -46,9 +46,8 @@ export default function BannerImagePicker({
     }) || [];
 
   const handleSelect = () => {
-    if (selectedId) {
-      onSelect(BigInt(selectedId));
-    }
+    if (selectedId) onSelect(BigInt(selectedId));
+    onOpenChange(false);
   };
 
   const pickerTitle =
@@ -62,14 +61,17 @@ export default function BannerImagePicker({
 
   const emptyMessage =
     mediaType === "video"
-      ? "Belum ada video yang tersedia. Silakan upload file MP4/WebM terlebih dahulu di Media Manager."
+      ? "Belum ada video. Upload MP4/WebM di Media Manager terlebih dahulu."
       : mediaType === "pdf"
-        ? "Belum ada file PDF. Silakan upload PDF terlebih dahulu di Media Manager."
-        : "Belum ada gambar yang tersedia. Silakan upload gambar terlebih dahulu di Media Manager.";
+        ? "Belum ada file PDF. Upload PDF di Media Manager terlebih dahulu."
+        : "Belum ada gambar. Upload gambar di Media Manager terlebih dahulu.";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent
+        className="max-w-4xl max-h-[80vh] overflow-y-auto"
+        data-ocid="media.dialog"
+      >
         <DialogHeader>
           <DialogTitle>{pickerTitle}</DialogTitle>
         </DialogHeader>
@@ -81,7 +83,12 @@ export default function BannerImagePicker({
             ))}
           </div>
         ) : filteredAssets.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">{emptyMessage}</div>
+          <div
+            className="text-center py-8 text-muted-foreground"
+            data-ocid="media.empty_state"
+          >
+            {emptyMessage}
+          </div>
         ) : (
           <div className="space-y-4">
             <RadioGroup value={selectedId} onValueChange={setSelectedId}>
@@ -101,8 +108,8 @@ export default function BannerImagePicker({
                       htmlFor={`asset-${assetIdString}`}
                       className={`block border rounded-lg p-3 cursor-pointer transition-all ${
                         selectedId === assetIdString
-                          ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200 hover:border-gray-300"
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-muted-foreground"
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -122,7 +129,7 @@ export default function BannerImagePicker({
                                 </div>
                               </div>
                             ) : isVideo ? (
-                              <div className="relative w-full h-32 bg-gray-900 rounded overflow-hidden flex items-center justify-center">
+                              <div className="relative w-full h-32 bg-gray-900 rounded overflow-hidden">
                                 <video
                                   src={previewUrl}
                                   className="w-full h-full object-cover"
@@ -138,14 +145,13 @@ export default function BannerImagePicker({
                                 src={previewUrl}
                                 alt={asset.filename}
                                 className="w-full h-32 object-cover rounded"
-                                onLoad={() => URL.revokeObjectURL(previewUrl)}
                               />
                             )}
                             <div className="text-sm">
                               <p className="font-medium truncate">
                                 {asset.filename}
                               </p>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-muted-foreground">
                                 {(Number(asset.size) / 1024 / 1024).toFixed(2)}{" "}
                                 MB
                               </p>
@@ -160,10 +166,18 @@ export default function BannerImagePicker({
             </RadioGroup>
 
             <div className="flex justify-end gap-2 pt-4 border-t">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
+              <Button
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                data-ocid="media.cancel_button"
+              >
                 Batal
               </Button>
-              <Button onClick={handleSelect} disabled={!selectedId}>
+              <Button
+                onClick={handleSelect}
+                disabled={!selectedId}
+                data-ocid="media.confirm_button"
+              >
                 {mediaType === "video"
                   ? "Pilih Video"
                   : mediaType === "pdf"

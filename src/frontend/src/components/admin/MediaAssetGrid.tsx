@@ -1,3 +1,4 @@
+import type { MediaAsset } from "@/backend";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,25 +12,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useActor } from "@/hooks/useActor";
-import { useInternetIdentity } from "@/hooks/useInternetIdentity";
+import { useActorContext } from "@/contexts/ActorContext";
 import {
   useDeleteMediaAsset,
   useGetAllMediaAssets,
 } from "@/hooks/useMediaAssets";
-import type { MediaAsset } from "@/types/local";
 import {
   createBlobUrlFromData,
   isImageMimeType,
   isPdfMimeType,
 } from "@/utils/blobUrl";
-import { validateDelegationIdentity } from "@/utils/validation";
 import {
   Copy,
   Download,
   ExternalLink,
   FileText,
   Film,
+  ImageIcon,
   Trash2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -65,8 +64,8 @@ function ImageCard({
 }: AssetCardProps) {
   const [imgError, setImgError] = useState(false);
   return (
-    <div className="border rounded-lg overflow-hidden bg-white">
-      <div className="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
+    <div className="border rounded-lg overflow-hidden bg-card">
+      <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
         {blobUrl && !imgError ? (
           <img
             src={blobUrl}
@@ -76,8 +75,8 @@ function ImageCard({
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="text-gray-400 text-center p-4">
-            <FileText className="h-12 w-12 mx-auto mb-1" />
+          <div className="text-muted-foreground text-center p-4">
+            <ImageIcon className="h-12 w-12 mx-auto mb-1" />
             <p className="text-xs">Gagal muat</p>
           </div>
         )}
@@ -96,8 +95,7 @@ function ImageCard({
             className="flex-1 text-xs"
             onClick={() => onCopyId(asset.id)}
           >
-            <Copy className="h-3 w-3 mr-1" />
-            ID
+            <Copy className="h-3 w-3 mr-1" /> ID
           </Button>
           <Button
             variant="destructive"
@@ -105,9 +103,9 @@ function ImageCard({
             className="flex-1 text-xs"
             onClick={() => onDeleteClick(asset)}
             disabled={!isActorReady || isDeleting}
+            data-ocid="media.delete_button"
           >
-            <Trash2 className="h-3 w-3 mr-1" />
-            Hapus
+            <Trash2 className="h-3 w-3 mr-1" /> Hapus
           </Button>
         </div>
       </div>
@@ -124,7 +122,7 @@ function VideoCard({
   onDeleteClick,
 }: AssetCardProps) {
   return (
-    <div className="border rounded-lg overflow-hidden bg-white">
+    <div className="border rounded-lg overflow-hidden bg-card">
       <div className="aspect-video bg-gray-900 flex items-center justify-center overflow-hidden relative">
         {blobUrl ? (
           <video
@@ -136,7 +134,7 @@ function VideoCard({
         ) : (
           <Film className="h-12 w-12 text-blue-400" />
         )}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
           <Film className="h-8 w-8 text-white/70" />
         </div>
       </div>
@@ -154,8 +152,7 @@ function VideoCard({
             className="flex-1 text-xs"
             onClick={() => onCopyId(asset.id)}
           >
-            <Copy className="h-3 w-3 mr-1" />
-            ID
+            <Copy className="h-3 w-3 mr-1" /> ID
           </Button>
           <Button
             variant="destructive"
@@ -163,9 +160,9 @@ function VideoCard({
             className="flex-1 text-xs"
             onClick={() => onDeleteClick(asset)}
             disabled={!isActorReady || isDeleting}
+            data-ocid="media.delete_button"
           >
-            <Trash2 className="h-3 w-3 mr-1" />
-            Hapus
+            <Trash2 className="h-3 w-3 mr-1" /> Hapus
           </Button>
         </div>
       </div>
@@ -192,7 +189,7 @@ function PdfCard({
     a.click();
   };
   return (
-    <div className="border rounded-lg overflow-hidden bg-white">
+    <div className="border rounded-lg overflow-hidden bg-card">
       <div className="aspect-square bg-red-50 flex items-center justify-center">
         <div className="text-center">
           <FileText className="h-16 w-16 mx-auto mb-2 text-red-500" />
@@ -213,8 +210,7 @@ function PdfCard({
             className="text-xs"
             onClick={handlePreview}
           >
-            <ExternalLink className="h-3 w-3 mr-1" />
-            Preview
+            <ExternalLink className="h-3 w-3 mr-1" /> Buka
           </Button>
           <Button
             variant="outline"
@@ -222,8 +218,7 @@ function PdfCard({
             className="text-xs"
             onClick={handleDownload}
           >
-            <Download className="h-3 w-3 mr-1" />
-            Unduh
+            <Download className="h-3 w-3 mr-1" /> Unduh
           </Button>
         </div>
         <div className="flex gap-1 mt-1">
@@ -233,8 +228,7 @@ function PdfCard({
             className="flex-1 text-xs"
             onClick={() => onCopyId(asset.id)}
           >
-            <Copy className="h-3 w-3 mr-1" />
-            ID
+            <Copy className="h-3 w-3 mr-1" /> ID
           </Button>
           <Button
             variant="destructive"
@@ -242,9 +236,9 @@ function PdfCard({
             className="flex-1 text-xs"
             onClick={() => onDeleteClick(asset)}
             disabled={!isActorReady || isDeleting}
+            data-ocid="media.delete_button"
           >
-            <Trash2 className="h-3 w-3 mr-1" />
-            Hapus
+            <Trash2 className="h-3 w-3 mr-1" /> Hapus
           </Button>
         </div>
       </div>
@@ -253,8 +247,7 @@ function PdfCard({
 }
 
 export default function MediaAssetGrid() {
-  const { actor, isFetching: actorFetching } = useActor();
-  const { identity } = useInternetIdentity();
+  const { actor, actorFetching } = useActorContext();
   const { data: assets, isLoading, error } = useGetAllMediaAssets();
   const deleteAsset = useDeleteMediaAsset();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -286,11 +279,6 @@ export default function MediaAssetGrid() {
       toast.error("Sistem belum siap.");
       return;
     }
-    const err = validateDelegationIdentity(identity);
-    if (err) {
-      toast.error(err);
-      return;
-    }
     setAssetToDelete(asset);
     setDeleteDialogOpen(true);
   };
@@ -301,32 +289,40 @@ export default function MediaAssetGrid() {
       onSuccess: () => {
         setDeleteDialogOpen(false);
         setAssetToDelete(null);
+        toast.success("File berhasil dihapus");
       },
       onError: () => {
         setDeleteDialogOpen(false);
         setAssetToDelete(null);
+        toast.error("Gagal menghapus file");
       },
     });
   };
 
   if (isLoading || actorFetching) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <Skeleton className="aspect-square" />
-        <Skeleton className="aspect-square" />
-        <Skeleton className="aspect-square" />
-        <Skeleton className="aspect-square" />
-        <Skeleton className="aspect-square" />
-        <Skeleton className="aspect-square" />
-        <Skeleton className="aspect-square" />
-        <Skeleton className="aspect-square" />
+      <div className="space-y-6">
+        {["Gambar", "Video", "Brosur PDF"].map((label) => (
+          <Card key={label}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">{label}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="aspect-square rounded-lg" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     );
   }
 
-  if (error && !error.message?.includes("Actor not available")) {
+  if (error) {
     return (
-      <div className="text-center py-8 text-red-500">
+      <div className="text-center py-8 text-destructive">
         Gagal memuat media. Silakan coba lagi.
       </div>
     );
@@ -335,10 +331,9 @@ export default function MediaAssetGrid() {
   const images = (assets || []).filter((a) => isImageMimeType(a.mimeType));
   const videos = (assets || []).filter((a) => isVideoMimeType(a.mimeType));
   const pdfs = (assets || []).filter((a) => isPdfMimeType(a.mimeType));
-
   const isActorReady = !!actor && !actorFetching;
 
-  const cardProps = (asset: MediaAsset) => ({
+  const cardProps = (asset: MediaAsset): AssetCardProps => ({
     asset,
     blobUrl: blobUrls.get(asset.id.toString()) || "",
     isActorReady,
@@ -354,7 +349,7 @@ export default function MediaAssetGrid() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <FileText className="h-4 w-4 text-green-600" />
+              <ImageIcon className="h-4 w-4 text-green-600" />
               Gambar
               <span className="text-muted-foreground font-normal text-sm">
                 ({images.length})
@@ -363,13 +358,21 @@ export default function MediaAssetGrid() {
           </CardHeader>
           <CardContent>
             {images.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
+              <p
+                className="text-sm text-muted-foreground text-center py-4"
+                data-ocid="media.empty_state"
+              >
                 Belum ada gambar. Upload JPG, PNG, atau WebP.
               </p>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {images.map((a) => (
-                  <ImageCard key={a.id.toString()} {...cardProps(a)} />
+                {images.map((a, idx) => (
+                  <div
+                    key={a.id.toString()}
+                    data-ocid={`media.item.${idx + 1}`}
+                  >
+                    <ImageCard {...cardProps(a)} />
+                  </div>
                 ))}
               </div>
             )}
@@ -390,12 +393,17 @@ export default function MediaAssetGrid() {
           <CardContent>
             {videos.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Belum ada video. Upload MP4 atau WebM.
+                Belum ada video. Upload MP4, WebM, atau MOV.
               </p>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {videos.map((a) => (
-                  <VideoCard key={a.id.toString()} {...cardProps(a)} />
+                {videos.map((a, idx) => (
+                  <div
+                    key={a.id.toString()}
+                    data-ocid={`media.item.${idx + 1}`}
+                  >
+                    <VideoCard {...cardProps(a)} />
+                  </div>
                 ))}
               </div>
             )}
@@ -420,8 +428,13 @@ export default function MediaAssetGrid() {
               </p>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {pdfs.map((a) => (
-                  <PdfCard key={a.id.toString()} {...cardProps(a)} />
+                {pdfs.map((a, idx) => (
+                  <div
+                    key={a.id.toString()}
+                    data-ocid={`media.item.${idx + 1}`}
+                  >
+                    <PdfCard {...cardProps(a)} />
+                  </div>
                 ))}
               </div>
             )}
@@ -430,7 +443,7 @@ export default function MediaAssetGrid() {
       </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent data-ocid="media.dialog">
           <AlertDialogHeader>
             <AlertDialogTitle>Konfirmasi Hapus</AlertDialogTitle>
             <AlertDialogDescription>
@@ -440,6 +453,7 @@ export default function MediaAssetGrid() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel
+              data-ocid="media.cancel_button"
               onClick={() => {
                 setDeleteDialogOpen(false);
                 setAssetToDelete(null);
@@ -448,6 +462,7 @@ export default function MediaAssetGrid() {
               Batal
             </AlertDialogCancel>
             <AlertDialogAction
+              data-ocid="media.confirm_button"
               onClick={handleDeleteConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

@@ -87,7 +87,6 @@ actor {
   let promotions = Map.empty<Nat, Promotion>();
   let testimonials = Map.empty<Nat, Testimonial>();
   let blogPosts = Map.empty<Nat, BlogPost>();
-  let mediaAssets = Map.empty<Nat, MediaAsset>();
   let commercialVehicleCategories = Map.empty<Nat, CommercialVehicleCategory>();
   let idMapping = Map.empty<Text, Nat>();
   let vehicles = Map.empty<Nat, Vehicle>();
@@ -95,8 +94,12 @@ actor {
   let bannerImages = Map.empty<Nat, BannerImage>();
   let metaStore = Map.empty<Text, MetaEntry>();
 
+  // ============================================================
+  // MEDIA MANAGER — Runtime map (restored from stable on upgrade)
+  // ============================================================
+  let mediaAssets = Map.empty<Nat, MediaAsset>();
+
   // Old stable var — kept so Motoko can deserialize existing canister state on upgrade.
-  // After postupgrade runs, websiteSettings_v2 is the source of truth.
   stable var websiteSettings : WebsiteSettingsV1 = {
     siteName = "";
     contactPhone = "";
@@ -113,19 +116,18 @@ actor {
     lastUpdated = -1;
   };
 
-  // New stable var holding extended settings. Null until first postupgrade migration.
   stable var websiteSettings_v2 : ?WebsiteSettingsBase = null;
 
-  // Extra stable vars for fields added after v2 (separate to keep upgrade compatibility)
   stable var ws_ext_mainBannerImageId2 : ?Nat = null;
   stable var ws_ext_mainBannerVideoId : ?Nat = null;
   stable var ws_ext_homepageBannerMode : Text = "1 image";
 
-  // Stable storage for media assets — persists across canister upgrades
+  // ============================================================
+  // MEDIA MANAGER — Stable storage (survives canister upgrades)
+  // ============================================================
   stable var stableMediaAssets : [MediaAsset] = [];
   stable var stableMediaAssetIdCounter : Nat = 1;
 
-  // In-memory working copy used by all runtime functions.
   var _websiteSettingsRuntime : WebsiteSettingsBase = {
     siteName = "";
     contactPhone = "";
@@ -192,7 +194,8 @@ actor {
   var promotionIdCounter = 1;
   var testimonialIdCounter = 1;
   var blogPostIdCounter = 1;
-  var mediaAssetIdCounter = 1;
+  // Media asset ID counter — runtime, synced with stable on upgrade
+  var mediaAssetIdCounter : Nat = 1;
   var commercialCategoryIdCounter = 1;
   var vehicleIdCounter = 1;
   var creditSimCounter = 1;
@@ -368,6 +371,10 @@ actor {
     updatedAt : Int;
   };
 
+  // ============================================================
+  // MEDIA ASSET TYPE
+  // Supports: images (jpg/png/webp), videos (mp4/webm/mov), PDFs
+  // ============================================================
   public type MediaAsset = {
     id : Nat;
     filename : Text;
@@ -402,8 +409,6 @@ actor {
     data : Blob;
   };
 
-
-
   public type UserProfile = {
     name : Text;
     email : Text;
@@ -425,6 +430,22 @@ actor {
     key : Text;
     value : Text;
     lastUpdated : Int;
+  };
+
+  // ============================================================
+  // HELPER: check if MIME type is allowed
+  // Allowed: images, videos, PDF
+  // ============================================================
+  func isAllowedMimeType(mimeType : Text) : Bool {
+    mimeType == "image/jpeg" or
+    mimeType == "image/jpg" or
+    mimeType == "image/png" or
+    mimeType == "image/webp" or
+    mimeType == "image/gif" or
+    mimeType == "video/mp4" or
+    mimeType == "video/webm" or
+    mimeType == "video/quicktime" or
+    mimeType == "application/pdf"
   };
 
   func promoteToSuperAdmin(caller : Principal) {
@@ -792,31 +813,174 @@ actor {
     visitorStats;
   };
 
+  // ============================================================
+  // MEDIA MANAGER — Upload
+  //
+  // Supports: image/jpeg, image/png, image/webp, image/gif,
+  //           video/mp4, video/webm, video/quicktime,
+  //           application/pdf
+  //
+  // Returns: Nat — the assigned asset ID
+  // Storage: stored in runtime map + persisted via stable storage
+  // ============================================================
   public shared ({ caller }) func uploadMediaAsset(
     filename : Text,
     mimeType : Text,
     data : Blob,
     fileSize : Nat,
-  ) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user)) and not callerIsAnyAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only authenticated users can upload media assets");
+  ) : async Nat {
+    // Only logged-in admins can upload
+    if (not callerIsAnyAdmin(caller)) {
+      Runtime.trap("Unauthorized: only admins can upload media assets");
     };
 
-    let uploadedAt = Time.now();
-    let mediaAsset : MediaAsset = {
-      id = mediaAssetIdCounter;
-      filename;
-      mimeType;
+    // Reject empty file
+    if (data.size() == 0) {
+      Runtime.trap("Upload failed: file data is empty");
+    };
+
+    // Validate MIME type
+    if (not isAllowedMimeType(mimeType)) {
+      Runtime.trap("Upload failed: unsupported file type. Allowed: images (jpg/png/webp), videos (mp4/webm/mov), PDF");
+    };
+
+    // Assign ID
+    let assetId : Nat = mediaAssetIdCounter;
+
+    // Build asset record
+    let asset : MediaAsset = {
+      id = assetId;
+      filename = filename;
+      mimeType = mimeType;
       size = fileSize;
-      data;
       uploadedBy = caller;
-      uploadedAt;
+      uploadedAt = Time.now();
+      data = data;
     };
 
-    mediaAssets.add(mediaAssetIdCounter, mediaAsset);
+    // Insert into runtime map
+    mediaAssets.add(assetId, asset);
+
+    // Increment counter AFTER insert
     mediaAssetIdCounter += 1;
+
+    // Return the assigned ID so frontend can reference this asset
+    assetId;
   };
 
+  // ============================================================
+  // MEDIA MANAGER — List all assets
+  // Returns all stored media assets ordered by upload time (newest first)
+  // ============================================================
+  public query ({ caller }) func getAllMediaAssets() : async [MediaAsset] {
+    if (not callerIsAnyAdmin(caller)) {
+      Runtime.trap("Unauthorized: only admins can list media assets");
+    };
+    let all = mediaAssets.values().toArray();
+    // Sort by uploadedAt descending (newest first)
+    all.sort(func(a : MediaAsset, b : MediaAsset) : { #less; #equal; #greater } {
+      if (a.uploadedAt > b.uploadedAt) { #less }
+      else if (a.uploadedAt < b.uploadedAt) { #greater }
+      else { #equal };
+    });
+  };
+
+  // ============================================================
+  // MEDIA MANAGER — Get single asset by ID (authenticated)
+  // ============================================================
+  public query ({ caller }) func getMediaAssetById(id : Nat) : async ?MediaAsset {
+    if (not callerIsAnyAdmin(caller)) {
+      Runtime.trap("Unauthorized: only admins can access media assets");
+    };
+    mediaAssets.get(id);
+  };
+
+  // ============================================================
+  // MEDIA MANAGER — Get single asset by ID (public, no auth)
+  // Used by public pages to render banner images / videos
+  // ============================================================
+  public query func getPublicMediaAssetById(id : Nat) : async ?MediaAsset {
+    mediaAssets.get(id);
+  };
+
+  // ============================================================
+  // MEDIA MANAGER — Delete asset
+  // Only the admin who uploaded OR any admin can delete
+  // ============================================================
+  public shared ({ caller }) func deleteMediaAsset(id : Nat) : async Bool {
+    if (not callerIsAnyAdmin(caller)) {
+      Runtime.trap("Unauthorized: only admins can delete media assets");
+    };
+    switch (mediaAssets.get(id)) {
+      case (null) {
+        Runtime.trap("Media asset not found");
+      };
+      case (?_) {
+        mediaAssets.remove(id);
+        true;
+      };
+    };
+  };
+
+  // ============================================================
+  // MEDIA MANAGER — Update asset metadata
+  // ============================================================
+  public shared ({ caller }) func updateMediaAsset(
+    id : Nat,
+    newFilename : Text,
+    newMimeType : Text,
+    newData : Blob,
+    newSize : Nat,
+  ) : async () {
+    if (not callerIsAnyAdmin(caller)) {
+      Runtime.trap("Unauthorized: only admins can update media assets");
+    };
+    switch (mediaAssets.get(id)) {
+      case (null) {
+        Runtime.trap("Media asset not found");
+      };
+      case (?existing) {
+        let updated : MediaAsset = {
+          existing with
+          filename = newFilename;
+          mimeType = newMimeType;
+          data = newData;
+          size = newSize;
+        };
+        mediaAssets.add(id, updated);
+      };
+    };
+  };
+
+  // ============================================================
+  // MEDIA MANAGER — Assets by uploader (admin only)
+  // ============================================================
+  public query ({ caller }) func getAssetsByUploader(uploader : Principal) : async [MediaAsset] {
+    if (not callerIsAnyAdmin(caller)) {
+      Runtime.trap("Unauthorized: only admins can query assets by uploader");
+    };
+    mediaAssets.values().toArray().filter(
+      func(asset : MediaAsset) : Bool { asset.uploadedBy == uploader }
+    );
+  };
+
+  // ============================================================
+  // MEDIA MANAGER — Assets by date range (admin only)
+  // ============================================================
+  public query ({ caller }) func getAssetsByDateRange(startDate : Int, endDate : Int) : async [MediaAsset] {
+    if (not callerIsAnyAdmin(caller)) {
+      Runtime.trap("Unauthorized: only admins can query assets by date");
+    };
+    mediaAssets.values().toArray().filter(
+      func(asset : MediaAsset) : Bool {
+        asset.uploadedAt >= startDate and asset.uploadedAt <= endDate
+      }
+    );
+  };
+
+  // ============================================================
+  // Banner images (separate from Media Manager)
+  // ============================================================
   public shared ({ caller }) func uploadBannerImage(
     filename : Text,
     bannerType : BannerImageType,
@@ -846,106 +1010,8 @@ actor {
     returnId;
   };
 
-  public query ({ caller }) func getAllMediaAssets() : async [MediaAsset] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user)) and not callerIsAnyAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only authenticated users can view media assets");
-    };
-    mediaAssets.values().toArray();
-  };
-
-  public query ({ caller }) func getMediaAssetById(id : Nat) : async ?MediaAsset {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user)) and not callerIsAnyAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only authenticated users can view media assets");
-    };
-    mediaAssets.get(id);
-  };
-
-  public query ({ caller }) func getMediaAssetByBlobId(blobId : Text) : async ?MediaAsset {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user)) and not callerIsAnyAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only authenticated users can view media assets");
-    };
-
-    let assets = mediaAssets.values().toArray();
-    switch (assets.find(func(asset) { asset.id.toText() == blobId })) {
-      case (?asset) { ?asset };
-      case (null) { null };
-    };
-  };
-
-  public shared ({ caller }) func updateMediaAsset(
-    id : Nat,
-    newFilename : Text,
-    newMimeType : Text,
-    newData : Blob,
-    newSize : Nat,
-  ) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update media assets");
-    };
-
-    switch (mediaAssets.get(id)) {
-      case (?existingAsset) {
-        let updatedAsset = {
-          existingAsset with
-          filename = newFilename;
-          mimeType = newMimeType;
-          data = newData;
-          size = newSize;
-        };
-        mediaAssets.add(id, updatedAsset);
-      };
-      case (null) {
-        Runtime.trap("Media asset not found. Cannot update non-existent asset.");
-      };
-    };
-  };
-
-  public shared ({ caller }) func deleteMediaAsset(id : Nat) : async Bool {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user)) and not callerIsAnyAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only authenticated users can delete media assets");
-    };
-
-    let asset = switch (mediaAssets.get(id)) {
-      case (null) {
-        Runtime.trap("Asset not found. Cannot delete non-existent asset.");
-      };
-      case (?asset) { asset };
-    };
-
-    if (caller == asset.uploadedBy or AccessControl.isAdmin(accessControlState, caller)) {
-      mediaAssets.remove(id);
-      true;
-    } else {
-      Runtime.trap("Unauthorized: Only the uploader or an admin can delete this asset.");
-    };
-  };
-
-  public query ({ caller }) func getAssetsByUploader(uploader : Principal) : async [MediaAsset] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view assets by uploader");
-    };
-    mediaAssets.values().toArray().filter(
-      func(asset) { asset.uploadedBy == uploader }
-    );
-  };
-
-  public query ({ caller }) func getAssetsByDateRange(startDate : Int, endDate : Int) : async [MediaAsset] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view assets by date range");
-    };
-    mediaAssets.values().toArray().filter(
-      func(asset) { asset.uploadedAt >= startDate and asset.uploadedAt <= endDate }
-    );
-  };
-
   public query func getBannerImages() : async [BannerImage] {
     bannerImages.values().toArray();
-  };
-
-
-  // Public query — no auth required — allows anonymous visitors to load media assets for display
-  public query func getPublicMediaAssetById(id : Nat) : async ?MediaAsset {
-    mediaAssets.get(id);
   };
 
   public shared ({ caller }) func updateWebsiteSettings(newSettings : WebsiteSettings) : async () {
@@ -958,7 +1024,6 @@ actor {
       };
       case (null) { Runtime.trap("Unauthorized: not an admin") };
     };
-    // Save base fields to stable runtime var
     _websiteSettingsRuntime := {
       siteName = newSettings.siteName;
       contactPhone = newSettings.contactPhone;
@@ -977,7 +1042,6 @@ actor {
       salesConsultantPhotoId = newSettings.salesConsultantPhotoId;
       footerAboutText = newSettings.footerAboutText;
     };
-    // Save extra fields to their own stable vars
     ws_ext_mainBannerImageId2 := newSettings.mainBannerImageId2;
     ws_ext_mainBannerVideoId := newSettings.mainBannerVideoId;
     ws_ext_homepageBannerMode := switch (newSettings.homepageBannerMode) {
@@ -997,13 +1061,10 @@ actor {
 
   public shared ({ caller }) func getAdmins() : async [AdminRecord] {
     ignore bootstrapIfEmpty(caller);
-
     recoverSuperAdminIfNeeded(caller);
-
     if (not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only admins can view the admin list");
     };
-
     adminStore.map(func((_, record)) { record });
   };
 
@@ -1011,17 +1072,14 @@ actor {
     switch (findAdminRecord(caller)) {
       case (?(_, admin)) {
         switch (admin.role) {
-          case (#super_admin) { /* allow — continue with existing logic */ };
+          case (#super_admin) { /* allow */ };
           case (_) { Runtime.trap("Unauthorized: super admin only") };
         };
       };
       case (null) { Runtime.trap("Unauthorized: not an admin") };
     };
-
     ignore bootstrapIfEmpty(caller);
-
     recoverSuperAdminIfNeeded(caller);
-
     switch (findAdminRecord(principal)) {
       case (null) {
         Runtime.trap("Admin not found for the given principal");
@@ -1048,15 +1106,11 @@ actor {
     if (not isSuperAdmin(caller)) {
       Runtime.trap("Unauthorized: Only super_admins can delete admins");
     };
-
     ignore bootstrapIfEmpty(caller);
-
     recoverSuperAdminIfNeeded(caller);
-
     if (adminStore.size() <= 1) {
       Runtime.trap("Cannot delete the last remaining admin");
     };
-
     switch (findAdminRecord(principal)) {
       case (null) {
         Runtime.trap("Admin not found for the given principal");
@@ -1069,9 +1123,7 @@ actor {
 
   public shared ({ caller }) func getMyRole() : async ?UserRole {
     ignore bootstrapIfEmpty(caller);
-
     recoverSuperAdminIfNeeded(caller);
-
     switch (findAdminRecord(caller)) {
       case (?(_, record)) { ?record.role };
       case (null) { null };
@@ -1084,7 +1136,6 @@ actor {
 
   public shared ({ caller }) func forceSetMeAsSuperAdmin() : async Text {
     let found = findAdminRecord(caller);
-
     switch (found) {
       case (?(_p, _existingAdmin)) {
         adminStore := adminStore.map(
@@ -1112,24 +1163,44 @@ actor {
     };
   };
 
-  // --- Stable upgrade hooks for WebsiteSettings migration ---
+  public shared ({ caller }) func initializeFirstAdmin() : async Text {
+    if (adminStore.size() > 0) {
+      return "Admin already initialized";
+    };
+    let now = Time.now();
+    let newAdmin : AdminRecord = {
+      principal = caller;
+      role = #super_admin;
+      createdAt = now;
+      updatedAt = now;
+    };
+    adminStore := [(caller, newAdmin)];
+    "First admin initialized: " # caller.toText();
+  };
 
+  // ============================================================
+  // STABLE UPGRADE HOOKS
+  //
+  // preupgrade:  save runtime state → stable vars
+  // postupgrade: restore stable vars → runtime state
+  // ============================================================
   system func preupgrade() {
-    // Persist the runtime settings into the v2 stable var before upgrade
+    // Persist website settings
     websiteSettings_v2 := ?_websiteSettingsRuntime;
-    // Persist media assets to stable storage
+
+    // Persist ALL media assets to stable storage
     stableMediaAssets := mediaAssets.values().toArray();
     stableMediaAssetIdCounter := mediaAssetIdCounter;
   };
 
   system func postupgrade() {
+    // Restore website settings
     switch (websiteSettings_v2) {
       case (?saved) {
-        // Already migrated — restore from v2 stable var
         _websiteSettingsRuntime := saved;
       };
       case (null) {
-        // First upgrade: migrate from old V1 stable var
+        // First upgrade: migrate from V1
         _websiteSettingsRuntime := {
           siteName = websiteSettings.siteName;
           contactPhone = websiteSettings.contactPhone;
@@ -1148,14 +1219,17 @@ actor {
           salesConsultantPhotoId = null;
           footerAboutText = null;
         };
-        // Mark as migrated
         websiteSettings_v2 := ?_websiteSettingsRuntime;
       };
     };
-    // Restore media assets from stable storage
+
+    // Restore media assets from stable storage into runtime map
     for (asset in stableMediaAssets.vals()) {
       mediaAssets.add(asset.id, asset);
     };
-    mediaAssetIdCounter := stableMediaAssetIdCounter;
+    // Restore counter — ensures new uploads get unique IDs
+    if (stableMediaAssetIdCounter > 0) {
+      mediaAssetIdCounter := stableMediaAssetIdCounter;
+    };
   };
 };

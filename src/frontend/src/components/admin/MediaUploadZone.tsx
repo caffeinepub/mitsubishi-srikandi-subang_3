@@ -1,9 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useActor } from "@/hooks/useActor";
-import { useInternetIdentity } from "@/hooks/useInternetIdentity";
+import { useActorContext } from "@/contexts/ActorContext";
 import { useUploadMediaAsset } from "@/hooks/useMediaAssets";
-import { validateDelegationIdentity } from "@/utils/validation";
 import { AlertCircle, CheckCircle, Upload, X } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 
@@ -29,13 +27,14 @@ const ACCEPTED_TYPES = [
   "video/quicktime",
 ];
 
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 // Internal limit is 60MB to avoid browser multipart rounding errors.
-// UI displays "50MB" which is the recommended max for users.
-const MAX_VIDEO_SIZE = 60 * 1024 * 1024; // 60MB internal
+// UI displays "50MB" as the recommended max for users.
+const MAX_SIZE = 60 * 1024 * 1024;
 
-function getMaxSize(mimeType: string): number {
-  return mimeType.startsWith("video/") ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+function getFileTypeLabel(mimeType: string): string {
+  if (mimeType.startsWith("video/")) return "Video";
+  if (mimeType === "application/pdf") return "PDF";
+  return "Gambar";
 }
 
 export default function MediaUploadZone({
@@ -45,20 +44,14 @@ export default function MediaUploadZone({
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadAsset = useUploadMediaAsset();
-  const { identity } = useInternetIdentity();
-  const { actor, isFetching: actorFetching } = useActor();
+  const { actor, actorFetching } = useActorContext();
 
   const validateFile = useCallback((file: File): string | null => {
     if (!ACCEPTED_TYPES.includes(file.type)) {
       return `Tipe file tidak didukung: ${file.type}. Gunakan JPG, PNG, WebP, PDF, MP4, WebM, atau MOV.`;
     }
-    const maxSize = getMaxSize(file.type);
-    if (file.size > maxSize) {
-      // Show 50MB as the user-visible limit for video
-      const displayMax = file.type.startsWith("video/")
-        ? 50
-        : maxSize / 1024 / 1024;
-      return `Ukuran file terlalu besar: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maksimal ${displayMax}MB.`;
+    if (file.size > MAX_SIZE) {
+      return `Ukuran file terlalu besar: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maksimal 50MB.`;
     }
     return null;
   }, []);
@@ -90,9 +83,7 @@ export default function MediaUploadZone({
   );
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      addFiles(e.target.files);
-    }
+    if (e.target.files) addFiles(e.target.files);
   };
 
   const removeFile = (index: number) => {
@@ -100,16 +91,6 @@ export default function MediaUploadZone({
   };
 
   const uploadSingleFile = async (uploadFile: UploadFile, index: number) => {
-    const validationError = validateDelegationIdentity(identity);
-    if (validationError) {
-      setFiles((prev) =>
-        prev.map((f, i) =>
-          i === index ? { ...f, status: "error", error: validationError } : f,
-        ),
-      );
-      return;
-    }
-
     if (!actor || actorFetching) {
       setFiles((prev) =>
         prev.map((f, i) =>
@@ -148,7 +129,6 @@ export default function MediaUploadZone({
           i === index ? { ...f, status: "success", progress: 100 } : f,
         ),
       );
-
       onUploadSuccess?.();
     } catch (error: unknown) {
       const errorMessage =
@@ -165,23 +145,20 @@ export default function MediaUploadZone({
     const pendingEntries = files
       .map((f, i) => ({ file: f, index: i }))
       .filter(({ file }) => file.status === "pending");
-
     for (const { file, index } of pendingEntries) {
       await uploadSingleFile(file, index);
     }
   };
 
-  const clearCompleted = () => {
+  const clearCompleted = () =>
     setFiles((prev) => prev.filter((f) => f.status !== "success"));
-  };
 
   const hasPending = files.some((f) => f.status === "pending");
   const hasCompleted = files.some((f) => f.status === "success");
 
   return (
     <div className="space-y-4">
-      {/* Drop Zone */}
-      {/* biome-ignore lint/a11y/useSemanticElements: drop zone div needs onDrop which <button> doesn't support natively */}
+      {/* biome-ignore lint/a11y/useSemanticElements: drop zone needs onDrop */}
       <div
         role="button"
         tabIndex={0}
@@ -199,18 +176,19 @@ export default function MediaUploadZone({
         className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
           isDragging
             ? "border-primary bg-primary/5"
-            : "border-gray-300 hover:border-primary hover:bg-gray-50"
+            : "border-border hover:border-primary hover:bg-muted/50"
         }`}
       >
-        <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-        <p className="text-lg font-medium text-gray-700">
+        <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+        <p className="text-lg font-medium text-foreground">
           Drag &amp; drop file di sini
         </p>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           atau klik untuk memilih file
         </p>
-        <p className="text-xs text-gray-400 mt-2">
-          JPG, PNG, WebP, PDF — Maks. 10MB | MP4, WebM, MOV — Maks. 50MB
+        <p className="text-xs text-muted-foreground mt-2">
+          JPG, PNG, WebP — Maks. 10MB &nbsp;|&nbsp; MP4, WebM, MOV — Maks. 50MB
+          &nbsp;|&nbsp; PDF — Maks. 50MB
         </p>
         <input
           ref={fileInputRef}
@@ -222,22 +200,19 @@ export default function MediaUploadZone({
         />
       </div>
 
-      {/* File List */}
       {files.length > 0 && (
         <div className="space-y-2">
           {files.map((uploadFile, index) => (
             <div
               key={`file-${uploadFile.file.name}-${index}`}
-              className="flex items-center gap-3 p-3 border rounded-lg bg-white"
+              className="flex items-center gap-3 p-3 border rounded-lg bg-card"
             >
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">
                   {uploadFile.file.name}
                 </p>
-                <p className="text-xs text-gray-500">
-                  {uploadFile.file.type.startsWith("video/")
-                    ? "Video"
-                    : "Gambar"}
+                <p className="text-xs text-muted-foreground">
+                  {getFileTypeLabel(uploadFile.file.type)}
                   {" · "}
                   {(uploadFile.file.size / 1024 / 1024).toFixed(2)} MB
                 </p>
@@ -250,7 +225,6 @@ export default function MediaUploadZone({
                   </p>
                 )}
               </div>
-
               <div className="flex items-center gap-2 shrink-0">
                 {uploadFile.status === "success" && (
                   <CheckCircle className="h-5 w-5 text-green-500" />

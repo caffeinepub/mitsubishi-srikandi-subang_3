@@ -1,11 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { MediaAsset } from "../backend";
-import { protectedCall } from "../utils/apiClient";
-import { useActor } from "./useActor";
+import { useActorContext } from "../contexts/ActorContext";
 import { useInternetIdentity } from "./useInternetIdentity";
 
 export function useGetAllMediaAssets() {
-  const { actor, isFetching } = useActor();
+  const { actor, actorFetching } = useActorContext();
 
   return useQuery<MediaAsset[]>({
     queryKey: ["mediaAssets"],
@@ -18,14 +17,12 @@ export function useGetAllMediaAssets() {
         return [];
       }
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor && !actorFetching,
   });
 }
 
 export function useGetMediaAssetById(id: bigint | null | undefined) {
-  const { actor, isFetching } = useActor();
-
-  // Normalize undefined to null for consistent handling
+  const { actor, actorFetching } = useActorContext();
   const normalizedId = id === undefined ? null : id;
 
   return useQuery<MediaAsset | null>({
@@ -38,13 +35,12 @@ export function useGetMediaAssetById(id: bigint | null | undefined) {
         return null;
       }
     },
-    enabled: !!actor && !isFetching && normalizedId !== null,
+    enabled: !!actor && !actorFetching && normalizedId !== null,
   });
 }
 
 export function useUploadMediaAsset() {
-  const { actor } = useActor();
-  const { identity } = useInternetIdentity();
+  const { actor } = useActorContext();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -61,19 +57,16 @@ export function useUploadMediaAsset() {
       fileSize: bigint;
       onProgress?: (pct: number) => void;
     }) => {
-      if (!actor) throw new Error("Actor not initialized");
-      const principalId = identity?.getPrincipal().toString();
-      return protectedCall(principalId, async () => {
-        onProgress?.(10);
-        const result = await actor.uploadMediaAsset(
-          filename,
-          mimeType,
-          data,
-          fileSize,
-        );
-        onProgress?.(100);
-        return result;
-      });
+      if (!actor) throw new Error("Actor belum siap");
+      onProgress?.(10);
+      const result = await actor.uploadMediaAsset(
+        filename,
+        mimeType,
+        data,
+        fileSize,
+      );
+      onProgress?.(100);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["mediaAssets"] });
@@ -82,15 +75,13 @@ export function useUploadMediaAsset() {
 }
 
 export function useDeleteMediaAsset() {
-  const { actor } = useActor();
-  const { identity } = useInternetIdentity();
+  const { actor } = useActorContext();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: bigint) => {
-      if (!actor) throw new Error("Actor not initialized");
-      const principalId = identity?.getPrincipal().toString();
-      return protectedCall(principalId, () => actor.deleteMediaAsset(id));
+      if (!actor) throw new Error("Actor belum siap");
+      return actor.deleteMediaAsset(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["mediaAssets"] });
