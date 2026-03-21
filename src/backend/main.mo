@@ -182,7 +182,7 @@ actor {
     updatedAt : Int;
   };
 
-  var adminStore : [(Principal, AdminRecord)] = [];
+  stable var adminStore : [(Principal, AdminRecord)] = [];
   let userProfiles = Map.empty<Principal, UserProfile>();
 
   var variantIdCounter = 1;
@@ -829,8 +829,11 @@ actor {
     data : Blob,
     fileSize : Nat,
   ) : async Nat {
+    // Bootstrap admin store if empty (handles first call after fresh deployment)
+    ignore bootstrapIfEmpty(caller);
+    
     // Only logged-in admins can upload
-    if (not callerIsAnyAdmin(caller)) {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: only admins can upload media assets");
     };
 
@@ -873,7 +876,7 @@ actor {
   // Returns all stored media assets ordered by upload time (newest first)
   // ============================================================
   public query ({ caller }) func getAllMediaAssets() : async [MediaAsset] {
-    if (not callerIsAnyAdmin(caller)) {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: only admins can list media assets");
     };
     let all = mediaAssets.values().toArray();
@@ -889,7 +892,7 @@ actor {
   // MEDIA MANAGER — Get single asset by ID (authenticated)
   // ============================================================
   public query ({ caller }) func getMediaAssetById(id : Nat) : async ?MediaAsset {
-    if (not callerIsAnyAdmin(caller)) {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: only admins can access media assets");
     };
     mediaAssets.get(id);
@@ -908,7 +911,8 @@ actor {
   // Only the admin who uploaded OR any admin can delete
   // ============================================================
   public shared ({ caller }) func deleteMediaAsset(id : Nat) : async Bool {
-    if (not callerIsAnyAdmin(caller)) {
+    ignore bootstrapIfEmpty(caller);
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: only admins can delete media assets");
     };
     switch (mediaAssets.get(id)) {
@@ -932,7 +936,8 @@ actor {
     newData : Blob,
     newSize : Nat,
   ) : async () {
-    if (not callerIsAnyAdmin(caller)) {
+    ignore bootstrapIfEmpty(caller);
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: only admins can update media assets");
     };
     switch (mediaAssets.get(id)) {
@@ -956,7 +961,7 @@ actor {
   // MEDIA MANAGER — Assets by uploader (admin only)
   // ============================================================
   public query ({ caller }) func getAssetsByUploader(uploader : Principal) : async [MediaAsset] {
-    if (not callerIsAnyAdmin(caller)) {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: only admins can query assets by uploader");
     };
     mediaAssets.values().toArray().filter(
@@ -968,7 +973,7 @@ actor {
   // MEDIA MANAGER — Assets by date range (admin only)
   // ============================================================
   public query ({ caller }) func getAssetsByDateRange(startDate : Int, endDate : Int) : async [MediaAsset] {
-    if (not callerIsAnyAdmin(caller)) {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: only admins can query assets by date");
     };
     mediaAssets.values().toArray().filter(
