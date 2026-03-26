@@ -104,6 +104,12 @@ export const WebsiteSettings = IDL.Record({
   'facebookUrl' : IDL.Text,
   'contactPhone' : IDL.Text,
   'tiktokUrl' : IDL.Text,
+  'salesConsultantName' : IDL.Opt(IDL.Text),
+  'salesConsultantPhotoId' : IDL.Opt(IDL.Nat),
+  'footerAboutText' : IDL.Opt(IDL.Text),
+  'mainBannerImageId2' : IDL.Opt(IDL.Nat),
+  'mainBannerVideoId' : IDL.Opt(IDL.Nat),
+  'homepageBannerMode' : IDL.Opt(IDL.Text),
 });
 
 export const idlService = IDL.Service({
@@ -313,6 +319,12 @@ export const idlFactory = ({ IDL }) => {
     'facebookUrl' : IDL.Text,
     'contactPhone' : IDL.Text,
     'tiktokUrl' : IDL.Text,
+    'salesConsultantName' : IDL.Opt(IDL.Text),
+    'salesConsultantPhotoId' : IDL.Opt(IDL.Nat),
+    'footerAboutText' : IDL.Opt(IDL.Text),
+    'mainBannerImageId2' : IDL.Opt(IDL.Nat),
+    'mainBannerVideoId' : IDL.Opt(IDL.Nat),
+    'homepageBannerMode' : IDL.Opt(IDL.Text),
   });
   
   return IDL.Service({

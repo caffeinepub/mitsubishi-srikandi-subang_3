@@ -27,9 +27,12 @@ const ACCEPTED_TYPES = [
   "video/quicktime",
 ];
 
-// Internal limit is 60MB to avoid browser multipart rounding errors.
-// UI displays "50MB" as the recommended max for users.
-const MAX_SIZE = 60 * 1024 * 1024;
+// File size limits
+// Videos: 60MB internal limit (UI shows 50MB — accounts for browser rounding)
+// Images & PDF: 5MB — practical limit for canister storage
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_VIDEO_SIZE = 60 * 1024 * 1024; // 60MB internal (displayed as 50MB)
+const MAX_PDF_SIZE = 5 * 1024 * 1024; // 5MB
 
 function getFileTypeLabel(mimeType: string): string {
   if (mimeType.startsWith("video/")) return "Video";
@@ -50,8 +53,14 @@ export default function MediaUploadZone({
     if (!ACCEPTED_TYPES.includes(file.type)) {
       return `Tipe file tidak didukung: ${file.type}. Gunakan JPG, PNG, WebP, PDF, MP4, WebM, atau MOV.`;
     }
-    if (file.size > MAX_SIZE) {
-      return `Ukuran file terlalu besar: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maksimal 50MB.`;
+    if (file.type.startsWith("video/") && file.size > MAX_VIDEO_SIZE) {
+      return `File video terlalu besar: ${(file.size / 1024 / 1024).toFixed(1)}MB. Ukuran maksimal adalah 50MB.`;
+    }
+    if (file.type === "application/pdf" && file.size > MAX_PDF_SIZE) {
+      return `File PDF terlalu besar: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maksimal 5MB.`;
+    }
+    if (file.type.startsWith("image/") && file.size > MAX_IMAGE_SIZE) {
+      return `Ukuran gambar terlalu besar: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maksimal 5MB.`;
     }
     return null;
   }, []);
@@ -133,6 +142,7 @@ export default function MediaUploadZone({
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Upload gagal";
+      // Only update the failed file's status; do NOT clear other data
       setFiles((prev) =>
         prev.map((f, i) =>
           i === index ? { ...f, status: "error", error: errorMessage } : f,
@@ -187,8 +197,8 @@ export default function MediaUploadZone({
           atau klik untuk memilih file
         </p>
         <p className="text-xs text-muted-foreground mt-2">
-          JPG, PNG, WebP — Maks. 10MB &nbsp;|&nbsp; MP4, WebM, MOV — Maks. 50MB
-          &nbsp;|&nbsp; PDF — Maks. 50MB
+          JPG, PNG, WebP (maks. 5MB) · MP4, WebM, MOV (maks. 50MB) · PDF (maks.
+          5MB)
         </p>
         <input
           ref={fileInputRef}

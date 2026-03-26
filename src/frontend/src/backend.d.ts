@@ -139,4 +139,6 @@ export interface backendInterface {
     uploadBannerImage(filename: string, bannerType: BannerImageType, mimeType: string, data: Uint8Array, fileSize: bigint): Promise<bigint>;
     uploadMediaAsset(filename: string, mimeType: string, data: Uint8Array, fileSize: bigint): Promise<void>;
     whoAmI(): Promise<string>;
+    initAdmin(): Promise<string>;
+    forceBecomeAdmin(): Promise<string>;
 }

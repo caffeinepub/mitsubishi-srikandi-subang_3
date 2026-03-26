@@ -174,6 +174,8 @@ export interface _SERVICE {
     undefined
   >,
   'whoAmI' : ActorMethod<[], string>,
+  'initAdmin' : ActorMethod<[], string>,
+  'forceBecomeAdmin' : ActorMethod<[], string>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

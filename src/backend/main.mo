@@ -569,7 +569,7 @@ actor {
   };
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+    if (caller != user and not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Can only view your own profile");
     };
     userProfiles.get(user);
@@ -670,7 +670,7 @@ actor {
   };
 
   public shared ({ caller }) func cleanupExpiredSessions() : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+    if (not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only admins can cleanup expired sessions");
     };
     cleanupExpiredSessionsInternal();
@@ -723,14 +723,14 @@ actor {
   };
 
   public query ({ caller }) func getTotalVisitors() : async Nat {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+    if (not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only admins can view visitor statistics");
     };
     visitorSessions.size();
   };
 
   public query ({ caller }) func getOnlineUsers() : async Nat {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+    if (not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only admins can view visitor statistics");
     };
 
@@ -743,7 +743,7 @@ actor {
   };
 
   public query ({ caller }) func getTotalPageViews() : async Nat {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+    if (not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only admins can view visitor statistics");
     };
 
@@ -751,7 +751,7 @@ actor {
   };
 
   public query ({ caller }) func getVisitorStats() : async VisitorStats {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+    if (not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only admins can view visitor statistics");
     };
     visitorStats;
@@ -786,28 +786,28 @@ actor {
   };
 
   public shared ({ caller }) func periodicCleanup() : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+    if (not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only admins can trigger periodic cleanup");
     };
     cleanupExpiredSessionsInternal();
   };
 
   public query ({ caller }) func getAllVisitorSessions() : async [VisitorSession] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+    if (not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only admins can view all visitor sessions");
     };
     visitorSessions.values().toArray();
   };
 
   public query ({ caller }) func getAllVisits() : async [Visit] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+    if (not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only admins can view all visits");
     };
     visits.values().toArray();
   };
 
   public query ({ caller }) func getStableVisitorStats() : async VisitorStats {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+    if (not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only admins can view visitor statistics");
     };
     visitorStats;
@@ -833,7 +833,7 @@ actor {
     ignore bootstrapIfEmpty(caller);
     
     // Only logged-in admins can upload
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: only admins can upload media assets");
     };
 
@@ -876,7 +876,7 @@ actor {
   // Returns all stored media assets ordered by upload time (newest first)
   // ============================================================
   public query ({ caller }) func getAllMediaAssets() : async [MediaAsset] {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not callerIsAnyAdmin(caller) and not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: only admins can list media assets");
     };
     let all = mediaAssets.values().toArray();
@@ -892,7 +892,7 @@ actor {
   // MEDIA MANAGER — Get single asset by ID (authenticated)
   // ============================================================
   public query ({ caller }) func getMediaAssetById(id : Nat) : async ?MediaAsset {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not callerIsAnyAdmin(caller) and not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: only admins can access media assets");
     };
     mediaAssets.get(id);
@@ -912,7 +912,7 @@ actor {
   // ============================================================
   public shared ({ caller }) func deleteMediaAsset(id : Nat) : async Bool {
     ignore bootstrapIfEmpty(caller);
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: only admins can delete media assets");
     };
     switch (mediaAssets.get(id)) {
@@ -937,7 +937,7 @@ actor {
     newSize : Nat,
   ) : async () {
     ignore bootstrapIfEmpty(caller);
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: only admins can update media assets");
     };
     switch (mediaAssets.get(id)) {
@@ -952,6 +952,7 @@ actor {
           data = newData;
           size = newSize;
         };
+        mediaAssets.remove(id);
         mediaAssets.add(id, updated);
       };
     };
@@ -961,7 +962,7 @@ actor {
   // MEDIA MANAGER — Assets by uploader (admin only)
   // ============================================================
   public query ({ caller }) func getAssetsByUploader(uploader : Principal) : async [MediaAsset] {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not callerIsAnyAdmin(caller) and not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: only admins can query assets by uploader");
     };
     mediaAssets.values().toArray().filter(
@@ -973,7 +974,7 @@ actor {
   // MEDIA MANAGER — Assets by date range (admin only)
   // ============================================================
   public query ({ caller }) func getAssetsByDateRange(startDate : Int, endDate : Int) : async [MediaAsset] {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not callerIsAnyAdmin(caller) and not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: only admins can query assets by date");
     };
     mediaAssets.values().toArray().filter(
@@ -993,7 +994,7 @@ actor {
     data : Blob,
     fileSize : Nat,
   ) : async Nat {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+    if (not callerIsAnyAdmin(caller)) {
       Runtime.trap("Unauthorized: Only admin can upload banner images");
     };
 
@@ -1181,6 +1182,36 @@ actor {
     };
     adminStore := [(caller, newAdmin)];
     "First admin initialized: " # caller.toText();
+  };
+
+  // ============================================================
+  // INIT ADMIN — Safe bootstrap via AccessControl
+  // Uses AccessControl.initialize with an empty token so the first
+  // authenticated caller gets the #admin role in the in-memory state.
+  // ============================================================
+  public shared ({ caller }) func initAdmin() : async Text {
+    if (AccessControl.isAdmin(accessControlState, caller)) {
+      return "Already admin";
+    };
+    // initialize() assigns #admin to the first caller when adminAssigned = false
+    AccessControl.initialize(accessControlState, caller, "", "");
+    if (AccessControl.isAdmin(accessControlState, caller)) {
+      return "First admin initialized";
+    };
+    return "Admin already exists, contact existing admin";
+  };
+
+  // ============================================================
+  // FORCE BECOME ADMIN — Dev/recovery escape hatch
+  // Directly assigns #admin role via assignRole using caller as both
+  // the authority and the target (bypasses the isAdmin guard in a
+  // fresh in-memory state by calling initialize first).
+  // ============================================================
+  public shared ({ caller }) func forceBecomeAdmin() : async Text {
+    // Reset adminAssigned so initialize() will grant admin to caller
+    accessControlState.adminAssigned := false;
+    AccessControl.initialize(accessControlState, caller, "", "");
+    return "You are now admin";
   };
 
   // ============================================================

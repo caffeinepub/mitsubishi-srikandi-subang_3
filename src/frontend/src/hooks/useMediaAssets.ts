@@ -1,28 +1,31 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import type { MediaAsset } from "../backend";
 import { useActorContext } from "../contexts/ActorContext";
-import { useInternetIdentity } from "./useInternetIdentity";
 
 export function useGetAllMediaAssets() {
-  const { actor, actorFetching } = useActorContext();
+  const { actor, actorFetching, isBootstrapped } = useActorContext();
 
   return useQuery<MediaAsset[]>({
     queryKey: ["mediaAssets"],
     queryFn: async () => {
-      if (!actor) return [];
-      try {
-        return await actor.getAllMediaAssets();
-      } catch (err) {
-        console.warn("[useGetAllMediaAssets] Failed to fetch:", err);
-        return [];
-      }
+      if (!actor) throw new Error("Actor not ready");
+      return await actor.getAllMediaAssets();
     },
-    enabled: !!actor && !actorFetching,
+    // Only run after bootstrap — prevents Unauthorized race condition
+    enabled: !!actor && !actorFetching && isBootstrapped,
+    placeholderData: keepPreviousData,
+    retry: 2,
+    staleTime: 30_000,
   });
 }
 
 export function useGetMediaAssetById(id: bigint | null | undefined) {
-  const { actor, actorFetching } = useActorContext();
+  const { actor, actorFetching, isBootstrapped } = useActorContext();
   const normalizedId = id === undefined ? null : id;
 
   return useQuery<MediaAsset | null>({
@@ -35,7 +38,8 @@ export function useGetMediaAssetById(id: bigint | null | undefined) {
         return null;
       }
     },
-    enabled: !!actor && !actorFetching && normalizedId !== null,
+    enabled:
+      !!actor && !actorFetching && isBootstrapped && normalizedId !== null,
   });
 }
 
@@ -68,7 +72,7 @@ export function useUploadMediaAsset() {
       onProgress?.(100);
       return result;
     },
-    onSuccess: () => {
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["mediaAssets"] });
     },
   });

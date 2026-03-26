@@ -29,6 +29,7 @@ import {
   FileText,
   Film,
   ImageIcon,
+  RefreshCw,
   Trash2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -248,7 +249,7 @@ function PdfCard({
 
 export default function MediaAssetGrid() {
   const { actor, actorFetching } = useActorContext();
-  const { data: assets, isLoading, error } = useGetAllMediaAssets();
+  const { data: assets, isLoading, error, refetch } = useGetAllMediaAssets();
   const deleteAsset = useDeleteMediaAsset();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState<MediaAsset | null>(null);
@@ -320,10 +321,29 @@ export default function MediaAssetGrid() {
     );
   }
 
-  if (error) {
+  if (error && !assets) {
     return (
-      <div className="text-center py-8 text-destructive">
-        Gagal memuat media. Silakan coba lagi.
+      <div
+        className="text-center py-12 space-y-3"
+        data-ocid="media.error_state"
+      >
+        <p className="text-destructive font-medium">
+          Gagal memuat media. Pastikan Anda sudah login sebagai admin.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {error instanceof Error
+            ? error.message
+            : "Terjadi kesalahan tidak diketahui."}
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          data-ocid="media.button"
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Coba Lagi
+        </Button>
       </div>
     );
   }
