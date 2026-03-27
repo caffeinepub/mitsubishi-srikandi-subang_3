@@ -1,26 +1,8 @@
-import type { backendInterface } from "@/backend";
 import SafeImage from "@/components/SafeImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useActor } from "@/hooks/useActor";
 import { useGetWebsiteSettings } from "@/hooks/useWebsiteSettings";
-import { createBlobUrlFromData } from "@/utils/blobUrl";
 import { useEffect, useRef, useState } from "react";
-
-type PublicActor = backendInterface & {
-  getPublicMediaAssetById?: (
-    id: bigint,
-  ) => Promise<{ data: Uint8Array; mimeType: string } | null>;
-};
-
-function fetchPublicMedia(
-  actor: PublicActor,
-  id: bigint,
-): Promise<{ data: Uint8Array; mimeType: string } | null> {
-  if (typeof actor.getPublicMediaAssetById === "function") {
-    return actor.getPublicMediaAssetById(id);
-  }
-  return actor.getMediaAssetById(id);
-}
 
 export default function MainBanner() {
   const { data: settings, isLoading: settingsLoading } =
@@ -38,21 +20,17 @@ export default function MainBanner() {
   const imageId = settings?.mainBannerImageId ?? null;
   const imageId2 = settings?.mainBannerImageId2 ?? null;
 
-  // Load video asset
   useEffect(() => {
     if (!videoId || !actor) {
       setVideoUrl(null);
       return;
     }
     let cancelled = false;
-    fetchPublicMedia(actor as PublicActor, videoId)
+    actor
+      .getPublicMediaAssetById(videoId)
       .then((asset) => {
-        if (cancelled || !asset?.data) return;
-        try {
-          setVideoUrl(createBlobUrlFromData(asset.data, asset.mimeType));
-        } catch {
-          setVideoUrl(null);
-        }
+        if (cancelled) return;
+        setVideoUrl(asset?.storageUrl ?? null);
       })
       .catch(() => {
         if (!cancelled) setVideoUrl(null);
@@ -62,21 +40,17 @@ export default function MainBanner() {
     };
   }, [videoId, actor]);
 
-  // Load image 1
   useEffect(() => {
     if (!imageId || !actor) {
       setBannerUrl(null);
       return;
     }
     let cancelled = false;
-    fetchPublicMedia(actor as PublicActor, imageId)
+    actor
+      .getPublicMediaAssetById(imageId)
       .then((asset) => {
-        if (cancelled || !asset?.data) return;
-        try {
-          setBannerUrl(createBlobUrlFromData(asset.data, asset.mimeType));
-        } catch {
-          setBannerUrl(null);
-        }
+        if (cancelled) return;
+        setBannerUrl(asset?.storageUrl ?? null);
       })
       .catch(() => {
         if (!cancelled) setBannerUrl(null);
@@ -86,21 +60,17 @@ export default function MainBanner() {
     };
   }, [imageId, actor]);
 
-  // Load image 2
   useEffect(() => {
     if (!imageId2 || !actor) {
       setBanner2Url(null);
       return;
     }
     let cancelled = false;
-    fetchPublicMedia(actor as PublicActor, imageId2)
+    actor
+      .getPublicMediaAssetById(imageId2)
       .then((asset) => {
-        if (cancelled || !asset?.data) return;
-        try {
-          setBanner2Url(createBlobUrlFromData(asset.data, asset.mimeType));
-        } catch {
-          setBanner2Url(null);
-        }
+        if (cancelled) return;
+        setBanner2Url(asset?.storageUrl ?? null);
       })
       .catch(() => {
         if (!cancelled) setBanner2Url(null);
@@ -110,12 +80,12 @@ export default function MainBanner() {
     };
   }, [imageId2, actor]);
 
-  // Determine display mode based on homepageBannerMode
   const mode = settings?.homepageBannerMode ?? "1 image";
 
   const resolveMode = () => {
     if (mode === "video") {
       if (videoUrl) return "video";
+      if (banner2Url && bannerUrl) return "slider";
       if (bannerUrl) return "static";
       return "empty";
     }
@@ -125,7 +95,6 @@ export default function MainBanner() {
       if (videoUrl) return "video";
       return "empty";
     }
-    // "1 image" or default
     if (bannerUrl) return "static";
     return "empty";
   };
@@ -134,7 +103,6 @@ export default function MainBanner() {
   const sliderImages = [bannerUrl, banner2Url].filter(Boolean) as string[];
   const isSlider = displayMode === "slider";
 
-  // Slider auto-advance
   useEffect(() => {
     if (!isSlider) {
       if (sliderTimer.current) clearInterval(sliderTimer.current);
@@ -174,7 +142,6 @@ export default function MainBanner() {
 
   return (
     <section className="relative w-full h-[150px] md:h-[600px] overflow-hidden">
-      {/* VIDEO MODE */}
       {displayMode === "video" && (
         <>
           <video
@@ -190,16 +157,10 @@ export default function MainBanner() {
           {overlayText}
         </>
       )}
-
-      {/* SLIDER MODE (2 images) */}
       {displayMode === "slider" && (
         <>
           <div
-            className={`absolute inset-0 transition-all duration-500 ${
-              flipping
-                ? "-translate-y-full opacity-0"
-                : "translate-y-0 opacity-100"
-            }`}
+            className={`absolute inset-0 transition-all duration-500 ${flipping ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"}`}
             style={{ transitionTimingFunction: "ease-in-out" }}
           >
             <SafeImage
@@ -212,8 +173,6 @@ export default function MainBanner() {
           {overlayText}
         </>
       )}
-
-      {/* STATIC IMAGE MODE */}
       {displayMode === "static" && (
         <>
           <SafeImage
@@ -225,8 +184,6 @@ export default function MainBanner() {
           {overlayText}
         </>
       )}
-
-      {/* EMPTY FALLBACK */}
       {displayMode === "empty" && (
         <>
           <div className="absolute inset-0 bg-black" />

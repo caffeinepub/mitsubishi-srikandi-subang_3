@@ -63,14 +63,15 @@ export function useUploadMediaAsset() {
     }) => {
       if (!actor) throw new Error("Actor belum siap");
       onProgress?.(10);
-      const result = await actor.uploadMediaAsset(
-        filename,
-        mimeType,
-        data,
-        fileSize,
-      );
+      // Step 1: Upload file bytes to Caffeine CDN and get back the storage URL
+      const storageUrl = await actor.uploadToStorageAndGetUrl(data, (pct) => {
+        // Map CDN upload progress to 10-90% range
+        onProgress?.(10 + Math.floor(pct * 0.8));
+      });
+      onProgress?.(90);
+      // Step 2: Store only the URL reference in the backend
+      await actor.uploadMediaAsset(filename, mimeType, storageUrl, fileSize);
       onProgress?.(100);
-      return result;
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["mediaAssets"] });

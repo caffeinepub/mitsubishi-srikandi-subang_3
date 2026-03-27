@@ -12,7 +12,6 @@ import {
   useGetWebsiteSettings,
   useUpdateWebsiteSettings,
 } from "@/hooks/useWebsiteSettings";
-import { createBlobUrlFromData } from "@/utils/blobUrl";
 import { validateDelegationIdentity } from "@/utils/validation";
 import { Film, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -43,17 +42,8 @@ function MediaPickerField({
   mediaType = "image",
 }: MediaPickerFieldProps) {
   const { data: asset, isLoading } = useGetMediaAssetById(assetId ?? null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const isVideo = asset?.mimeType.startsWith("video/") ?? false;
-
-  useEffect(() => {
-    if (asset?.data) {
-      const url = createBlobUrlFromData(asset.data, asset.mimeType);
-      setPreviewUrl(url);
-      return () => URL.revokeObjectURL(url);
-    }
-    setPreviewUrl(null);
-  }, [asset]);
+  const previewUrl = asset?.storageUrl || null;
 
   return (
     <>
@@ -147,10 +137,7 @@ function MediaPickerField({
 function SectionCard({
   title,
   children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+}: { title: string; children: React.ReactNode }) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-border p-6 space-y-5">
       <h2 className="text-lg font-semibold text-foreground tracking-tight">
@@ -167,7 +154,6 @@ export default function WebsiteSettingsPage() {
   const { data: settings, isLoading } = useGetWebsiteSettings();
   const updateSettings = useUpdateWebsiteSettings();
 
-  // Media picker open states
   const [mainBannerPickerOpen, setMainBannerPickerOpen] = useState(false);
   const [mainBanner2PickerOpen, setMainBanner2PickerOpen] = useState(false);
   const [videoBannerPickerOpen, setVideoBannerPickerOpen] = useState(false);
@@ -175,7 +161,6 @@ export default function WebsiteSettingsPage() {
   const [consultantPhotoPickerOpen, setConsultantPhotoPickerOpen] =
     useState(false);
 
-  // Media asset IDs
   const [mainBannerImageId, setMainBannerImageId] = useState<
     bigint | undefined
   >(undefined);
@@ -191,12 +176,9 @@ export default function WebsiteSettingsPage() {
   const [salesConsultantPhotoId, setSalesConsultantPhotoId] = useState<
     bigint | undefined
   >(undefined);
-
-  // Banner mode
   const [homepageBannerMode, setHomepageBannerMode] =
     useState<string>("1 image");
 
-  // Text fields
   const [formData, setFormData] = useState({
     siteName: "",
     contactPhone: "",
@@ -212,7 +194,6 @@ export default function WebsiteSettingsPage() {
     footerAboutText: "",
   });
 
-  // Populate from loaded settings
   useEffect(() => {
     if (settings) {
       setFormData({
@@ -226,15 +207,51 @@ export default function WebsiteSettingsPage() {
         instagramUrl: settings.instagramUrl ?? "",
         tiktokUrl: settings.tiktokUrl ?? "",
         youtubeUrl: settings.youtubeUrl ?? "",
-        salesConsultantName: settings.salesConsultantName ?? "",
-        footerAboutText: settings.footerAboutText ?? "",
+        salesConsultantName:
+          typeof settings.salesConsultantName === "string"
+            ? settings.salesConsultantName
+            : Array.isArray(settings.salesConsultantName)
+              ? ((settings.salesConsultantName as string[])[0] ?? "")
+              : "",
+        footerAboutText:
+          typeof settings.footerAboutText === "string"
+            ? settings.footerAboutText
+            : Array.isArray(settings.footerAboutText)
+              ? ((settings.footerAboutText as string[])[0] ?? "")
+              : "",
       });
-      setMainBannerImageId(settings.mainBannerImageId ?? undefined);
-      setMainBannerImageId2(settings.mainBannerImageId2 ?? undefined);
-      setMainBannerVideoId(settings.mainBannerVideoId ?? undefined);
-      setCtaBannerImageId(settings.ctaBannerImageId ?? undefined);
-      setSalesConsultantPhotoId(settings.salesConsultantPhotoId ?? undefined);
-      setHomepageBannerMode(settings.homepageBannerMode ?? "1 image");
+      setMainBannerImageId(
+        typeof settings.mainBannerImageId === "bigint"
+          ? settings.mainBannerImageId
+          : undefined,
+      );
+      setMainBannerImageId2(
+        typeof settings.mainBannerImageId2 === "bigint"
+          ? settings.mainBannerImageId2
+          : undefined,
+      );
+      setMainBannerVideoId(
+        typeof settings.mainBannerVideoId === "bigint"
+          ? settings.mainBannerVideoId
+          : undefined,
+      );
+      setCtaBannerImageId(
+        typeof settings.ctaBannerImageId === "bigint"
+          ? settings.ctaBannerImageId
+          : undefined,
+      );
+      setSalesConsultantPhotoId(
+        typeof settings.salesConsultantPhotoId === "bigint"
+          ? settings.salesConsultantPhotoId
+          : undefined,
+      );
+      setHomepageBannerMode(
+        typeof settings.homepageBannerMode === "string"
+          ? settings.homepageBannerMode
+          : Array.isArray(settings.homepageBannerMode)
+            ? ((settings.homepageBannerMode as string[])[0] ?? "1 image")
+            : "1 image",
+      );
     }
   }, [settings]);
 
@@ -244,7 +261,6 @@ export default function WebsiteSettingsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const validationError = validateDelegationIdentity(identity);
     if (validationError) {
       toast.error(validationError);
@@ -262,15 +278,15 @@ export default function WebsiteSettingsPage() {
       instagramUrl: formData.instagramUrl,
       tiktokUrl: formData.tiktokUrl,
       youtubeUrl: formData.youtubeUrl,
+      lastUpdated: BigInt(Date.now()) * BigInt(1_000_000),
       mainBannerImageId: mainBannerImageId,
       mainBannerImageId2: mainBannerImageId2,
       mainBannerVideoId: mainBannerVideoId,
       ctaBannerImageId: ctaBannerImageId,
-      lastUpdated: BigInt(Date.now()) * BigInt(1_000_000),
-      salesConsultantName: formData.salesConsultantName || undefined,
       salesConsultantPhotoId: salesConsultantPhotoId,
+      homepageBannerMode: homepageBannerMode || undefined,
+      salesConsultantName: formData.salesConsultantName || undefined,
       footerAboutText: formData.footerAboutText || undefined,
-      homepageBannerMode: homepageBannerMode,
     };
 
     try {
@@ -304,9 +320,7 @@ export default function WebsiteSettingsPage() {
         </h1>
       </div>
 
-      {/* ── Section 1: MAIN BANNER ── */}
       <SectionCard title="Main Banner">
-        {/* Image Banner */}
         <div>
           <p className="text-sm font-medium text-muted-foreground mb-3">
             Image Banner
@@ -337,7 +351,6 @@ export default function WebsiteSettingsPage() {
           </div>
         </div>
 
-        {/* Video Banner */}
         <div className="pt-1">
           <p className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-1.5">
             <Film className="h-4 w-4" /> Video Banner
@@ -358,7 +371,6 @@ export default function WebsiteSettingsPage() {
           </p>
         </div>
 
-        {/* Banner Mode */}
         <div className="pt-1 border-t">
           <p className="text-sm font-medium mb-3">Banner Mode</p>
           <p className="text-xs text-muted-foreground mb-3">
@@ -394,7 +406,7 @@ export default function WebsiteSettingsPage() {
                 htmlFor="mode-2image"
                 className="cursor-pointer font-normal"
               >
-                Image Slider — slide Image 1 & Image 2
+                Image Slider — slide Image 1 &amp; Image 2
               </Label>
             </div>
             <div className="flex items-center space-x-2">
@@ -414,7 +426,6 @@ export default function WebsiteSettingsPage() {
         </div>
       </SectionCard>
 
-      {/* ── Section 2: CTA BANNER ── */}
       <SectionCard title="CTA Banner">
         <MediaPickerField
           label="CTA Banner"
@@ -429,7 +440,6 @@ export default function WebsiteSettingsPage() {
         />
       </SectionCard>
 
-      {/* ── Section 3: SALES PROFILE ── */}
       <SectionCard title="Sales Profile">
         <MediaPickerField
           label="Foto Sales Consultant"
@@ -457,7 +467,6 @@ export default function WebsiteSettingsPage() {
         </div>
       </SectionCard>
 
-      {/* ── Section 4: INFORMASI SITUS ── */}
       <SectionCard title="Informasi Situs">
         <div className="space-y-2">
           <Label htmlFor="footerAboutText">
@@ -549,7 +558,6 @@ export default function WebsiteSettingsPage() {
         </div>
       </SectionCard>
 
-      {/* ── Section 5: MEDIA SOSIAL ── */}
       <SectionCard title="Media Sosial">
         <div className="space-y-2">
           <Label htmlFor="facebookUrl">Facebook Url</Label>
@@ -597,7 +605,6 @@ export default function WebsiteSettingsPage() {
         </div>
       </SectionCard>
 
-      {/* ── Save button ── */}
       <div className="flex justify-end pb-8">
         <Button
           type="submit"

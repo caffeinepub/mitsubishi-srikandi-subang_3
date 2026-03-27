@@ -1,25 +1,7 @@
-import type { backendInterface } from "@/backend";
 import SafeImage from "@/components/SafeImage";
 import { useActor } from "@/hooks/useActor";
 import { useGetWebsiteSettings } from "@/hooks/useWebsiteSettings";
-import { createBlobUrlFromData } from "@/utils/blobUrl";
 import { useEffect, useState } from "react";
-
-type PublicActor = backendInterface & {
-  getPublicMediaAssetById?: (
-    id: bigint,
-  ) => Promise<{ data: Uint8Array; mimeType: string } | null>;
-};
-
-function fetchPublicMedia(
-  actor: PublicActor,
-  id: bigint,
-): Promise<{ data: Uint8Array; mimeType: string } | null> {
-  if (typeof actor.getPublicMediaAssetById === "function") {
-    return actor.getPublicMediaAssetById(id);
-  }
-  return actor.getMediaAssetById(id);
-}
 
 export default function CTABanner() {
   const { data: settings } = useGetWebsiteSettings();
@@ -29,27 +11,17 @@ export default function CTABanner() {
   const bannerImageId = settings?.ctaBannerImageId ?? null;
 
   useEffect(() => {
-    if (!bannerImageId || !actor) {
-      return;
-    }
-
+    if (!bannerImageId || !actor) return;
     let cancelled = false;
-    fetchPublicMedia(actor as PublicActor, bannerImageId)
+    actor
+      .getPublicMediaAssetById(bannerImageId)
       .then((asset) => {
         if (cancelled) return;
-        if (asset?.data) {
-          try {
-            const url = createBlobUrlFromData(asset.data, asset.mimeType);
-            setBannerUrl(url);
-          } catch {
-            setBannerUrl(null);
-          }
-        }
+        setBannerUrl(asset?.storageUrl ?? null);
       })
       .catch(() => {
         if (!cancelled) setBannerUrl(null);
       });
-
     return () => {
       cancelled = true;
     };

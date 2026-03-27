@@ -1,4 +1,3 @@
-import type { backendInterface } from "@/backend";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,26 +5,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useActor } from "@/hooks/useActor";
 import { useContactForm } from "@/hooks/useContactForm";
 import { useGetWebsiteSettings } from "@/hooks/useWebsiteSettings";
-import { createBlobUrlFromData } from "@/utils/blobUrl";
 import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
-type PublicActor = backendInterface & {
-  getPublicMediaAssetById?: (
-    id: bigint,
-  ) => Promise<{ data: Uint8Array; mimeType: string } | null>;
-};
-
-function fetchPublicMedia(
-  actor: PublicActor,
-  id: bigint,
-): Promise<{ data: Uint8Array; mimeType: string } | null> {
-  if (typeof actor.getPublicMediaAssetById === "function") {
-    return actor.getPublicMediaAssetById(id);
-  }
-  return actor.getMediaAssetById(id);
-}
 
 export default function KontakPage() {
   const [formData, setFormData] = useState({
@@ -46,7 +28,6 @@ export default function KontakPage() {
     null,
   );
 
-  // Dynamic values with fallbacks
   const phone = settings?.contactPhone || "0852-1234-0778";
   const email = settings?.contactEmail || "fuadmitsubishi2025@gmail.com";
   const address =
@@ -63,23 +44,17 @@ export default function KontakPage() {
   const consultantPhotoId = settings?.salesConsultantPhotoId ?? null;
   const consultantInitial = consultantName.charAt(0).toUpperCase();
 
-  // Load consultant photo
   useEffect(() => {
     if (!consultantPhotoId || !actor) {
       setConsultantPhotoUrl(null);
       return;
     }
     let cancelled = false;
-    fetchPublicMedia(actor as PublicActor, consultantPhotoId)
+    actor
+      .getPublicMediaAssetById(consultantPhotoId)
       .then((asset) => {
-        if (cancelled || !asset?.data) return;
-        try {
-          setConsultantPhotoUrl(
-            createBlobUrlFromData(asset.data, asset.mimeType),
-          );
-        } catch {
-          setConsultantPhotoUrl(null);
-        }
+        if (cancelled) return;
+        setConsultantPhotoUrl(asset?.storageUrl ?? null);
       })
       .catch(() => {
         if (!cancelled) setConsultantPhotoUrl(null);

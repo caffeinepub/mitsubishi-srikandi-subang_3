@@ -30,7 +30,7 @@ export type BannerImageType = { 'mainBanner' : null } |
   { 'ctaBanner' : null };
 export interface MediaAsset {
   'id' : bigint,
-  'data' : Uint8Array,
+  'storageUrl' : string,
   'size' : bigint,
   'mimeType' : string,
   'filename' : string,
@@ -126,8 +126,10 @@ export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole__1], undefined>,
   'cleanupExpiredSessions' : ActorMethod<[], undefined>,
+  'clearAllMediaAssets' : ActorMethod<[], undefined>,
   'deleteAdmin' : ActorMethod<[Principal], undefined>,
   'deleteMediaAsset' : ActorMethod<[bigint], boolean>,
+  'forceBecomeAdmin' : ActorMethod<[], string>,
   'forceSetMeAsSuperAdmin' : ActorMethod<[], string>,
   'getAdmins' : ActorMethod<[], Array<AdminRecord>>,
   'getAllMediaAssets' : ActorMethod<[], Array<MediaAsset>>,
@@ -144,6 +146,7 @@ export interface _SERVICE {
   'getMediaAssets' : ActorMethod<[], Array<MediaAsset>>,
   'getMyRole' : ActorMethod<[], [] | [UserRole]>,
   'getOnlineUsers' : ActorMethod<[], bigint>,
+  'getPublicMediaAssetById' : ActorMethod<[bigint], [] | [MediaAsset]>,
   'getPublicVisitorStats' : ActorMethod<[], VisitorStats>,
   'getStableVisitorStats' : ActorMethod<[], VisitorStats>,
   'getTopPageViews' : ActorMethod<[], Array<[string, bigint]>>,
@@ -152,6 +155,7 @@ export interface _SERVICE {
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getVisitorStats' : ActorMethod<[], VisitorStats>,
   'getWebsiteSettings' : ActorMethod<[], WebsiteSettings>,
+  'initAdmin' : ActorMethod<[], string>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'periodicCleanup' : ActorMethod<[], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
@@ -161,7 +165,7 @@ export interface _SERVICE {
   >,
   'updateAdminRole' : ActorMethod<[Principal, UserRole], undefined>,
   'updateMediaAsset' : ActorMethod<
-    [bigint, string, string, Uint8Array, bigint],
+    [bigint, string, string, string, bigint],
     undefined
   >,
   'updateWebsiteSettings' : ActorMethod<[WebsiteSettings], undefined>,
@@ -170,12 +174,10 @@ export interface _SERVICE {
     bigint
   >,
   'uploadMediaAsset' : ActorMethod<
-    [string, string, Uint8Array, bigint],
+    [string, string, string, bigint],
     undefined
   >,
   'whoAmI' : ActorMethod<[], string>,
-  'initAdmin' : ActorMethod<[], string>,
-  'forceBecomeAdmin' : ActorMethod<[], string>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

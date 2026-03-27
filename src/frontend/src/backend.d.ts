@@ -30,7 +30,7 @@ export interface WebsiteSettings {
 }
 export interface MediaAsset {
     id: bigint;
-    data: Uint8Array;
+    storageUrl: string;
     size: bigint;
     mimeType: string;
     filename: string;
@@ -102,9 +102,10 @@ export enum UserRole__1 {
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole__1): Promise<void>;
     cleanupExpiredSessions(): Promise<void>;
+    clearAllMediaAssets(): Promise<void>;
     deleteAdmin(principal: Principal): Promise<void>;
     deleteMediaAsset(id: bigint): Promise<boolean>;
-    clearAllMediaAssets(): Promise<void>;
+    forceBecomeAdmin(): Promise<string>;
     forceSetMeAsSuperAdmin(): Promise<string>;
     getAdmins(): Promise<Array<AdminRecord>>;
     getAllMediaAssets(): Promise<Array<MediaAsset>>;
@@ -121,6 +122,7 @@ export interface backendInterface {
     getMediaAssets(): Promise<Array<MediaAsset>>;
     getMyRole(): Promise<UserRole | null>;
     getOnlineUsers(): Promise<bigint>;
+    getPublicMediaAssetById(id: bigint): Promise<MediaAsset | null>;
     getPublicVisitorStats(): Promise<VisitorStats>;
     getStableVisitorStats(): Promise<VisitorStats>;
     getTopPageViews(): Promise<Array<[string, bigint]>>;
@@ -128,18 +130,17 @@ export interface backendInterface {
     getTotalVisitors(): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getVisitorStats(): Promise<VisitorStats>;
-    getPublicMediaAssetById(id: bigint): Promise<MediaAsset | null>;
     getWebsiteSettings(): Promise<WebsiteSettings>;
+    initAdmin(): Promise<string>;
     isCallerAdmin(): Promise<boolean>;
     periodicCleanup(): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     trackVisitor(sessionId: string, ipAddress: string, userAgent: string, pageUrl: string, referrer: string, deviceType: string, browser: string): Promise<void>;
     updateAdminRole(principal: Principal, newRole: UserRole): Promise<void>;
-    updateMediaAsset(id: bigint, newFilename: string, newMimeType: string, newData: Uint8Array, newSize: bigint): Promise<void>;
+    updateMediaAsset(id: bigint, newFilename: string, newMimeType: string, newStorageUrl: string, newSize: bigint): Promise<void>;
     updateWebsiteSettings(newSettings: WebsiteSettings): Promise<void>;
     uploadBannerImage(filename: string, bannerType: BannerImageType, mimeType: string, data: Uint8Array, fileSize: bigint): Promise<bigint>;
-    uploadMediaAsset(filename: string, mimeType: string, data: Uint8Array, fileSize: bigint): Promise<void>;
+    uploadMediaAsset(filename: string, mimeType: string, storageUrl: string, fileSize: bigint): Promise<void>;
+    uploadToStorageAndGetUrl(data: Uint8Array, onProgress?: (pct: number) => void): Promise<string>;
     whoAmI(): Promise<string>;
-    initAdmin(): Promise<string>;
-    forceBecomeAdmin(): Promise<string>;
 }

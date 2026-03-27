@@ -17,11 +17,7 @@ import {
   useDeleteMediaAsset,
   useGetAllMediaAssets,
 } from "@/hooks/useMediaAssets";
-import {
-  createBlobUrlFromData,
-  isImageMimeType,
-  isPdfMimeType,
-} from "@/utils/blobUrl";
+import { isImageMimeType, isPdfMimeType } from "@/utils/blobUrl";
 import {
   Copy,
   Download,
@@ -32,7 +28,7 @@ import {
   RefreshCw,
   Trash2,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 function isVideoMimeType(mimeType: string): boolean {
@@ -48,7 +44,6 @@ function formatFileSize(bytes: bigint): string {
 
 interface AssetCardProps {
   asset: MediaAsset;
-  blobUrl: string;
   isActorReady: boolean;
   isDeleting: boolean;
   onCopyId: (id: bigint) => void;
@@ -57,7 +52,6 @@ interface AssetCardProps {
 
 function ImageCard({
   asset,
-  blobUrl,
   isActorReady,
   isDeleting,
   onCopyId,
@@ -67,9 +61,9 @@ function ImageCard({
   return (
     <div className="border rounded-lg overflow-hidden bg-card">
       <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
-        {blobUrl && !imgError ? (
+        {asset.storageUrl && !imgError ? (
           <img
-            src={blobUrl}
+            src={asset.storageUrl}
             alt={asset.filename}
             className="w-full h-full object-cover"
             loading="lazy"
@@ -116,7 +110,6 @@ function ImageCard({
 
 function VideoCard({
   asset,
-  blobUrl,
   isActorReady,
   isDeleting,
   onCopyId,
@@ -125,9 +118,9 @@ function VideoCard({
   return (
     <div className="border rounded-lg overflow-hidden bg-card">
       <div className="aspect-video bg-gray-900 flex items-center justify-center overflow-hidden relative">
-        {blobUrl ? (
+        {asset.storageUrl ? (
           <video
-            src={blobUrl}
+            src={asset.storageUrl}
             className="w-full h-full object-cover"
             muted
             preload="metadata"
@@ -173,19 +166,18 @@ function VideoCard({
 
 function PdfCard({
   asset,
-  blobUrl,
   isActorReady,
   isDeleting,
   onCopyId,
   onDeleteClick,
 }: AssetCardProps) {
   const handlePreview = () => {
-    if (blobUrl) window.open(blobUrl, "_blank");
+    if (asset.storageUrl) window.open(asset.storageUrl, "_blank");
   };
   const handleDownload = () => {
-    if (!blobUrl) return;
+    if (!asset.storageUrl) return;
     const a = document.createElement("a");
-    a.href = blobUrl;
+    a.href = asset.storageUrl;
     a.download = asset.filename;
     a.click();
   };
@@ -253,22 +245,6 @@ export default function MediaAssetGrid() {
   const deleteAsset = useDeleteMediaAsset();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState<MediaAsset | null>(null);
-  const [blobUrls, setBlobUrls] = useState<Map<string, string>>(new Map());
-
-  useEffect(() => {
-    if (!assets) return;
-    const newBlobUrls = new Map<string, string>();
-    for (const asset of assets) {
-      if (asset.data) {
-        const url = createBlobUrlFromData(asset.data, asset.mimeType);
-        newBlobUrls.set(asset.id.toString(), url);
-      }
-    }
-    setBlobUrls(newBlobUrls);
-    return () => {
-      for (const url of newBlobUrls.values()) URL.revokeObjectURL(url);
-    };
-  }, [assets]);
 
   const handleCopyId = (assetId: bigint) => {
     navigator.clipboard.writeText(assetId.toString());
@@ -341,8 +317,7 @@ export default function MediaAssetGrid() {
           onClick={() => refetch()}
           data-ocid="media.button"
         >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Coba Lagi
+          <RefreshCw className="h-4 w-4 mr-2" /> Coba Lagi
         </Button>
       </div>
     );
@@ -355,7 +330,6 @@ export default function MediaAssetGrid() {
 
   const cardProps = (asset: MediaAsset): AssetCardProps => ({
     asset,
-    blobUrl: blobUrls.get(asset.id.toString()) || "",
     isActorReady,
     isDeleting: deleteAsset.isPending && assetToDelete?.id === asset.id,
     onCopyId: handleCopyId,
@@ -365,7 +339,6 @@ export default function MediaAssetGrid() {
   return (
     <>
       <div className="space-y-6">
-        {/* Images */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -399,7 +372,6 @@ export default function MediaAssetGrid() {
           </CardContent>
         </Card>
 
-        {/* Videos */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -430,7 +402,6 @@ export default function MediaAssetGrid() {
           </CardContent>
         </Card>
 
-        {/* PDFs */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">

@@ -8,7 +8,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetAllMediaAssets } from "@/hooks/useMediaAssets";
-import { createBlobUrlFromData, isPdfMimeType } from "@/utils/blobUrl";
+import { isPdfMimeType } from "@/utils/blobUrl";
 import { FileText, Film } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -97,10 +97,6 @@ export default function BannerImagePicker({
                   const assetIdString = asset.id.toString();
                   const isVideo = asset.mimeType.startsWith("video/");
                   const isPdf = isPdfMimeType(asset.mimeType);
-                  const previewUrl = createBlobUrlFromData(
-                    asset.data,
-                    asset.mimeType,
-                  );
 
                   return (
                     <label
@@ -131,7 +127,7 @@ export default function BannerImagePicker({
                             ) : isVideo ? (
                               <div className="relative w-full h-32 bg-gray-900 rounded overflow-hidden">
                                 <video
-                                  src={previewUrl}
+                                  src={asset.storageUrl}
                                   className="w-full h-full object-cover"
                                   muted
                                   preload="metadata"
@@ -142,7 +138,7 @@ export default function BannerImagePicker({
                               </div>
                             ) : (
                               <img
-                                src={previewUrl}
+                                src={asset.storageUrl}
                                 alt={asset.filename}
                                 className="w-full h-32 object-cover rounded"
                               />

@@ -114,7 +114,7 @@ export interface WebsiteSettings {
 }
 export interface MediaAsset {
     id: bigint;
-    data: Uint8Array;
+    storageUrl: string;
     size: bigint;
     mimeType: string;
     filename: string;
@@ -220,6 +220,7 @@ export interface backendInterface {
     getDailyVisitorTrend(): Promise<Array<[bigint, bigint]>>;
     getMediaAssetByBlobId(blobId: string): Promise<MediaAsset | null>;
     getMediaAssetById(id: bigint): Promise<MediaAsset | null>;
+    getPublicMediaAssetById(id: bigint): Promise<MediaAsset | null>;
     getMediaAssets(): Promise<Array<MediaAsset>>;
     getMyRole(): Promise<UserRole | null>;
     getOnlineUsers(): Promise<bigint>;
@@ -239,7 +240,8 @@ export interface backendInterface {
     updateMediaAsset(id: bigint, newFilename: string, newMimeType: string, newData: Uint8Array, newSize: bigint): Promise<void>;
     updateWebsiteSettings(newSettings: WebsiteSettings): Promise<void>;
     uploadBannerImage(filename: string, bannerType: BannerImageType, mimeType: string, data: Uint8Array, fileSize: bigint): Promise<bigint>;
-    uploadMediaAsset(filename: string, mimeType: string, data: Uint8Array, fileSize: bigint): Promise<void>;
+    uploadMediaAsset(filename: string, mimeType: string, storageUrl: string, fileSize: bigint): Promise<void>;
+    uploadToStorageAndGetUrl(data: Uint8Array, onProgress?: (pct: number) => void): Promise<string>;
     whoAmI(): Promise<string>;
     initAdmin(): Promise<string>;
     forceBecomeAdmin(): Promise<string>;
@@ -595,6 +597,20 @@ export class Backend implements backendInterface {
             return from_candid_opt_n23(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getPublicMediaAssetById(arg0: bigint): Promise<MediaAsset | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getPublicMediaAssetById(arg0);
+                return result ? from_candid_opt_n23(this._uploadFile, this._downloadFile, [result]) : null;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getPublicMediaAssetById(arg0);
+            return result ? from_candid_opt_n23(this._uploadFile, this._downloadFile, [result]) : null;
+        }
+    }
     async getMediaAssets(): Promise<Array<MediaAsset>> {
         if (this.processError) {
             try {
@@ -861,7 +877,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async uploadMediaAsset(arg0: string, arg1: string, arg2: Uint8Array, arg3: bigint): Promise<void> {
+    async uploadMediaAsset(arg0: string, arg1: string, arg2: string, arg3: bigint): Promise<void> {
         if (this.processError) {
             try {
                 const result = await this.actor.uploadMediaAsset(arg0, arg1, arg2, arg3);
@@ -874,6 +890,13 @@ export class Backend implements backendInterface {
             const result = await this.actor.uploadMediaAsset(arg0, arg1, arg2, arg3);
             return result;
         }
+    }
+    async uploadToStorageAndGetUrl(data: Uint8Array, onProgress?: (pct: number) => void): Promise<string> {
+        const blob = ExternalBlob.fromBytes(data);
+        if (onProgress) blob.withUploadProgress(onProgress);
+        const hashBytes = await this._uploadFile(blob);
+        const resultBlob = await this._downloadFile(hashBytes);
+        return resultBlob.getDirectURL();
     }
     async whoAmI(): Promise<string> {
         if (this.processError) {
@@ -1057,12 +1080,12 @@ function from_candid_record_n26(_uploadFile: (file: ExternalBlob) => Promise<Uin
         facebookUrl: value.facebookUrl,
         contactPhone: value.contactPhone,
         tiktokUrl: value.tiktokUrl,
-        salesConsultantName: value.salesConsultantName ? record_opt_to_undefined(value.salesConsultantName.length === 0 ? [] : [value.salesConsultantName[0]]) : undefined,
+        salesConsultantName: value.salesConsultantName !== undefined && value.salesConsultantName.length > 0 ? value.salesConsultantName[0] : undefined,
         salesConsultantPhotoId: value.salesConsultantPhotoId ? record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.salesConsultantPhotoId as [] | [bigint])) : undefined,
-        footerAboutText: value.footerAboutText ? record_opt_to_undefined(value.footerAboutText.length === 0 ? [] : [value.footerAboutText[0]]) : undefined,
+        footerAboutText: value.footerAboutText !== undefined && value.footerAboutText.length > 0 ? value.footerAboutText[0] : undefined,
         mainBannerImageId2: value.mainBannerImageId2 ? record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.mainBannerImageId2 as [] | [bigint])) : undefined,
         mainBannerVideoId: value.mainBannerVideoId ? record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.mainBannerVideoId as [] | [bigint])) : undefined,
-        homepageBannerMode: value.homepageBannerMode ? record_opt_to_undefined(value.homepageBannerMode.length === 0 ? [] : [value.homepageBannerMode[0]]) : undefined,
+        homepageBannerMode: value.homepageBannerMode !== undefined && value.homepageBannerMode.length > 0 ? value.homepageBannerMode[0] : undefined,
     };
 }
 function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
