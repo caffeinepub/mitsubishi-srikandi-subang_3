@@ -926,6 +926,21 @@ actor {
     };
   };
 
+
+  // ============================================================
+  // MEDIA MANAGER — Clear all media assets
+  // ============================================================
+  public shared ({ caller }) func clearAllMediaAssets() : async () {
+    ignore bootstrapIfEmpty(caller);
+    if (not callerIsAnyAdmin(caller)) {
+      Runtime.trap("Unauthorized: only admins can clear media assets");
+    };
+    for ((id, _) in mediaAssets.entries()) {
+      mediaAssets.remove(id);
+    };
+    stableMediaAssets := [];
+    mediaAssetIdCounter := 0;
+  };
   // ============================================================
   // MEDIA MANAGER — Update asset metadata
   // ============================================================

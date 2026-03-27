@@ -206,6 +206,7 @@ export interface backendInterface {
     cleanupExpiredSessions(): Promise<void>;
     deleteAdmin(principal: Principal): Promise<void>;
     deleteMediaAsset(id: bigint): Promise<boolean>;
+    clearAllMediaAssets(): Promise<void>;
     forceSetMeAsSuperAdmin(): Promise<string>;
     getAdmins(): Promise<Array<AdminRecord>>;
     getAllMediaAssets(): Promise<Array<MediaAsset>>;
@@ -384,6 +385,18 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.deleteAdmin(arg0);
             return result;
+        }
+    }
+    async clearAllMediaAssets(): Promise<void> {
+        if (this.processError) {
+            try {
+                await this.actor.clearAllMediaAssets();
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            await this.actor.clearAllMediaAssets();
         }
     }
     async deleteMediaAsset(arg0: bigint): Promise<boolean> {
