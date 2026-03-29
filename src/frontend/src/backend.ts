@@ -141,7 +141,7 @@ export interface VisitorStats {
 export interface BannerImage {
     id: bigint;
     bannerType: BannerImageType;
-    data: Uint8Array;
+    storageUrl: string;
     size: bigint;
     mimeType: string;
     filename: string;
@@ -237,9 +237,9 @@ export interface backendInterface {
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     trackVisitor(sessionId: string, ipAddress: string, userAgent: string, pageUrl: string, referrer: string, deviceType: string, browser: string): Promise<void>;
     updateAdminRole(principal: Principal, newRole: UserRole): Promise<void>;
-    updateMediaAsset(id: bigint, newFilename: string, newMimeType: string, newData: Uint8Array, newSize: bigint): Promise<void>;
+    updateMediaAsset(id: bigint, newFilename: string, newMimeType: string, newStorageUrl: string, newSize: bigint): Promise<void>;
     updateWebsiteSettings(newSettings: WebsiteSettings): Promise<void>;
-    uploadBannerImage(filename: string, bannerType: BannerImageType, mimeType: string, data: Uint8Array, fileSize: bigint): Promise<bigint>;
+    uploadBannerImage(filename: string, bannerType: BannerImageType, mimeType: string, storageUrl: string, fileSize: bigint): Promise<bigint>;
     uploadMediaAsset(filename: string, mimeType: string, storageUrl: string, fileSize: bigint): Promise<void>;
     uploadToStorageAndGetUrl(data: Uint8Array, onProgress?: (pct: number) => void): Promise<string>;
     whoAmI(): Promise<string>;
@@ -835,7 +835,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateMediaAsset(arg0: bigint, arg1: string, arg2: string, arg3: Uint8Array, arg4: bigint): Promise<void> {
+    async updateMediaAsset(arg0: bigint, arg1: string, arg2: string, arg3: string, arg4: bigint): Promise<void> {
         if (this.processError) {
             try {
                 const result = await this.actor.updateMediaAsset(arg0, arg1, arg2, arg3, arg4);
@@ -863,7 +863,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async uploadBannerImage(arg0: string, arg1: BannerImageType, arg2: string, arg3: Uint8Array, arg4: bigint): Promise<bigint> {
+    async uploadBannerImage(arg0: string, arg1: BannerImageType, arg2: string, arg3: string, arg4: bigint): Promise<bigint> {
         if (this.processError) {
             try {
                 const result = await this.actor.uploadBannerImage(arg0, to_candid_BannerImageType_n31(this._uploadFile, this._downloadFile, arg1), arg2, arg3, arg4);
@@ -998,7 +998,7 @@ function from_candid_record_n12(_uploadFile: (file: ExternalBlob) => Promise<Uin
 function from_candid_record_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: bigint;
     bannerType: _BannerImageType;
-    data: Uint8Array;
+    storageUrl: string;
     size: bigint;
     mimeType: string;
     filename: string;
@@ -1007,7 +1007,7 @@ function from_candid_record_n17(_uploadFile: (file: ExternalBlob) => Promise<Uin
 }): {
     id: bigint;
     bannerType: BannerImageType;
-    data: Uint8Array;
+    storageUrl: string;
     size: bigint;
     mimeType: string;
     filename: string;
@@ -1017,7 +1017,7 @@ function from_candid_record_n17(_uploadFile: (file: ExternalBlob) => Promise<Uin
     return {
         id: value.id,
         bannerType: from_candid_BannerImageType_n18(_uploadFile, _downloadFile, value.bannerType),
-        data: value.data,
+        storageUrl: value.storageUrl,
         size: value.size,
         mimeType: value.mimeType,
         filename: value.filename,

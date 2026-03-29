@@ -68,7 +68,7 @@ export const BannerImageType = IDL.Variant({
 export const BannerImage = IDL.Record({
   'id' : IDL.Nat,
   'bannerType' : BannerImageType,
-  'data' : IDL.Vec(IDL.Nat8),
+  'storageUrl' : IDL.Text,
   'size' : IDL.Nat,
   'mimeType' : IDL.Text,
   'filename' : IDL.Text,
@@ -212,7 +212,7 @@ export const idlService = IDL.Service({
     ),
   'updateWebsiteSettings' : IDL.Func([WebsiteSettings], [], []),
   'uploadBannerImage' : IDL.Func(
-      [IDL.Text, BannerImageType, IDL.Text, IDL.Vec(IDL.Nat8), IDL.Nat],
+      [IDL.Text, BannerImageType, IDL.Text, IDL.Text, IDL.Nat],
       [IDL.Nat],
       [],
     ),
@@ -287,7 +287,7 @@ export const idlFactory = ({ IDL }) => {
   const BannerImage = IDL.Record({
     'id' : IDL.Nat,
     'bannerType' : BannerImageType,
-    'data' : IDL.Vec(IDL.Nat8),
+    'storageUrl' : IDL.Text,
     'size' : IDL.Nat,
     'mimeType' : IDL.Text,
     'filename' : IDL.Text,
@@ -435,7 +435,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'updateWebsiteSettings' : IDL.Func([WebsiteSettings], [], []),
     'uploadBannerImage' : IDL.Func(
-        [IDL.Text, BannerImageType, IDL.Text, IDL.Vec(IDL.Nat8), IDL.Nat],
+        [IDL.Text, BannerImageType, IDL.Text, IDL.Text, IDL.Nat],
         [IDL.Nat],
         [],
       ),

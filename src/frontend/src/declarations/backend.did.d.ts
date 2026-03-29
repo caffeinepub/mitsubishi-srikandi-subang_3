@@ -19,7 +19,7 @@ export interface AdminRecord {
 export interface BannerImage {
   'id' : bigint,
   'bannerType' : BannerImageType,
-  'data' : Uint8Array,
+  'storageUrl' : string,
   'size' : bigint,
   'mimeType' : string,
   'filename' : string,
@@ -170,7 +170,7 @@ export interface _SERVICE {
   >,
   'updateWebsiteSettings' : ActorMethod<[WebsiteSettings], undefined>,
   'uploadBannerImage' : ActorMethod<
-    [string, BannerImageType, string, Uint8Array, bigint],
+    [string, BannerImageType, string, string, bigint],
     bigint
   >,
   'uploadMediaAsset' : ActorMethod<
